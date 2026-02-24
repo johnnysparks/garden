@@ -1,30 +1,27 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { World } from 'miniplex';
+	import { get } from 'svelte/store';
 	import GardenGrid, { type CellData } from '$lib/render/GardenGrid.svelte';
 	import {
 		SEASON_PALETTES,
-		type SeasonId,
 	} from '$lib/render/palette.js';
 	import { createWindState, updateWind, type WindState } from '$lib/render/animation.js';
-	import { createRng } from '$lib/engine/rng.js';
 	import { getSpecies, getAllSpecies } from '$lib/data/index.js';
-	import type { Entity, SoilState } from '$lib/engine/ecs/components.js';
-	import type { GameWorld } from '$lib/engine/ecs/world.js';
-	import type { GrowthStageId } from '$lib/data/types.js';
+	import { createGameSession, type GameSession } from '$lib/engine/game-session.js';
+	import type { ClimateZone } from '$lib/engine/weather-gen.js';
+	import type { Entity } from '$lib/engine/ecs/components.js';
 	import SeasonBar from '$lib/ui/SeasonBar.svelte';
 	import WeatherRibbon from '$lib/ui/WeatherRibbon.svelte';
 	import EnergyBar from '$lib/ui/EnergyBar.svelte';
 	import ActionToolbar from '$lib/ui/ActionToolbar.svelte';
 	import SeedSelector from '$lib/ui/SeedSelector.svelte';
-	import { season, energy, turn, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
-	import { dispatch } from '$lib/state/stores.js';
+	import { season, energy, turn, weather, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
+	import zone8aData from '$lib/data/zones/zone_8a.json';
 
 	// ── Constants ───────────────────────────────────────────────────────
 
 	const GRID_ROWS = 3;
 	const GRID_COLS = 3;
-	const SEED = 42;
 
 	// ── Shared animation loop ───────────────────────────────────────────
 	// One rAF drives all AnimatedPlant instances via props.
@@ -45,115 +42,82 @@
 		rafId = requestAnimationFrame(animationTick);
 	}
 
-	// ── ECS World ───────────────────────────────────────────────────────
+	// ── Game session ────────────────────────────────────────────────────
 
-	let world: GameWorld = new World<Entity>();
+	let session = $state<GameSession | null>(null);
 	let ecsTick = $state(0);
 
-	function createDefaultSoil(row: number, col: number): SoilState {
-		const plotRng = createRng(SEED + row * 10 + col);
-		return {
-			ph: 6.2 + plotRng.nextFloat(-0.3, 0.3),
-			nitrogen: 0.5 + plotRng.nextFloat(-0.15, 0.15),
-			phosphorus: 0.4 + plotRng.nextFloat(-0.1, 0.1),
-			potassium: 0.4 + plotRng.nextFloat(-0.1, 0.1),
-			organic_matter: 0.3 + plotRng.nextFloat(-0.15, 0.15),
-			moisture: 0.5 + plotRng.nextFloat(-0.1, 0.1),
-			temperature_c: 18,
-			compaction: 0.3 + plotRng.nextFloat(-0.1, 0.1),
-			biology: 0.4 + plotRng.nextFloat(-0.1, 0.1),
-		};
-	}
+	/** Advance from DUSK (or ACT) through to the next week's ACT phase. */
+	function advanceToNextWeek() {
+		if (!session) return;
+		const phase = get(session.turnManager.phase);
 
-	function initPlots() {
-		for (let row = 0; row < GRID_ROWS; row++) {
-			for (let col = 0; col < GRID_COLS; col++) {
-				world.add({
-					plotSlot: { row, col },
-					soil: createDefaultSoil(row, col),
-					amendments: { pending: [] },
-					sunExposure: { level: 'full' },
-				});
-			}
+		if (phase === 'ACT') {
+			session.turnManager.endActions(); // ACT → DUSK (sim runs via callback)
 		}
+		// DUSK → ADVANCE (frost check via callback)
+		session.turnManager.advancePhase();
+		// ADVANCE → DAWN (increments week)
+		session.turnManager.advancePhase();
+
+		// Begin next week: DAWN → PLAN → ACT
+		const weekIdx = Math.min(
+			get(session.turnManager.week) - 1,
+			session.seasonWeather.length - 1,
+		);
+		session.turnManager.advancePhase(); // DAWN → PLAN
+		session.turnManager.beginWork(session.seasonWeather[weekIdx]); // PLAN → ACT
+
+		ecsTick++;
 	}
-
-	function addPlant(
-		row: number,
-		col: number,
-		speciesId: string,
-		progress: number,
-		stage: GrowthStageId,
-		stress: number = 0,
-		health: number = 1.0,
-	) {
-		const species = getSpecies(speciesId);
-		if (!species) return;
-
-		const instanceSeed = SEED * 100 + row * 10 + col;
-
-		world.add({
-			plotSlot: { row, col },
-			species: { speciesId },
-			growth: { progress, stage, rate_modifier: 1.0 },
-			health: { value: health, stress },
-			visual: { params: species.visual, instanceSeed },
-			harvestState: {
-				ripe: stage === 'fruiting' && progress > 0.7,
-				remaining: species.harvest.yield_potential,
-				quality: health,
-			},
-			activeConditions: { conditions: [] },
-			companionBuffs: { buffs: [] },
-		});
-	}
-
-	// Initialize plot grid immediately
-	initPlots();
-
-	// Mulch a plot for visual demo
-	function mulchPlot(row: number, col: number) {
-		for (const e of world.with('plotSlot', 'amendments')) {
-			if (e.plotSlot.row === row && e.plotSlot.col === col) {
-				e.amendments.pending.push({
-					type: 'mulch',
-					applied_week: 0,
-					effect_delay_weeks: 0,
-					effects: {},
-				});
-				break;
-			}
-		}
-	}
-
-	// ── Hardcoded test garden ───────────────────────────────────────────
-	// 5 plants at various growth stages across a 3x3 grid.
 
 	onMount(() => {
-		// Start the shared animation loop
-		rafId = requestAnimationFrame(animationTick);
+		const seed = Math.floor(Math.random() * 2 ** 32);
+		const zone = zone8aData as unknown as ClimateZone;
 
-		// Basil seedling — just getting started
-		addPlant(0, 0, 'basil_genovese', 0.15, 'seedling');
+		const s = createGameSession({
+			seed,
+			zone,
+			speciesLookup: getSpecies,
+			gridRows: GRID_ROWS,
+			gridCols: GRID_COLS,
+		});
+		session = s;
 
-		// Tomato mid vegetative — bushy, leafy
-		addPlant(0, 1, 'tomato_cherokee_purple', 0.4, 'vegetative');
+		// Sync HUD stores from session's turn manager
+		const unsubPhase = s.turnManager.phase.subscribe((p) => {
+			turn.phase = p;
+		});
+		const unsubWeek = s.turnManager.week.subscribe((w) => {
+			season.week = w;
+		});
+		const unsubEnergy = s.turnManager.energy.subscribe((e) => {
+			energy.current = e.current;
+			energy.max = e.max;
+		});
+		const unsubWeather = s.currentWeather$.subscribe((w) => {
+			weather.current = w;
+		});
 
-		// Tomato at fruiting — tall with fruit
-		addPlant(1, 0, 'tomato_cherokee_purple', 0.8, 'fruiting');
+		// Set zone-derived season info
+		season.totalWeeks = 30;
+		season.frostStartWeek = zone.frost_free_weeks[1];
 
-		// Basil flowering, slightly stressed
-		addPlant(1, 2, 'basil_genovese', 0.6, 'flowering', 0.25, 0.8);
-
-		// Tomato seedling with some stress
-		addPlant(2, 2, 'tomato_cherokee_purple', 0.2, 'seedling', 0.15, 0.9);
-
-		// Mulch the bottom-left empty plot
-		mulchPlot(2, 0);
+		// Advance from DAWN → PLAN → ACT so the player can interact
+		const weekIdx = Math.min(get(s.turnManager.week) - 1, s.seasonWeather.length - 1);
+		s.turnManager.advancePhase(); // DAWN → PLAN
+		s.turnManager.beginWork(s.seasonWeather[weekIdx]); // PLAN → ACT
 
 		ecsTick++;
 
+		// Start the shared animation loop
+		rafId = requestAnimationFrame(animationTick);
+
 		return () => {
+			unsubPhase();
+			unsubWeek();
+			unsubEnergy();
+			unsubWeather();
 			if (rafId !== null) {
 				cancelAnimationFrame(rafId);
 				rafId = null;
@@ -165,7 +129,9 @@
 
 	let cells = $derived.by((): CellData[] => {
 		void ecsTick;
+		if (!session) return [];
 
+		const world = session.world;
 		const plotEntities = world.with('plotSlot', 'soil');
 		const plantEntities = world.with(
 			'plotSlot',
@@ -179,7 +145,7 @@
 
 		for (const plot of plotEntities) {
 			const { row, col } = plot.plotSlot;
-			const isMulched = (plot.amendments?.pending ?? []).some(
+			const isMulched = ((plot as Entity).amendments?.pending ?? []).some(
 				(a) => a.type === 'mulch',
 			);
 
@@ -189,7 +155,7 @@
 				if (
 					pe.plotSlot.row === row &&
 					pe.plotSlot.col === col &&
-					!pe.dead
+					!(pe as Entity).dead
 				) {
 					const sp = getSpecies(pe.species.speciesId);
 					if (sp) {
@@ -231,13 +197,13 @@
 	/** Check whether the currently selected plot has a living plant. */
 	let selectedPlotHasPlant = $derived.by(() => {
 		void ecsTick;
-		if (!selectedPlot) return false;
-		const plantEntities = world.with('plotSlot', 'species');
+		if (!selectedPlot || !session) return false;
+		const plantEntities = session.world.with('plotSlot', 'species');
 		for (const pe of plantEntities) {
 			if (
 				pe.plotSlot.row === selectedPlot.row &&
 				pe.plotSlot.col === selectedPlot.col &&
-				!pe.dead
+				!(pe as Entity).dead
 			) {
 				return true;
 			}
@@ -253,24 +219,44 @@
 	let availableSpecies = $derived(getAllSpecies());
 
 	function onSelectSeed(speciesId: string) {
-		if (!selectedPlot) return;
-		if (energy.current < 1) return;
+		if (!selectedPlot || !session) return;
 
-		// Dispatch PLANT event
-		dispatch({
+		// Spend energy via turn manager (returns false if insufficient)
+		if (!session.turnManager.spendEnergy(1)) return;
+
+		// Dispatch PLANT event through the session's event log
+		session.dispatch({
 			type: 'PLANT',
 			species_id: speciesId,
 			plot: [selectedPlot.row, selectedPlot.col],
 			week: season.week,
 		});
 
-		// Add plant entity to ECS world
-		addPlant(selectedPlot.row, selectedPlot.col, speciesId, 0.0, 'seed');
+		// Add plant entity to session's ECS world
+		const species = getSpecies(speciesId);
+		if (species) {
+			const instanceSeed = get(session.turnManager.week) * 1000 + selectedPlot.row * 10 + selectedPlot.col;
+			session.world.add({
+				plotSlot: { row: selectedPlot.row, col: selectedPlot.col },
+				species: { speciesId },
+				growth: { progress: 0.0, stage: 'seed', rate_modifier: 1.0 },
+				health: { value: 1.0, stress: 0 },
+				visual: { params: species.visual, instanceSeed },
+				harvestState: {
+					ripe: false,
+					remaining: species.harvest.yield_potential,
+					quality: 1.0,
+				},
+				activeConditions: { conditions: [] },
+				companionBuffs: { buffs: [] },
+			});
+		}
 
-		// Decrement energy
-		energy.current = Math.max(0, energy.current - 1);
+		// If energy depleted, spendEnergy auto-transitions to DUSK — advance to next week
+		if (get(session.turnManager.phase) !== 'ACT') {
+			advanceToNextWeek();
+		}
 
-		// Update ECS tick and clean up UI state
 		ecsTick++;
 		showSeedSelector = false;
 		selectedPlot = null;
@@ -279,6 +265,7 @@
 	// ── Action dispatch ─────────────────────────────────────────────────
 
 	function onAction(actionId: string) {
+		if (!session) return;
 		switch (actionId) {
 			case 'plant': {
 				if (!selectedPlot || selectedPlotHasPlant) return;
@@ -286,9 +273,7 @@
 				break;
 			}
 			case 'wait': {
-				// Spend remaining energy, advance to DUSK phase
-				energy.current = 0;
-				turn.phase = 'DUSK';
+				advanceToNextWeek();
 				selectedPlot = null;
 				break;
 			}
