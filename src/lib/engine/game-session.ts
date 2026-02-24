@@ -5,12 +5,12 @@
  * turn manager, event log, soil) and hooks the DUSK and ADVANCE phases so that
  * the simulation tick and frost check run automatically.
  *
- * Exposes Svelte-readable stores for UI binding: plants, soilStates,
- * currentWeather, and the latest tickResult.
+ * Provides both Svelte-readable stores for reactive UI binding and synchronous
+ * accessors for non-reactive consumers (CLI, tests, headless agents).
  */
 
 import { writable, derived, get, type Readable } from 'svelte/store';
-import { createWorld, type GameWorld } from './ecs/world.js';
+import { createWorld, getPlotAt, type GameWorld } from './ecs/world.js';
 import type {
   Entity,
   SoilState,
@@ -23,8 +23,10 @@ import { generateSeasonWeather, type ClimateZone } from './weather-gen.js';
 import { generateSeasonPests } from './pest-gen.js';
 import {
   createTurnManager,
+  calculateEnergyBudget,
   TurnPhase,
   type TurnManager,
+  type EnergyState,
 } from './turn-manager.js';
 import { createEventLog, type EventLog } from '../state/event-log.js';
 import type { GameEvent } from '../state/events.js';
@@ -42,6 +44,7 @@ export interface DuskTickResult {
     speciesId: string;
     row: number;
     col: number;
+    prevProgress: number;
     progress: number;
     stage: string;
   }>;
@@ -50,6 +53,7 @@ export interface DuskTickResult {
     speciesId: string;
     row: number;
     col: number;
+    prevStress: number;
     stress: number;
   }>;
   /** New disease onsets this tick. */
@@ -74,6 +78,21 @@ export interface AdvanceResult {
   runEnded: boolean;
 }
 
+/** Snapshot of a plant entity for query results. */
+export interface PlantInfo {
+  speciesId: string;
+  row: number;
+  col: number;
+  stage: string;
+  progress: number;
+  health: number;
+  stress: number;
+  dead: boolean;
+  conditions: Array<{ conditionId: string; severity: number; stage: number }>;
+  companionBuffs: Array<{ source: string }>;
+  harvestReady: boolean;
+}
+
 export interface GameSessionConfig {
   seed: number;
   zone: ClimateZone;
@@ -85,7 +104,7 @@ export interface GameSessionConfig {
 }
 
 export interface GameSession {
-  // Core subsystems
+  // ── Core subsystems ────────────────────────────────────────────────
   readonly world: GameWorld;
   readonly turnManager: TurnManager;
   readonly eventLog: EventLog;
@@ -93,30 +112,102 @@ export interface GameSession {
   readonly seasonWeather: readonly WeekWeather[];
   /** Pre-generated pest events for the season, sorted by arrival_week. */
   readonly seasonPests: readonly PestEvent[];
+  readonly speciesLookup: SpeciesLookup;
+  readonly config: GameSessionConfig;
+  readonly gridRows: number;
+  readonly gridCols: number;
 
-  // Stores for UI binding
+  // ── Reactive stores (for UI binding) ───────────────────────────────
   readonly plants$: Readable<With<Entity, 'species' | 'growth' | 'health' | 'plotSlot'>[]>;
   readonly soilStates$: Readable<With<Entity, 'plotSlot' | 'soil'>[]>;
   readonly currentWeather$: Readable<WeekWeather>;
   readonly tickResult$: Readable<DuskTickResult | null>;
   readonly advanceResult$: Readable<AdvanceResult | null>;
 
+  // ── Synchronous accessors ──────────────────────────────────────────
+
+  /** Current turn phase. */
+  getPhase(): TurnPhase;
+  /** Current week number. */
+  getWeek(): number;
+  /** Current energy state. */
+  getEnergy(): EnergyState;
+  /** Whether the player can act (ACT phase with energy > 0). */
+  canAct(): boolean;
+  /** Current week's weather. */
+  getCurrentWeather(): WeekWeather;
+  /** Whether the run has ended. */
+  isRunEnded(): boolean;
+
+  // ── Actions ────────────────────────────────────────────────────────
+
   /** Dispatch a game event to the event log. */
   dispatch(event: GameEvent): void;
 
   /**
-   * Run a full week cycle: DAWN → PLAN → beginWork → endActions → (DUSK auto-simulates)
-   *                         → (ADVANCE auto-checks frost) → next DAWN.
-   *
-   * Returns the DUSK tick result and ADVANCE frost result.
-   * If frost kills the run, the session ends.
+   * Advance to the next phase. Returns phase-specific results.
+   * Handles PLAN→ACT energy budget setup automatically.
+   */
+  advancePhase(): { phase: TurnPhase; dusk?: DuskTickResult; advance?: AdvanceResult };
+
+  /** Spend energy on an action. Returns false if insufficient. */
+  spendEnergy(cost: number): boolean;
+
+  /** Skip remaining actions and end ACT phase. Returns DUSK tick result. */
+  endActions(): DuskTickResult | undefined;
+
+  /**
+   * Add a plant entity to the ECS world. Handles creating all required
+   * components (species, growth, health, activeConditions, companionBuffs,
+   * harvestState). Optionally accepts visual params for rendering.
+   */
+  addPlant(
+    speciesId: string,
+    row: number,
+    col: number,
+    opts?: { instanceSeed?: number },
+  ): Entity;
+
+  /**
+   * Run a full week cycle: DAWN → PLAN → beginWork → endActions → (DUSK)
+   *                         → (ADVANCE) → next DAWN.
    */
   processWeek(): { tick: DuskTickResult; advance: AdvanceResult };
+
+  // ── Queries ────────────────────────────────────────────────────────
+
+  /** Get all living plants as PlantInfo snapshots. */
+  getPlants(): PlantInfo[];
+  /** Get soil state at a position. */
+  getSoil(row: number, col: number): SoilState | undefined;
+  /** Get a plant at a position. */
+  getPlantAt(row: number, col: number): PlantInfo | undefined;
+  /** Check if a plot is occupied by a living plant. */
+  isOccupied(row: number, col: number): boolean;
+  /** Check if coordinates are within the grid. */
+  inBounds(row: number, col: number): boolean;
+
+  // ── Serialization ──────────────────────────────────────────────────
+
+  /** Serialize the event log to JSON. */
+  toJSON(): GameEvent[];
+
+  /**
+   * Consume the last dusk tick result (if any). Used to display results
+   * from auto-transitions when energy runs out during an action.
+   */
+  consumeLastDuskResult(): DuskTickResult | undefined;
+
+  /**
+   * Bump the reactive store version counter. Call after directly mutating
+   * the ECS world (e.g. adding entities) so that derived stores update.
+   */
+  notifyWorldChanged(): void;
 }
 
 // ── Default soil factory ─────────────────────────────────────────────
 
-function defaultSoil(): SoilState {
+export function defaultSoil(): SoilState {
   return {
     ph: 6.5,
     nitrogen: 0.5,
@@ -130,6 +221,33 @@ function defaultSoil(): SoilState {
   };
 }
 
+// ── Plant entity → PlantInfo conversion ──────────────────────────────
+
+export function toPlantInfo(
+  p: With<Entity, 'species' | 'growth' | 'health' | 'plotSlot'>,
+): PlantInfo {
+  const entity = p as Entity;
+  return {
+    speciesId: p.species.speciesId,
+    row: p.plotSlot.row,
+    col: p.plotSlot.col,
+    stage: p.growth.stage,
+    progress: p.growth.progress,
+    health: p.health.value,
+    stress: p.health.stress,
+    dead: !!entity.dead,
+    conditions: entity.activeConditions?.conditions.map((c) => ({
+      conditionId: c.conditionId,
+      severity: c.severity,
+      stage: c.current_stage,
+    })) ?? [],
+    companionBuffs: entity.companionBuffs?.buffs.map((b) => ({
+      source: b.source,
+    })) ?? [],
+    harvestReady: !!entity.harvestState?.ripe,
+  };
+}
+
 // ── Session factory ──────────────────────────────────────────────────
 
 /**
@@ -137,6 +255,9 @@ function defaultSoil(): SoilState {
  *
  * Initializes ECS world with plot grid, pre-generates weather, wires
  * the turn manager's DUSK and ADVANCE phases to the simulation engine.
+ *
+ * Provides both reactive stores (for Svelte UI) and synchronous methods
+ * (for CLI, tests, headless agents).
  */
 export function createGameSession(config: GameSessionConfig): GameSession {
   const {
@@ -157,6 +278,10 @@ export function createGameSession(config: GameSessionConfig): GameSession {
 
   // ── Initialize event log with RUN_START ───────────────────────────
   eventLog.append({ type: 'RUN_START', seed, zone: zone.id });
+
+  // ── Set initial energy budget so it's visible from Week 1 DAWN ────
+  const week1Budget = calculateEnergyBudget(1, seasonWeather[0]);
+  turnManager.energy.set({ current: week1Budget, max: week1Budget });
 
   // ── Create plot grid with starting soil ───────────────────────────
   for (let r = 0; r < gridRows; r++) {
@@ -198,15 +323,26 @@ export function createGameSession(config: GameSessionConfig): GameSession {
     return [...world.with('plotSlot', 'soil')];
   });
 
+  // ── State tracking ─────────────────────────────────────────────────
+  let lastDuskResult: DuskTickResult | null = null;
+  let lastAdvanceResult: AdvanceResult | null = null;
+  let duskFrostResult: FrostResult = { killingFrost: false, killed: [] };
+  let runEnded = false;
+
   // ── DUSK phase handler ────────────────────────────────────────────
 
   function snapshotBeforeTick() {
     const plants = world.with('species', 'health', 'plotSlot');
     const stressBefore = new Map<string, number>();
+    const progressBefore = new Map<string, number>();
     const conditionsBefore = new Map<string, Set<string>>();
     for (const p of plants) {
       const key = `${p.plotSlot.row},${p.plotSlot.col}`;
       stressBefore.set(key, p.health.stress);
+      const growth = (p as Entity).growth;
+      if (growth) {
+        progressBefore.set(key, growth.progress);
+      }
       const conds = (p as Entity).activeConditions;
       if (conds) {
         conditionsBefore.set(key, new Set(conds.conditions.map((c) => c.conditionId)));
@@ -214,7 +350,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
         conditionsBefore.set(key, new Set());
       }
     }
-    return { stressBefore, conditionsBefore };
+    return { stressBefore, progressBefore, conditionsBefore };
   }
 
   function handleDusk(): DuskTickResult {
@@ -224,7 +360,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
     weatherIndex.set(weekIdx);
 
     // Snapshot pre-tick state for diff
-    const { stressBefore, conditionsBefore } = snapshotBeforeTick();
+    const { stressBefore, progressBefore, conditionsBefore } = snapshotBeforeTick();
 
     // Run the full simulation tick (soil → companion → growth → stress → disease → frost)
     const tickResult = runTick(simConfig, weather, currentWeek);
@@ -248,6 +384,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
           speciesId: p.species.speciesId,
           row: p.plotSlot.row,
           col: p.plotSlot.col,
+          prevProgress: progressBefore.get(key) ?? 0,
           progress: p.growth.progress,
           stage: p.growth.stage,
         });
@@ -260,6 +397,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
           speciesId: p.species.speciesId,
           row: p.plotSlot.row,
           col: p.plotSlot.col,
+          prevStress,
           stress: p.health.stress,
         });
       }
@@ -307,10 +445,6 @@ export function createGameSession(config: GameSessionConfig): GameSession {
 
   // ── ADVANCE phase handler ─────────────────────────────────────────
 
-  let lastAdvanceResult: AdvanceResult | null = null;
-  /** Frost result captured from the DUSK tick (used by ADVANCE). */
-  let duskFrostResult: FrostResult = { killingFrost: false, killed: [] };
-
   function handleAdvance(): AdvanceResult {
     const currentWeek = get(turnManager.week);
 
@@ -328,6 +462,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
 
     if (frost.killingFrost) {
       eventLog.append({ type: 'RUN_END', reason: 'frost' });
+      runEnded = true;
     }
 
     lastAdvanceResult = result;
@@ -337,8 +472,6 @@ export function createGameSession(config: GameSessionConfig): GameSession {
   }
 
   // ── Wire phase callbacks ──────────────────────────────────────────
-
-  let lastDuskResult: DuskTickResult | null = null;
 
   turnManager.onPhaseChange = (_from: TurnPhase, to: TurnPhase) => {
     if (to === TurnPhase.DUSK) {
@@ -376,23 +509,169 @@ export function createGameSession(config: GameSessionConfig): GameSession {
   // ── Public interface ──────────────────────────────────────────────
 
   return {
+    // Core subsystems
     world,
     turnManager,
     eventLog,
     rng,
     seasonWeather,
     seasonPests,
+    speciesLookup,
+    config,
+    gridRows,
+    gridCols,
 
+    // Reactive stores
     plants$,
     soilStates$,
     currentWeather$,
     tickResult$: { subscribe: tickResultStore.subscribe },
     advanceResult$: { subscribe: advanceResultStore.subscribe },
 
+    // Synchronous accessors
+    getPhase() {
+      return get(turnManager.phase);
+    },
+
+    getWeek() {
+      return get(turnManager.week);
+    },
+
+    getEnergy() {
+      return get(turnManager.energy);
+    },
+
+    canAct() {
+      return get(turnManager.canAct);
+    },
+
+    getCurrentWeather() {
+      const week = get(turnManager.week);
+      const idx = Math.min(week - 1, seasonWeather.length - 1);
+      return seasonWeather[idx];
+    },
+
+    isRunEnded() {
+      return runEnded;
+    },
+
+    // Actions
     dispatch(event: GameEvent) {
       eventLog.append(event);
     },
 
+    advancePhase() {
+      const phaseBefore = get(turnManager.phase);
+
+      if (phaseBefore === TurnPhase.PLAN) {
+        // PLAN → ACT: set energy budget
+        const week = get(turnManager.week);
+        const idx = Math.min(week - 1, seasonWeather.length - 1);
+        const weather = seasonWeather[idx];
+        turnManager.beginWork(weather);
+        return { phase: get(turnManager.phase) };
+      }
+
+      turnManager.advancePhase();
+      const newPhase = get(turnManager.phase);
+
+      return {
+        phase: newPhase,
+        dusk: phaseBefore === TurnPhase.ACT ? lastDuskResult ?? undefined : undefined,
+        advance: phaseBefore === TurnPhase.DUSK ? lastAdvanceResult ?? undefined : undefined,
+      };
+    },
+
+    spendEnergy(cost: number) {
+      return turnManager.spendEnergy(cost);
+    },
+
+    endActions() {
+      turnManager.endActions();
+      return lastDuskResult ?? undefined;
+    },
+
+    addPlant(
+      speciesId: string,
+      row: number,
+      col: number,
+      opts?: { instanceSeed?: number },
+    ): Entity {
+      const species = speciesLookup(speciesId);
+      const entity: Partial<Entity> = {
+        plotSlot: { row, col },
+        species: { speciesId },
+        growth: { progress: 0, stage: 'seed', rate_modifier: 1.0 },
+        health: { value: 1.0, stress: 0 },
+        activeConditions: { conditions: [] },
+        companionBuffs: { buffs: [] },
+      };
+      if (species) {
+        entity.harvestState = {
+          ripe: false,
+          remaining: species.harvest.yield_potential,
+          quality: 1.0,
+        };
+        if (opts?.instanceSeed !== undefined) {
+          entity.visual = { params: species.visual, instanceSeed: opts.instanceSeed };
+        }
+      }
+      const added = world.add(entity as Entity);
+      worldVersion.update((v) => v + 1);
+      return added;
+    },
+
     processWeek,
+
+    // Queries
+    getPlants() {
+      const plants = world.with('species', 'growth', 'health', 'plotSlot');
+      return [...plants]
+        .filter((p) => !(p as Entity).dead)
+        .map(toPlantInfo);
+    },
+
+    getSoil(row: number, col: number) {
+      return getPlotAt(world, row, col)?.soil;
+    },
+
+    getPlantAt(row: number, col: number) {
+      const plants = world.with('species', 'growth', 'health', 'plotSlot');
+      for (const p of plants) {
+        if (p.plotSlot.row === row && p.plotSlot.col === col && !(p as Entity).dead) {
+          return toPlantInfo(p);
+        }
+      }
+      return undefined;
+    },
+
+    isOccupied(row: number, col: number) {
+      const plants = world.with('species', 'plotSlot');
+      for (const p of plants) {
+        if (p.plotSlot.row === row && p.plotSlot.col === col && !(p as Entity).dead) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    inBounds(row: number, col: number) {
+      return row >= 0 && row < gridRows && col >= 0 && col < gridCols;
+    },
+
+    // Serialization
+    toJSON() {
+      return eventLog.toJSON();
+    },
+
+    consumeLastDuskResult() {
+      const result = lastDuskResult;
+      lastDuskResult = null;
+      return result ?? undefined;
+    },
+
+    notifyWorldChanged() {
+      worldVersion.update((v) => v + 1);
+    },
   };
 }

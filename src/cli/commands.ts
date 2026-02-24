@@ -281,13 +281,8 @@ export function executeCommand(session: CliSession, input: string): CommandResul
         week,
       });
 
-      // Add plant entity to ECS world
-      session.world.add({
-        plotSlot: { row: rc.row, col: rc.col },
-        species: { speciesId },
-        growth: { progress: 0, stage: 'seed', rate_modifier: 1.0 },
-        health: { value: 1.0, stress: 0 },
-      });
+      // Add plant entity via shared factory
+      session.addPlant(speciesId, rc.row, rc.col);
 
       const energy = session.getEnergy();
       let output = `Planted ${species.common_name} (${speciesId}) at [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`;

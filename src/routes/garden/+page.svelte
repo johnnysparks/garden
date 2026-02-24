@@ -250,8 +250,8 @@
 	function onSelectSeed(speciesId: string) {
 		if (!selectedPlot || !session) return;
 
-		// Spend energy via turn manager (returns false if insufficient)
-		if (!session.turnManager.spendEnergy(1)) return;
+		// Spend energy via session (returns false if insufficient)
+		if (!session.spendEnergy(1)) return;
 
 		// Dispatch PLANT event through the session's event log
 		session.dispatch({
@@ -261,25 +261,9 @@
 			week: season.week,
 		});
 
-		// Add plant entity to session's ECS world
-		const species = getSpecies(speciesId);
-		if (species) {
-			const instanceSeed = get(session.turnManager.week) * 1000 + selectedPlot.row * 10 + selectedPlot.col;
-			session.world.add({
-				plotSlot: { row: selectedPlot.row, col: selectedPlot.col },
-				species: { speciesId },
-				growth: { progress: 0.0, stage: 'seed', rate_modifier: 1.0 },
-				health: { value: 1.0, stress: 0 },
-				visual: { params: species.visual, instanceSeed },
-				harvestState: {
-					ripe: false,
-					remaining: species.harvest.yield_potential,
-					quality: 1.0,
-				},
-				activeConditions: { conditions: [] },
-				companionBuffs: { buffs: [] },
-			});
-		}
+		// Add plant entity via shared factory (includes visual for rendering)
+		const instanceSeed = get(session.turnManager.week) * 1000 + selectedPlot.row * 10 + selectedPlot.col;
+		session.addPlant(speciesId, selectedPlot.row, selectedPlot.col, { instanceSeed });
 
 		// If energy depleted, spendEnergy auto-transitions to DUSK.
 		// The $effect handles DUSK → ADVANCE → DAWN automatically.
