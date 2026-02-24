@@ -428,6 +428,44 @@ describe('getWeatherModifier', () => {
   });
 });
 
+// ── Energy reset on new week ─────────────────────────────────────────
+
+describe('energy reset on new week (ADVANCE → DAWN)', () => {
+  it('resets energy to 0/0 when transitioning from ADVANCE to DAWN', () => {
+    const tm = createTurnManager();
+    const weather = makeDefaultWeather();
+
+    // Complete a full cycle: energy will be set and partially/fully spent
+    tm.advancePhase();     // DAWN → PLAN
+    tm.beginWork(weather); // PLAN → ACT (energy set to budget)
+    tm.spendEnergy(1);     // spend some energy so stale value is non-zero
+    tm.endActions();       // ACT → DUSK
+    tm.advancePhase();     // DUSK → ADVANCE
+    tm.advancePhase();     // ADVANCE → DAWN (new week)
+
+    // Energy should be reset — not left at a stale value from the previous week
+    const e = get(tm.energy);
+    expect(e.current).toBe(0);
+    expect(e.max).toBe(0);
+  });
+
+  it('resets energy to 0/0 even when energy was exhausted during ACT', () => {
+    const tm = createTurnManager();
+    const weather = makeDefaultWeather();
+
+    tm.advancePhase();     // → PLAN
+    tm.beginWork(weather); // → ACT, energy = budget
+    const budget = get(tm.energy).max;
+    tm.spendEnergy(budget); // exhausts energy, auto-transitions to DUSK
+    tm.advancePhase();      // DUSK → ADVANCE
+    tm.advancePhase();      // ADVANCE → DAWN
+
+    const e = get(tm.energy);
+    expect(e.current).toBe(0);
+    expect(e.max).toBe(0);
+  });
+});
+
 // ── Frost check ─────────────────────────────────────────────────────
 
 describe('checkFrost', () => {
