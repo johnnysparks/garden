@@ -1,26 +1,62 @@
 # 07 — Technical Architecture
 
+## Two Interfaces
+
+Perennial has two interfaces to the same engine core. See [08-CLI-INTERFACE.md](./08-CLI-INTERFACE.md) for full CLI design.
+
+| | Web UI | CLI |
+|---|---|---|
+| **Entry point** | SvelteKit routes (`src/routes/`) | Node CLI script (`src/cli/`) |
+| **Rendering** | Parametric SVG ([06-VISUAL-SYSTEM.md](./06-VISUAL-SYSTEM.md)) | Structured text (ASCII grid, tables) |
+| **Persistence** | Dexie.js (IndexedDB) | Event log JSON files on disk |
+| **Input** | Touch/mouse gestures, UI buttons | CLI commands via stdin |
+| **State reactivity** | Svelte stores + event sourcing | Event sourcing only |
+| **Target user** | Human player | Human player, LLM agent, scripts |
+
 ## Stack
+
+### Shared (Engine + Data)
+
+|Layer      |Choice                        |Version|Why                                                            |
+|-----------|------------------------------|-------|---------------------------------------------------------------|
+|Language   |TypeScript                    |5.x    |Type safety for complex game state                             |
+|ECS        |miniplex                      |latest |Entity-component-system for game entities                      |
+|State      |Event sourcing                |—      |Replayable game log, deterministic replay                      |
+|Validation |Zod                           |latest |Schema validation for species JSON at build time               |
+|Testing    |Vitest                        |latest |Unit and integration tests                                     |
+
+### Web UI Only
 
 |Layer      |Choice                        |Version|Why                                                            |
 |-----------|------------------------------|-------|---------------------------------------------------------------|
 |Framework  |SvelteKit                     |2.x    |Lightweight, native stores, transitions, SSR for landing page  |
-|Language   |TypeScript                    |5.x    |Type safety for complex game state                             |
 |Rendering  |SVG (DOM-native)              |—      |Parametric plants, Svelte component integration                |
 |Animation  |svelte/motion + rAF loop      |—      |Spring physics for growth, manual loop for continuous animation|
-|ECS        |miniplex                      |latest |Entity-component-system for game entities                      |
-|State      |Svelte stores + event sourcing|—      |Reactive UI + replayable game log                              |
+|Reactivity |Svelte stores                 |—      |Reactive UI derived from event log                             |
 |Audio      |Tone.js                       |latest |Procedural ambient sound                                       |
 |Persistence|Dexie.js (IndexedDB)          |latest |Offline-first local storage                                    |
 |Gestures   |use-gesture (or Hammer.js)    |latest |Pinch/zoom/drag on mobile                                      |
 |Build      |Vite                          |latest |SvelteKit default bundler                                      |
 |PWA        |vite-plugin-pwa               |latest |Offline capability, installable                                |
 
+### CLI Only
+
+|Layer      |Choice                        |Version|Why                                                            |
+|-----------|------------------------------|-------|---------------------------------------------------------------|
+|Runtime    |Node.js                       |20+    |Direct engine import, no browser needed                        |
+|I/O        |readline (Node built-in)      |—      |Interactive REPL + piped command support                        |
+|Persistence|fs (JSON files)               |—      |Serialize event log to disk                                    |
+
 ## Project Structure
 
 ```
 perennial/
 ├── src/
+│   ├── cli/                       # CLI interface (no Svelte/browser dependencies)
+│   │   ├── index.ts               # Entry point, arg parsing, REPL loop
+│   │   ├── commands.ts            # Command parser + dispatcher
+│   │   ├── formatter.ts           # Text output formatters (grid, status, inspect)
+│   │   └── session.ts             # CLI-specific GameSession wrapper
 │   ├── lib/
 │   │   ├── engine/                # Game simulation (no UI dependencies)
 │   │   │   ├── ecs/
@@ -126,14 +162,15 @@ perennial/
 
 ## Data Flow
 
+### Shared Core
+
 ```
                     ┌──────────────┐
-                    │  Player      │
-                    │  Input       │
+                    │  Input       │  ← Web UI buttons / CLI commands
                     └──────┬───────┘
                            │
                     ┌──────▼───────┐
-                    │  Event       │  ← All player actions become events
+                    │  Event       │  ← All actions become GameEvents
                     │  Dispatch    │
                     └──────┬───────┘
                            │
@@ -143,26 +180,36 @@ perennial/
                 └──────────┬──────────┘
                            │
               ┌────────────▼────────────┐
-              │  Game State Stores      │  ← Derived from event replay
-              │  (Svelte writable)      │
-              └────────────┬────────────┘
-                           │
-              ┌────────────▼────────────┐
-              │  Simulation Tick        │  ← Triggered at week advance
+              │  Simulation Tick        │  ← Triggered at DUSK phase
               │  (simulation.ts)        │
               │  Runs ECS systems       │
               └────────────┬────────────┘
                            │
               ┌────────────▼────────────┐
               │  Updated Entity State   │  ← New plant states, soil, etc.
-              └─────┬──────────┬────────┘
-                    │          │
-         ┌──────────▼──┐  ┌───▼──────────┐
-         │  Render      │  │  UI Updates   │
-         │  Pipeline    │  │  (stores →    │
-         │  (SVG)       │  │   components) │
-         └──────────────┘  └──────────────┘
+              └────────────┬────────────┘
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+     ┌────────▼────────┐      ┌────────▼────────┐
+     │  Web UI          │      │  CLI             │
+     │  Svelte stores → │      │  Formatted text  │
+     │  SVG render +    │      │  to stdout       │
+     │  animation       │      │                  │
+     └─────────────────┘      └─────────────────┘
 ```
+
+### Web UI Path
+
+Input → Event → Log → Svelte stores (reactive) → SVG render pipeline → Animation layer
+
+Persistence: Event log → Dexie (IndexedDB)
+
+### CLI Path
+
+Input (stdin) → Command parser → Event → Log → Text formatter → stdout
+
+Persistence: Event log → JSON file (fs)
 
 ## ECS Architecture
 

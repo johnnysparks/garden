@@ -1,4 +1,6 @@
-# 06 — Visual System
+# 06 — Visual System (Web UI Only)
+
+> This document describes the parametric SVG rendering and animation system for the **web UI** interface. It does not apply to the CLI interface, which uses structured text output instead. See [08-CLI-INTERFACE.md](./08-CLI-INTERFACE.md) for CLI output format.
 
 ## Art Direction
 
