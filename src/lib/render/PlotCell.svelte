@@ -90,6 +90,16 @@
 				<ellipse cx="8" cy="7" rx="1.5" ry="0.8" fill="#795548" opacity="0.5" />
 				<ellipse cx="5" cy="9" rx="1" ry="0.5" fill="#6d4c41" opacity="0.4" />
 			</pattern>
+			<!-- Selection glow filter -->
+			{#if selected}
+				<filter id="sel-glow" x="-20%" y="-20%" width="140%" height="140%">
+					<feGaussianBlur stdDeviation="3" result="blur" />
+					<feMerge>
+						<feMergeNode in="blur" />
+						<feMergeNode in="SourceGraphic" />
+					</feMerge>
+				</filter>
+			{/if}
 		</defs>
 
 		<!-- Soil background -->
@@ -153,8 +163,20 @@
 			</g>
 		{/if}
 
-		<!-- Selection border -->
+		<!-- Selection glow + border -->
 		{#if selected}
+			<rect
+				x="1"
+				y="1"
+				width={CELL_SVG - 2}
+				height={CELL_SVG - 2}
+				fill="none"
+				stroke={palette.accent}
+				stroke-width="2"
+				rx="2"
+				opacity="0.4"
+				filter="url(#sel-glow)"
+			/>
 			<rect
 				x="1.5"
 				y="1.5"
@@ -162,9 +184,9 @@
 				height={CELL_SVG - 3}
 				fill="none"
 				stroke={palette.accent}
-				stroke-width="3"
+				stroke-width="2.5"
 				rx="2"
-				opacity="0.8"
+				opacity="0.85"
 			/>
 		{/if}
 	</svg>
@@ -184,7 +206,9 @@
 	}
 
 	.plot-cell.selected {
-		box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+		box-shadow:
+			0 0 0 2px rgba(255, 255, 255, 0.5),
+			0 0 8px 1px rgba(255, 255, 255, 0.15);
 	}
 
 	svg {

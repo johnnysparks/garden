@@ -8,6 +8,15 @@
 import type { WeekWeather } from '../engine/weather-gen.js';
 import type { SeasonId } from '../render/palette.js';
 
+// ── Turn phase state ────────────────────────────────────────────────
+
+/** Weekly cycle phases. */
+export type TurnPhase = 'DAWN' | 'PLAN' | 'ACT' | 'DUSK' | 'ADVANCE';
+
+export const turn = $state({
+	phase: 'ACT' as TurnPhase,
+});
+
 // ── Season state ────────────────────────────────────────────────────
 
 export const season = $state({
