@@ -285,6 +285,19 @@ export interface Lore {
 }
 
 // ---------------------------------------------------------------------------
+// Soil amendments
+// ---------------------------------------------------------------------------
+
+/** Soil amendment definition loaded from JSON data. */
+export interface SoilAmendment {
+  id: string;
+  name: string;
+  /** Soil state deltas applied after delay period. Keys are SoilState field names. */
+  effects: Record<string, number>;
+  delay_weeks: number;
+}
+
+// ---------------------------------------------------------------------------
 // Top-level species
 // ---------------------------------------------------------------------------
 

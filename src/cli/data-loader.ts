@@ -11,7 +11,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PlantSpeciesSchema } from '../lib/data/schema.js';
 import { ClimateZoneSchema, type ClimateZone } from '../lib/engine/weather-gen.js';
-import type { PlantSpecies } from '../lib/data/types.js';
+import type { PlantSpecies, SoilAmendment } from '../lib/data/types.js';
 import type { SpeciesLookup } from '../lib/engine/ecs/components.js';
 
 // ── Path resolution ─────────────────────────────────────────────────
@@ -70,14 +70,10 @@ export function getAllSpeciesIds(): string[] {
 
 // ── Amendment loading ────────────────────────────────────────────────
 
-export interface AmendmentDef {
-  id: string;
-  name: string;
-  effects: Record<string, number>;
-  delay_weeks: number;
-}
+/** @deprecated Use `SoilAmendment` from `src/lib/data/types.ts` instead. */
+export type AmendmentDef = SoilAmendment;
 
-let amendmentsList: AmendmentDef[] | null = null;
+let amendmentsList: SoilAmendment[] | null = null;
 
 function loadAmendments(): void {
   if (amendmentsList !== null) return;
@@ -88,13 +84,13 @@ function loadAmendments(): void {
 }
 
 /** Get all available amendments. */
-export function getAllAmendments(): AmendmentDef[] {
+export function getAllAmendments(): SoilAmendment[] {
   loadAmendments();
   return amendmentsList!;
 }
 
 /** Look up an amendment by id. */
-export function getAmendment(id: string): AmendmentDef | undefined {
+export function getAmendment(id: string): SoilAmendment | undefined {
   loadAmendments();
   return amendmentsList!.find((a) => a.id === id);
 }
