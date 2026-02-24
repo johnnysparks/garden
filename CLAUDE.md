@@ -63,7 +63,7 @@ src/
       scoring.ts            # End-of-run score calculation
       rng.ts                # Seeded PRNG (xoshiro128**), deterministic runs
     data/
-      types.ts              # TypeScript interfaces matching 02-PLANT-SCHEMA.md
+      types.ts              # TypeScript interfaces matching docs/02-PLANT-SCHEMA.md
       schema.ts             # Zod schemas for build-time JSON validation
       loader.ts             # Vite glob import of species JSON + validation
       index.ts              # Re-exports for data module
@@ -183,17 +183,17 @@ The static adapter outputs to `build/` with base path `/garden` in production.
 
 ## Design Documents
 
-The numbered markdown files at the repo root are the game design documents:
+The numbered markdown files in `docs/` are the game design documents:
 
 | Doc | Contents |
 |-----|----------|
-| `00-OVERVIEW.md` | Game concept, run structure, scoring, meta-progression overview |
-| `01-ACTIONS-AND-TURN.md` | Weekly turn phases (DAWN/PLAN/ACT/DUSK/ADVANCE), energy budget, action types |
-| `02-PLANT-SCHEMA.md` | Full PlantSpecies interface, visual params, example JSON |
-| `03-SIMULATION.md` | Tick order, weather/soil/growth/disease/pest/frost systems |
-| `04-DIAGNOSES.md` | Diagnosis interaction design — the core learning mechanic |
-| `05-META-PROGRESSION.md` | Seed bank, field journal, climate ladder, tool unlocks |
-| `06-VISUAL-SYSTEM.md` | Parametric SVG rendering, animation, season palette |
-| `07-ARCHITECTURE.md` | Technical stack, project structure, ECS, event sourcing, persistence |
+| `docs/00-OVERVIEW.md` | Game concept, run structure, scoring, meta-progression overview |
+| `docs/01-ACTIONS-AND-TURN.md` | Weekly turn phases (DAWN/PLAN/ACT/DUSK/ADVANCE), energy budget, action types |
+| `docs/02-PLANT-SCHEMA.md` | Full PlantSpecies interface, visual params, example JSON |
+| `docs/03-SIMULATION.md` | Tick order, weather/soil/growth/disease/pest/frost systems |
+| `docs/04-DIAGNOSES.md` | Diagnosis interaction design — the core learning mechanic |
+| `docs/05-META-PROGRESSION.md` | Seed bank, field journal, climate ladder, tool unlocks |
+| `docs/06-VISUAL-SYSTEM.md` | Parametric SVG rendering, animation, season palette |
+| `docs/07-ARCHITECTURE.md` | Technical stack, project structure, ECS, event sourcing, persistence |
 
 These documents are the authoritative reference for game mechanics and should be consulted when implementing new features.
