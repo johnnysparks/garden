@@ -1,0 +1,22 @@
+{
+  "id": "zone_8a",
+  "name": "USDA Zone 8a — Pacific Northwest",
+  "avg_temps_by_week": [
+    10, 11, 12, 13, 14, 16, 18, 20, 22, 24,
+    26, 27, 28, 29, 29, 29, 28, 27, 26, 24,
+    22, 20, 18, 16, 14, 12, 10, 9, 8, 7
+  ],
+  "temp_variance": 3.0,
+  "precip_pattern": "winter_wet",
+  "frost_free_weeks": [6, 24],
+  "first_frost_week_avg": 25,
+  "humidity_baseline": 0.65,
+  "special_event_weights": {
+    "heatwave": 0.03,
+    "drought": 0.02,
+    "heavy_rain": 0.04,
+    "hail": 0.015,
+    "early_frost": 0.02,
+    "indian_summer": 0.03
+  }
+}
