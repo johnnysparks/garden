@@ -83,12 +83,22 @@ function nutrientAdequacy(soilLevel: number, need: NutrientLevel): number {
 
 /**
  * Total expected weeks across all growth stages (average of each range).
+ * Used by determineStage to distribute progress proportionally across stages.
  */
 export function totalExpectedWeeks(species: PlantSpecies): number {
   return species.growth.stages.reduce(
     (sum, s) => sum + (s.duration_weeks[0] + s.duration_weeks[1]) / 2,
     0,
   );
+}
+
+/**
+ * Average weeks to maturity from the species days_to_maturity range.
+ * This represents the expected weeks to reach harvest under good conditions.
+ */
+export function maturityWeeks(species: PlantSpecies): number {
+  const [lo, hi] = species.growth.days_to_maturity;
+  return (lo + hi) / 2;
 }
 
 /**
@@ -125,18 +135,10 @@ export function growthTickSystem(ctx: SimulationContext): void {
     if (!soil) continue;
 
     // ── base_rate ────────────────────────────────────────────────
-    const weeks = totalExpectedWeeks(species);
+    const weeks = maturityWeeks(species);
     const baseRate = GROWTH_RATE_VALUE[species.growth.growth_rate] / weeks;
 
     // ── temp_modifier (gaussian around ideal growing temp) ───────
-    // TODO: BUG — Growth is extremely slow for warm-season crops in zone_8a.
-    // With soil temp ~7-12°C for the first 8+ weeks, the Gaussian curve
-    // (ideal=25°C for tomato, ideal=28°C for basil, tolerance=8) yields
-    // tempMod ≈ 0.03–0.08, effectively zeroing growth. After 11 weeks,
-    // tomato and basil are only at 12% (expected ~70-100%). Combined with
-    // the soil temp init bug (starts at 20°C, drops to 7°C), this makes
-    // warm-season crops nearly unplayable. Consider: wider tolerance,
-    // lower ideal temp, or a minimum growth floor so plants aren't fully stalled.
     const soilTemp = soil.temperature_c;
     const idealTemp = species.needs.soil_temp_min_c + 10;
     const tempMod = gaussianFit(soilTemp, idealTemp, 8);

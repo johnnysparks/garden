@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createWorld } from '../../src/lib/engine/ecs/world.js';
 import type { GameWorld } from '../../src/lib/engine/ecs/world.js';
-import { growthTickSystem, gaussianFit, totalExpectedWeeks, determineStage } from '../../src/lib/engine/ecs/systems/growth.js';
+import { growthTickSystem, gaussianFit, totalExpectedWeeks, maturityWeeks, determineStage } from '../../src/lib/engine/ecs/systems/growth.js';
 import { createRng } from '../../src/lib/engine/rng.js';
 import type { SimulationContext } from '../../src/lib/engine/ecs/components.js';
 import {
@@ -58,6 +58,23 @@ describe('growth helpers', () => {
       const total = totalExpectedWeeks(BASIL);
       // seed(1) + germ(1) + seedling(1.5) + veg(4) + flower(2.5) + fruit(1.5) + sen(1.5) = 13
       expect(total).toBeCloseTo(13);
+    });
+  });
+
+  describe('maturityWeeks', () => {
+    it('returns average of days_to_maturity for tomato', () => {
+      // (12 + 16) / 2 = 14
+      expect(maturityWeeks(TOMATO)).toBeCloseTo(14);
+    });
+
+    it('returns average of days_to_maturity for basil', () => {
+      // (8 + 10) / 2 = 9
+      expect(maturityWeeks(BASIL)).toBeCloseTo(9);
+    });
+
+    it('is shorter than totalExpectedWeeks (maturity < full lifecycle)', () => {
+      expect(maturityWeeks(TOMATO)).toBeLessThan(totalExpectedWeeks(TOMATO));
+      expect(maturityWeeks(BASIL)).toBeLessThan(totalExpectedWeeks(BASIL));
     });
   });
 
@@ -212,6 +229,27 @@ describe('growthTickSystem', () => {
     growthTickSystem(makeCtx(world));
 
     expect(plant.growth!.progress).toBeGreaterThan(noBuffPlant.growth!.progress);
+  });
+
+  it('plant reaches maturity within days_to_maturity under ideal conditions', () => {
+    // Ideal conditions: perfect soil temp for tomato, good moisture and nutrients
+    setupSinglePlot(world, 0, 0, {
+      moisture: 0.5,
+      nitrogen: 0.8,
+      phosphorus: 0.8,
+      potassium: 0.8,
+      temperature_c: 25, // ideal for tomato (soil_temp_min_c=15, ideal=25)
+    });
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    const ctx = makeCtx(world);
+    // Tomato days_to_maturity = [12, 16], avg = 14 weeks
+    // With fast growth rate (1.3) and ideal conditions, should reach 100% well within 16 weeks
+    for (let i = 0; i < 16; i++) {
+      growthTickSystem(ctx);
+    }
+
+    expect(plant.growth!.progress).toBeGreaterThanOrEqual(0.9);
   });
 
   it('allelopathy debuff reduces growth', () => {
