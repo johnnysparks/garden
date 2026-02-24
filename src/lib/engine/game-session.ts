@@ -215,6 +215,11 @@ export function defaultSoil(): SoilState {
     potassium: 0.5,
     organic_matter: 0.4,
     moisture: 0.5,
+    // TODO: BUG — Initial soil temp of 20°C is unrealistic for early spring.
+    // In zone_8a week 1, air temp is ~8°C high / -5°C low, but soil starts at 20°C.
+    // The soil system then rapidly cools it to ~7°C, causing warm-season crops
+    // (tomato, basil) to stall for many weeks. Should initialize based on zone's
+    // early-season air temperature, e.g. avgTemp of week 1 weather.
     temperature_c: 20,
     compaction: 0.2,
     biology: 0.5,
