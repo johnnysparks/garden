@@ -246,6 +246,22 @@ describe('harvestCheckSystem', () => {
     expect(hs!.ripe).toBe(true);
   });
 
+  it('does not mark immature plants as harvestable even in the harvest window', () => {
+    for (const stage of ['seed', 'germination', 'seedling'] as const) {
+      const w = createWorld();
+      setupSinglePlot(w, 0, 0);
+      const plant = plantSpecies(w, 'tomato_cherokee_purple', 0, 0);
+      plant.growth!.stage = stage;
+      plant.growth!.progress = 0.05;
+
+      // Week 15 is in tomato harvest_window [12, 22]
+      harvestCheckSystem(makeCtx(w, { currentWeek: 15 }));
+
+      const hs = (plant as { harvestState?: { ripe: boolean } }).harvestState;
+      expect(hs, `${stage} plant should not be harvestable`).toBeUndefined();
+    }
+  });
+
   it('handles exact end of harvest window', () => {
     setupSinglePlot(world, 0, 0);
     const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);

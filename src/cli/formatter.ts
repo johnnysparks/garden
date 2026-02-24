@@ -196,6 +196,82 @@ export function formatInspect(session: CliSession, row: number, col: number): st
   return lines.join('\n');
 }
 
+// ── Diagnose ────────────────────────────────────────────────────────
+
+export function formatDiagnose(session: CliSession, row: number, col: number): string {
+  const plant = session.getPlantAt(row, col);
+  if (!plant) {
+    return `Error: No plant at [${row}, ${col}].`;
+  }
+
+  const species = session.speciesLookup(plant.speciesId);
+  const name = species ? `${species.common_name}` : plant.speciesId;
+  const lines: string[] = [];
+  lines.push(`=== Diagnosis: ${name} [${row}, ${col}] ===`);
+  lines.push(`Stage: ${plant.stage} (${pct(plant.progress)})`);
+  lines.push(`Health: ${fixed(plant.health)} | Stress: ${fixed(plant.stress)}${plant.stress > 0.2 ? ' !' : ''}`);
+
+  // Active conditions with symptom descriptions
+  if (plant.conditions.length > 0) {
+    lines.push('');
+    lines.push('Active conditions:');
+    for (const cond of plant.conditions) {
+      lines.push(`  ${cond.conditionId} — severity ${fixed(cond.severity)}, stage ${cond.stage}`);
+      if (species) {
+        const vuln = species.vulnerabilities.find((v) => v.condition_id === cond.conditionId);
+        if (vuln && vuln.symptoms.stages[cond.stage]) {
+          const symptom = vuln.symptoms.stages[cond.stage];
+          lines.push(`    Symptom: ${symptom.description}`);
+          lines.push(`    Reversible: ${symptom.reversible ? 'yes' : 'no'}`);
+          if (vuln.symptoms.weeks_to_death !== null) {
+            lines.push(`    Lethal after ${vuln.symptoms.weeks_to_death} weeks if untreated`);
+          }
+        }
+      }
+    }
+  } else {
+    lines.push('');
+    lines.push('No active conditions detected.');
+  }
+
+  // Environmental assessment
+  const soil = session.getSoil(row, col);
+  if (soil && species) {
+    lines.push('');
+    lines.push('Environmental assessment:');
+    const warnings: string[] = [];
+
+    if (soil.ph < species.needs.soil_ph[0]) {
+      warnings.push(`  Soil pH ${fixed(soil.ph)} is below preferred range (${species.needs.soil_ph[0]}-${species.needs.soil_ph[1]})`);
+    } else if (soil.ph > species.needs.soil_ph[1]) {
+      warnings.push(`  Soil pH ${fixed(soil.ph)} is above preferred range (${species.needs.soil_ph[0]}-${species.needs.soil_ph[1]})`);
+    }
+
+    if (soil.temperature_c < species.needs.soil_temp_min_c) {
+      warnings.push(`  Soil temp ${fixed(soil.temperature_c)}C is below minimum ${species.needs.soil_temp_min_c}C`);
+    }
+
+    const minNutrient = Math.min(soil.nitrogen, soil.phosphorus, soil.potassium);
+    if (minNutrient < 0.3) {
+      warnings.push(`  Low nutrients — N: ${fixed(soil.nitrogen)}, P: ${fixed(soil.phosphorus)}, K: ${fixed(soil.potassium)}`);
+    }
+
+    if (soil.moisture < 0.2) {
+      warnings.push(`  Soil moisture critically low (${fixed(soil.moisture)})`);
+    } else if (soil.moisture > 0.8) {
+      warnings.push(`  Soil moisture excessive (${fixed(soil.moisture)}) — risk of root rot`);
+    }
+
+    if (warnings.length > 0) {
+      for (const w of warnings) lines.push(w);
+    } else {
+      lines.push('  Conditions look good for this species.');
+    }
+  }
+
+  return lines.join('\n');
+}
+
 // ── Weather ──────────────────────────────────────────────────────────
 
 export function formatWeather(session: CliSession): string {

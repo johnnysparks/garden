@@ -68,6 +68,37 @@ export function getAllSpeciesIds(): string[] {
   return Array.from(speciesMap.keys());
 }
 
+// ── Amendment loading ────────────────────────────────────────────────
+
+export interface AmendmentDef {
+  id: string;
+  name: string;
+  effects: Record<string, number>;
+  delay_weeks: number;
+}
+
+let amendmentsList: AmendmentDef[] | null = null;
+
+function loadAmendments(): void {
+  if (amendmentsList !== null) return;
+
+  const filePath = join(DATA_DIR, 'amendments.json');
+  const raw = JSON.parse(readFileSync(filePath, 'utf-8'));
+  amendmentsList = Array.isArray(raw) ? raw : [];
+}
+
+/** Get all available amendments. */
+export function getAllAmendments(): AmendmentDef[] {
+  loadAmendments();
+  return amendmentsList!;
+}
+
+/** Look up an amendment by id. */
+export function getAmendment(id: string): AmendmentDef | undefined {
+  loadAmendments();
+  return amendmentsList!.find((a) => a.id === id);
+}
+
 // ── Zone loading ────────────────────────────────────────────────────
 
 const zoneMap = new Map<string, ClimateZone>();

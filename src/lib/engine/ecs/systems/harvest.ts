@@ -22,6 +22,9 @@ const QUALITY_DECAY_PER_WEEK = 0.15;
 /** Minimum quality floor — produce never drops below this. */
 const QUALITY_FLOOR = 0.1;
 
+/** Growth stages too early for any harvest — plant has no usable produce yet. */
+const PRE_HARVEST_STAGES = new Set(['seed', 'germination', 'seedling']);
+
 // ── System ───────────────────────────────────────────────────────────
 
 export function harvestCheckSystem(ctx: SimulationContext): void {
@@ -38,10 +41,11 @@ export function harvestCheckSystem(ctx: SimulationContext): void {
     const [windowStart, windowEnd] = species.season.harvest_window;
     const inWindow = currentWeek >= windowStart && currentWeek <= windowEnd;
     const healthyEnough = plant.health.value >= HARVEST_HEALTH_MINIMUM;
+    const matureEnough = !PRE_HARVEST_STAGES.has(plant.growth.stage);
 
     const existing = (plant as { harvestState?: { ripe: boolean; remaining: number; quality: number } }).harvestState;
 
-    if (inWindow && healthyEnough) {
+    if (inWindow && healthyEnough && matureEnough) {
       if (!existing) {
         // First time entering the harvest window — initialize harvest state
         world.addComponent(plant, 'harvestState', {

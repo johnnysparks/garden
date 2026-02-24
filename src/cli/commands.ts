@@ -9,7 +9,7 @@ import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { TurnPhase } from '../lib/engine/turn-manager.js';
 import type { CliSession, DuskTickResult, AdvanceResult } from './session.js';
 import { createCliSession, type CliSessionConfig } from './session.js';
-import { getAllSpecies, getAllSpeciesIds, getSpeciesLookup, getZone } from './data-loader.js';
+import { getAllSpecies, getAllSpeciesIds, getSpeciesLookup, getZone, getAllAmendments, getAmendment } from './data-loader.js';
 import type { PlantSpecies } from '../lib/data/types.js';
 import {
   formatStatus,
@@ -24,6 +24,7 @@ import {
   formatAdvance,
   formatLog,
   formatHelp,
+  formatDiagnose,
 } from './formatter.js';
 
 // ── Command result ───────────────────────────────────────────────────
@@ -123,8 +124,17 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       return { output: formatSpeciesList(getAllSpecies()) };
     }
 
-    case 'amendments':
-      return { output: 'Amendments: none defined yet.' };
+    case 'amendments': {
+      const amendments = getAllAmendments();
+      if (amendments.length === 0) {
+        return { output: 'No amendments available.' };
+      }
+      const lines = [`=== Available Amendments (${amendments.length}) ===`];
+      for (const a of amendments) {
+        lines.push(`  ${a.id}: ${a.name} (delay: ${a.delay_weeks} weeks)`);
+      }
+      return { output: lines.join('\n') };
+    }
 
     case 'log': {
       const count = args.length > 0 ? parseInt(args[0], 10) : 10;
@@ -250,9 +260,20 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       if (args.length < 3) {
         return { output: 'Error: Usage: amend AMENDMENT ROW COL' };
       }
-      const amendment = args[0];
+      const amendmentId = args[0];
       const rc = parseRowCol(args.slice(1));
       if (typeof rc === 'string') return { output: `Error: ${rc}` };
+
+      const amendmentDef = getAmendment(amendmentId);
+      if (!amendmentDef) {
+        const available = getAllAmendments();
+        if (available.length === 0) {
+          return { output: 'Error: No amendments available.' };
+        }
+        return {
+          output: `Error: Unknown amendment '${amendmentId}'. Available: ${available.map((a) => a.id).join(', ')}`,
+        };
+      }
 
       const boundsErr = requireBounds(session, rc.row, rc.col);
       if (boundsErr) return { output: boundsErr };
@@ -265,14 +286,14 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       const week = session.getWeek();
       session.dispatch({
         type: 'AMEND',
-        amendment,
+        amendment: amendmentId,
         plot: [rc.row, rc.col],
         week,
       });
 
       const energy = session.getEnergy();
       return {
-        output: `Applied ${amendment} to [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`,
+        output: `Applied ${amendmentDef.name} to [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`,
       };
     }
 
@@ -301,7 +322,7 @@ export function executeCommand(session: CliSession, input: string): CommandResul
         week: session.getWeek(),
       });
 
-      return { output: formatInspect(session, rc.row, rc.col) };
+      return { output: formatDiagnose(session, rc.row, rc.col) };
     }
 
     case 'intervene': {
