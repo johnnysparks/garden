@@ -11,6 +11,12 @@ import type { SimulationContext, CompanionBuff } from '../components.js';
 import { getAdjacentPlants } from '../world.js';
 import type { InteractionEffect } from '../../../data/types.js';
 
+// TODO: pest_resistance companion effects are defined in species JSON data
+// (e.g. basil → tomato: pest_resistance +0.3) but are never consumed by
+// the pest system. The growth system only reads 'growth_rate' and
+// 'allelopathy' effect types. Implement pest_resistance integration in
+// pest-gen.ts or the pest check system.
+
 export function companionEffectsSystem(ctx: SimulationContext): void {
   const { world, speciesLookup } = ctx;
   const plants = world.with('species', 'plotSlot');

@@ -173,6 +173,9 @@ export function formatInspect(session: CliSession, row: number, col: number): st
     } else {
       lines.push(`  Conditions: none`);
     }
+    // TODO: Companion buff display only shows source species IDs, not effect
+    // types or magnitudes. Players can't tell what benefit they're getting
+    // (e.g. "basil_genovese: pest_resistance +0.3" vs just "basil_genovese").
     if (plant.companionBuffs.length > 0) {
       lines.push(`  Companion buffs: ${plant.companionBuffs.map((b) => b.source).join(', ')}`);
     } else {
@@ -391,6 +394,10 @@ export function formatSpeciesDetail(species: PlantSpecies): string {
 
 // ── Tick summary ─────────────────────────────────────────────────────
 
+// TODO: DUSK tick summary doesn't report active companion effects.
+// Players have no indication that companion bonuses are firing unless they
+// manually inspect each plant. Consider adding a "Companions:" section
+// listing active buffs/debuffs applied this tick.
 export function formatDuskTick(result: DuskTickResult): string {
   const lines: string[] = [];
   lines.push(`=== DUSK — Simulation Tick (Week ${result.week}) ===`);
