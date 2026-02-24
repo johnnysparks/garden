@@ -80,14 +80,14 @@
 
 ### Known Bugs (from Playtesting)
 
-Found via CLI gameplay testing sessions. Marked with `// TODO: BUG` in source.
+Found via CLI gameplay testing sessions. All bugs below have been fixed.
 
-| Bug | File | Description |
-|-----|------|-------------|
-| Amendment not applied | `src/cli/commands.ts:331` | AMEND event dispatched but amendment never added to soil entity |
-| Unrealistic starting soil temp | `src/lib/engine/game-session.ts:231` | Initial soil temp 20°C is too warm for early spring |
-| Energy not reset | `src/lib/engine/turn-manager.ts:194` | Energy not reset when entering new week's DAWN phase |
-| Slow warm-season growth | `src/lib/engine/ecs/systems/growth.ts:132` | Growth extremely slow for warm-season crops in zone_8a |
+| Bug | File | Status |
+|-----|------|--------|
+| Amendment not applied | `src/lib/engine/game-session.ts` | done — amendment added to plot entity in `amendAction` |
+| Unrealistic starting soil temp | `src/lib/engine/game-session.ts` | done — `defaultSoil()` now takes zone week-1 avg temp |
+| Energy not reset | `src/lib/engine/turn-manager.ts` | done — energy reset to `{current:0, max:0}` on ADVANCE→DAWN |
+| Slow warm-season growth | `src/lib/engine/ecs/systems/growth.ts` | done — temperature tolerance widened from 8 to 12 |
 
 ---
 
@@ -183,7 +183,7 @@ Data layer is complete and tested. All UI is missing.
 
 | # | Task | Status |
 |---|------|--------|
-| 1 | Fix known bugs (4 playtesting bugs) | todo |
+| 1 | Fix known bugs (4 playtesting bugs) | done |
 | 2 | Amend action UI (WS5.1) | todo |
 | 3 | Intervene/harvest action UI (WS5.3) | todo |
 | 4 | Run end screen (WS5.5) | todo |

@@ -319,3 +319,55 @@ describe('growthTickSystem – sun matching', () => {
     expect(fullSunPlant.growth!.rate_modifier).toBeGreaterThan(shadePlant.growth!.rate_modifier);
   });
 });
+
+// ── Temperature tolerance regression ─────────────────────────────────────────
+
+describe('growthTickSystem – temperature tolerance', () => {
+  let world: GameWorld;
+
+  beforeEach(() => {
+    world = createWorld();
+  });
+
+  it('warm-season crop accumulates meaningful progress over 8 ticks in cool early-spring soil', () => {
+    // Regression test: with tolerance=8, tomato at 8°C soil yielded tempMod≈0.10,
+    // making growth near-zero (~5% after 8 ticks). Widening tolerance to 12 gives
+    // tempMod≈0.37, yielding meaningful growth (~18% after 8 ticks).
+    // Soil at 8°C with ideal nutrients and moisture, full sun, no stress.
+    setupSinglePlot(world, 0, 0, {
+      temperature_c: 8,
+      nitrogen: 0.6,
+      phosphorus: 0.6,
+      potassium: 0.6,
+      moisture: 0.5,
+    });
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    // Run 8 ticks (8 simulated weeks)
+    for (let i = 0; i < 8; i++) {
+      growthTickSystem(makeCtx(world));
+    }
+
+    // Expect at least 12% growth over 8 weeks — not effectively stalled.
+    // (With the old tolerance=8 this was ~5%, with tolerance=12 it is ~18%.)
+    expect(plant.growth!.progress).toBeGreaterThan(0.12);
+  });
+
+  it('basil at its minimum soil temp still makes some progress per tick', () => {
+    // Basil soil_temp_min_c = 18°C; ideal = 28°C.
+    // At exactly the minimum, growth should not be stalled.
+    setupSinglePlot(world, 0, 0, {
+      temperature_c: 18,
+      nitrogen: 0.6,
+      phosphorus: 0.6,
+      potassium: 0.6,
+      moisture: 0.5,
+    });
+    const plant = plantSpecies(world, 'basil_genovese', 0, 0);
+
+    growthTickSystem(makeCtx(world));
+
+    // At 18°C (soil_temp_min_c), growth should give at least 2% per tick.
+    expect(plant.growth!.progress).toBeGreaterThan(0.02);
+  });
+});

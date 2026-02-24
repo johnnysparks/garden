@@ -533,3 +533,42 @@ describe('scoutAction', () => {
     expect(result.ok).toBe(false);
   });
 });
+
+// ── Soil initialization ───────────────────────────────────────────────
+
+describe('initial soil temperature', () => {
+  it('initializes soil temperature from zone week 1 average, not a hardcoded 20°C', () => {
+    // Regression test: soil was always initialized at 20°C regardless of zone climate.
+    // Fix: soil temperature should derive from zone.avg_temps_by_week[0].
+    const coldSpringZone: ClimateZone = {
+      ...TEST_ZONE,
+      id: 'cold_spring_zone',
+      avg_temps_by_week: [5, ...Array.from({ length: 29 }, () => 20)],
+    };
+    const session = createGameSession({
+      seed: 42,
+      zone: coldSpringZone,
+      speciesLookup,
+    });
+
+    const soil = session.getSoil(0, 0)!;
+    // Should be near the zone's week 1 temperature (5°C), not the old hardcoded 20°C.
+    expect(soil.temperature_c).toBeCloseTo(5, 0);
+  });
+
+  it('initializes soil temperature matching a warm-zone week 1 average', () => {
+    const warmZone: ClimateZone = {
+      ...TEST_ZONE,
+      id: 'warm_zone',
+      avg_temps_by_week: [25, ...Array.from({ length: 29 }, () => 28)],
+    };
+    const session = createGameSession({
+      seed: 42,
+      zone: warmZone,
+      speciesLookup,
+    });
+
+    const soil = session.getSoil(0, 0)!;
+    expect(soil.temperature_c).toBeCloseTo(25, 0);
+  });
+});
