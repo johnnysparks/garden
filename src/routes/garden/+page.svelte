@@ -11,6 +11,10 @@
 	import type { Entity, SoilState } from '$lib/engine/ecs/components.js';
 	import type { GameWorld } from '$lib/engine/ecs/world.js';
 	import type { GrowthStageId } from '$lib/data/types.js';
+	import SeasonBar from '$lib/ui/SeasonBar.svelte';
+	import WeatherRibbon from '$lib/ui/WeatherRibbon.svelte';
+	import EnergyBar from '$lib/ui/EnergyBar.svelte';
+	import { season, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
 
 	// ── Constants ───────────────────────────────────────────────────────
 
@@ -174,9 +178,9 @@
 		return result;
 	});
 
-	// ── Season (hardcoded to summer for the visual test) ────────────────
+	// ── Season (derived from HUD store) ─────────────────────────────────
 
-	const seasonId: SeasonId = 'summer';
+	let seasonId = $derived(weekToSeasonId(season.week));
 	let palette = $derived(SEASON_PALETTES[seasonId]);
 
 	// ── Selection state ─────────────────────────────────────────────────
@@ -198,7 +202,8 @@
 
 <div class="garden-page" style:background={palette.sky}>
 	<header class="top-bar" style:background={palette.ui_bg}>
-		<span class="season-label">Summer — Week 14</span>
+		<SeasonBar />
+		<WeatherRibbon />
 	</header>
 
 	<main class="garden-content">
@@ -211,6 +216,10 @@
 			{onSelectPlot}
 		/>
 	</main>
+
+	<footer class="bottom-bar" style:background={palette.ui_bg}>
+		<EnergyBar />
+	</footer>
 </div>
 
 <style>
@@ -222,16 +231,8 @@
 	}
 
 	.top-bar {
-		padding: 10px 16px;
-		font-family: monospace;
-		font-size: 14px;
-		font-weight: 600;
 		border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 		flex-shrink: 0;
-	}
-
-	.season-label {
-		color: #555;
 	}
 
 	.garden-content {
@@ -241,5 +242,11 @@
 		justify-content: center;
 		overflow: hidden;
 		padding: 8px;
+		min-height: 0;
+	}
+
+	.bottom-bar {
+		border-top: 1px solid rgba(0, 0, 0, 0.08);
+		flex-shrink: 0;
 	}
 </style>
