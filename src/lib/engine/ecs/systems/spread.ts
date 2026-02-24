@@ -22,6 +22,7 @@
 
 import type { SimulationContext, ActiveCondition, Entity, SoilState } from '../components.js';
 import type { GrowthStageId } from '../../../data/types.js';
+import type { With } from 'miniplex';
 
 // ── Constants ───────────────────────────────────────────────────────
 
@@ -75,9 +76,9 @@ function getPlantsInRadius(
   row: number,
   col: number,
   radius: number,
-): ReturnType<SimulationContext['world']['with']> extends Iterable<infer T> ? T[] : never[] {
+): With<Entity, 'plotSlot' | 'species'>[] {
   const plants = ctx.world.with('species', 'plotSlot');
-  const result: typeof plants.entities = [];
+  const result: With<Entity, 'plotSlot' | 'species'>[] = [];
   for (const plant of plants) {
     const dr = Math.abs(plant.plotSlot.row - row);
     const dc = Math.abs(plant.plotSlot.col - col);
@@ -85,7 +86,7 @@ function getPlantsInRadius(
       result.push(plant);
     }
   }
-  return result as ReturnType<typeof getPlantsInRadius>;
+  return result;
 }
 
 /**
@@ -147,7 +148,7 @@ function diseaseSpread(ctx: SimulationContext): void {
   const plants = world.with('species', 'plotSlot');
 
   const newInfections: Array<{
-    plant: (typeof plants.entities)[number];
+    plant: With<Entity, 'plotSlot' | 'species'>;
     conditionId: string;
   }> = [];
 

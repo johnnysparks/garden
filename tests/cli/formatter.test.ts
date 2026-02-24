@@ -224,8 +224,8 @@ describe('formatInspect', () => {
       conditions: [{
         conditionId: 'early_blight',
         severity: 0.3,
+        onset_week: 1,
         current_stage: 1,
-        weeks_active: 2,
       }],
     };
     session.notifyWorldChanged();
@@ -246,7 +246,7 @@ describe('formatInspect', () => {
     plant.companionBuffs = {
       buffs: [{
         source: 'basil_genovese',
-        effects: [{ type: 'pest_resistance', modifier: 0.3 }],
+        effects: [{ type: 'pest_resistance', modifier: 0.3, radius: 1 }],
       }],
     };
     session.notifyWorldChanged();
@@ -406,7 +406,7 @@ describe('formatInspect', () => {
     plant.companionBuffs = {
       buffs: [{
         source: 'fennel',
-        effects: [{ type: 'allelopathy', modifier: -0.4 }],
+        effects: [{ type: 'allelopathy', modifier: -0.4, radius: 1 }],
       }],
     };
     session.notifyWorldChanged();
@@ -813,8 +813,8 @@ describe('formatDiagnose', () => {
       conditions: [{
         conditionId: 'early_blight',
         severity: 0.4,
+        onset_week: 1,
         current_stage: 0,
-        weeks_active: 1,
       }],
     };
     session.notifyWorldChanged();
@@ -830,8 +830,8 @@ describe('formatDiagnose', () => {
       conditions: [{
         conditionId: 'early_blight',
         severity: 0.4,
+        onset_week: 1,
         current_stage: 0,
-        weeks_active: 1,
       }],
     };
     session.notifyWorldChanged();
