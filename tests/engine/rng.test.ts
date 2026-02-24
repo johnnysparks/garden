@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createRng, hashSeed } from '../../src/lib/engine/rng.js';
 
-describe('createRng', () => {
+describe('createRng (xoshiro128**)', () => {
   it('produces deterministic output for the same seed', () => {
     const a = createRng(42);
     const b = createRng(42);
@@ -13,7 +13,6 @@ describe('createRng', () => {
   it('produces different output for different seeds', () => {
     const a = createRng(1);
     const b = createRng(2);
-    // At least one of the first 10 values should differ
     const diffs = Array.from({ length: 10 }, () => a.next() !== b.next());
     expect(diffs.some(Boolean)).toBe(true);
   });
@@ -52,7 +51,6 @@ describe('createRng', () => {
     const stddev = 2;
     const values = Array.from({ length: 10000 }, () => rng.nextGaussian(mean, stddev));
     const avg = values.reduce((a, b) => a + b, 0) / values.length;
-    // Mean should be close to target (within 0.2 for 10k samples)
     expect(avg).toBeGreaterThan(mean - 0.2);
     expect(avg).toBeLessThan(mean + 0.2);
   });
@@ -67,14 +65,44 @@ describe('createRng', () => {
 
   it('weightedIndex() respects weights', () => {
     const rng = createRng(333);
-    // Heavily weight the first item
     const weights = [100, 1, 1];
     const counts = [0, 0, 0];
     for (let i = 0; i < 1000; i++) {
       counts[rng.weightedIndex(weights)]++;
     }
-    // First item should dominate
     expect(counts[0]).toBeGreaterThan(900);
+  });
+
+  it('saveState/restoreState creates a replayable checkpoint', () => {
+    const rng = createRng(42);
+    rng.next();
+    rng.next();
+    rng.next();
+
+    const snapshot = rng.saveState();
+    const nextFive = Array.from({ length: 5 }, () => rng.next());
+
+    rng.restoreState(snapshot);
+    const replayed = Array.from({ length: 5 }, () => rng.next());
+    expect(replayed).toEqual(nextFive);
+  });
+
+  it('has reasonable distribution (chi-squared rough check)', () => {
+    const rng = createRng(314159);
+    const buckets = 10;
+    const counts = new Array(buckets).fill(0);
+    const n = 10000;
+
+    for (let i = 0; i < n; i++) {
+      const bucket = Math.floor(rng.next() * buckets);
+      counts[bucket]++;
+    }
+
+    const expected = n / buckets;
+    for (const count of counts) {
+      expect(count).toBeGreaterThan(expected * 0.7);
+      expect(count).toBeLessThan(expected * 1.3);
+    }
   });
 });
 

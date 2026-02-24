@@ -1,9 +1,43 @@
 /**
- * Seeded PRNG using the mulberry32 algorithm.
+ * Seeded PRNG using the xoshiro128** algorithm.
  *
  * All game randomness flows through this so that runs are fully
- * reproducible given the same seed.
+ * reproducible given the same seed.  Uses splitmix32 for state
+ * initialization from a single 32-bit integer.
  */
+
+// ── Core xoshiro128** ────────────────────────────────────────────────
+
+function rotl(x: number, k: number): number {
+  return ((x << k) | (x >>> (32 - k))) >>> 0;
+}
+
+function splitmix32(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x9e3779b9) >>> 0;
+    let z = state;
+    z = Math.imul(z ^ (z >>> 16), 0x85ebca6b) >>> 0;
+    z = Math.imul(z ^ (z >>> 13), 0xc2b2ae35) >>> 0;
+    return (z ^ (z >>> 16)) >>> 0;
+  };
+}
+
+function xoshiro128ss(s: Uint32Array): number {
+  const result = Math.imul(rotl(Math.imul(s[1], 5), 7), 9) >>> 0;
+  const t = (s[1] << 9) >>> 0;
+
+  s[2] = (s[2] ^ s[0]) >>> 0;
+  s[3] = (s[3] ^ s[1]) >>> 0;
+  s[1] = (s[1] ^ s[2]) >>> 0;
+  s[0] = (s[0] ^ s[3]) >>> 0;
+  s[2] = (s[2] ^ t) >>> 0;
+  s[3] = rotl(s[3], 11);
+
+  return result / 0x100000000;
+}
+
+// ── Public interface ─────────────────────────────────────────────────
 
 export interface SeededRng {
   /** Returns a float in [0, 1). */
@@ -18,54 +52,66 @@ export interface SeededRng {
   pick<T>(arr: readonly T[]): T;
   /** Weighted random selection. Returns the index of the chosen item. */
   weightedIndex(weights: number[]): number;
+  /** Returns a copy of internal state for snapshotting. */
+  saveState(): Uint32Array;
+  /** Restores internal state from a previous snapshot. */
+  restoreState(state: Uint32Array): void;
 }
 
 /**
  * Create a new seeded RNG from a 32-bit integer seed.
  *
- * Uses mulberry32 — fast, simple, good statistical properties for game use.
+ * Uses xoshiro128** — fast, excellent statistical properties, 128-bit state.
  */
 export function createRng(seed: number): SeededRng {
-  let state = seed | 0;
+  const s = new Uint32Array(4);
+  const sm = splitmix32(seed);
+  for (let i = 0; i < 4; i++) {
+    s[i] = sm();
+  }
 
-  function mulberry32(): number {
-    state = (state + 0x6d2b79f5) | 0;
-    let t = Math.imul(state ^ (state >>> 15), 1 | state);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  function next(): number {
+    return xoshiro128ss(s);
   }
 
   return {
-    next: mulberry32,
+    next,
 
     nextInt(min: number, max: number): number {
-      return Math.floor(mulberry32() * (max - min + 1)) + min;
+      return Math.floor(next() * (max - min + 1)) + min;
     },
 
     nextFloat(min: number, max: number): number {
-      return mulberry32() * (max - min) + min;
+      return next() * (max - min) + min;
     },
 
     nextGaussian(mean: number, stddev: number): number {
-      // Box-Muller transform
-      const u1 = mulberry32();
-      const u2 = mulberry32();
+      const u1 = next();
+      const u2 = next();
       const z = Math.sqrt(-2 * Math.log(u1 || 1e-10)) * Math.cos(2 * Math.PI * u2);
       return mean + z * stddev;
     },
 
     pick<T>(arr: readonly T[]): T {
-      return arr[Math.floor(mulberry32() * arr.length)];
+      return arr[Math.floor(next() * arr.length)];
     },
 
     weightedIndex(weights: number[]): number {
       const total = weights.reduce((sum, w) => sum + w, 0);
-      let r = mulberry32() * total;
+      let r = next() * total;
       for (let i = 0; i < weights.length; i++) {
         r -= weights[i];
         if (r <= 0) return i;
       }
       return weights.length - 1;
+    },
+
+    saveState(): Uint32Array {
+      return new Uint32Array(s);
+    },
+
+    restoreState(state: Uint32Array): void {
+      s.set(state);
     },
   };
 }
