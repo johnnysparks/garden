@@ -18,22 +18,22 @@ DAWN → PLAN → ACT → DUSK → ADVANCE
 **PLAN** (player observes)
 - Player surveys the garden freely — zoom, inspect, read status indicators
 - No energy cost to look. Information gathering is free at surface level.
-- Deep inspection (diagnosis) costs energy — see [04-DIAGNOSIS.md](./04-DIAGNOSIS.md)
+- Deep inspection (diagnosis) costs energy — see [04-DIAGNOSES.md](./04-DIAGNOSES.md)
 
 **ACT** (player spends energy)
 - Player takes actions from their energy budget
 - Actions resolve immediately with visual feedback
 
-**DUSK** (automated)
-- Companion planting effects apply
-- Growth tick for all plants
-- Random events may fire (pest arrival, beneficial insect visit, neighbor's cat)
+**DUSK** (automated — simulation tick)
+- The full simulation tick runs. See [03-SIMULATION.md](./03-SIMULATION.md) for the 10-system tick order.
+- Key systems: weather applies → soil updates → companion effects → growth tick → stress accumulates → disease check → pest check → harvest check → frost check
+- Frost check runs last: late in the season, a killing frost can end the run
 - Visual: light fades, garden settles
 
 **ADVANCE**
 - Week counter increments
 - Season progress bar moves
-- Check for frost event (probability increases as season progresses)
+- If a killing frost occurred during DUSK, the run ends and the score summary is shown
 
 ## Energy Budget
 
@@ -70,7 +70,7 @@ Apply a soil amendment to a plot or zone.
 Effects are NOT instantaneous. Amendments take 1-3 weeks to change soil parameters. This teaches the real lag in soil management.
 
 ### DIAGNOSE (1-2 energy)
-Inspect a plant showing symptoms. See [04-DIAGNOSIS.md](./04-DIAGNOSIS.md) for full interaction design.
+Inspect a plant showing symptoms. See [04-DIAGNOSES.md](./04-DIAGNOSES.md) for full interaction design.
 
 - 1 energy: visual inspection (see symptoms, make your guess)
 - 2 energy: lab test (confirms diagnosis but costs more — available after meta-unlock)

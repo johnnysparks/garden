@@ -29,7 +29,7 @@ Use `advance` to move through phases. Use `week` to skip straight to the next we
 
 ### Energy
 
-You get **4-5 actions per week** (varies by season/weather). Energy does NOT carry over. Each action costs 1 energy. When energy hits 0, the turn auto-advances to DUSK. Use `wait` (free) to end your turn early.
+You get **4-5 energy per week** (varies by season/weather). Energy does NOT carry over. Most actions cost 1 energy, but planting via transplant costs 2 and lab-test diagnosis costs 2. When energy hits 0, the turn auto-advances to DUSK. Use `wait` (free) to end your turn early.
 
 ### Goal
 
@@ -45,7 +45,7 @@ Grow a diverse, healthy garden. Harvest produce. Keep plants alive until frost. 
 | `week` | Skip to next week's ACT phase |
 | `wait` | End actions early (0 energy) |
 
-### Actions (ACT Phase Only, 1 Energy Each)
+### Actions (ACT Phase Only, 1-2 Energy Each)
 
 | Command | Syntax | What It Does |
 |---------|--------|--------------|

@@ -17,7 +17,7 @@ The order of operations matters — it creates emergent behavior and edge cases 
 6. DISEASE_CHECK        → stress + triggers → disease onset/progression
 7. PEST_CHECK           → pest events spawn, spread, or resolve
 8. HARVEST_CHECK        → mark ripe produce available for next week's harvest
-9. SPREAD_CHECK         → invasive plants, disease spread, self-seeding
+9. SPREAD_CHECK         → invasive plants, disease spread, self-seeding [not yet implemented]
 10. FROST_CHECK         → late in season, probability roll for killing frost
 ```
 
@@ -258,7 +258,7 @@ Frost ends the run. Surviving perennials enter dormancy and persist to the next 
 
 ## Randomness & Seeds
 
-All RNG uses a seeded PRNG (e.g., `mulberry32` or `xoshiro128`). The run seed determines:
+All RNG uses a seeded PRNG (`xoshiro128**` — see `src/lib/engine/rng.ts`). The run seed determines:
 
 - Weather generation
 - Pest event timing
