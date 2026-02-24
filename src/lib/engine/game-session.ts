@@ -69,6 +69,16 @@ export interface DuskTickResult {
     row: number;
     col: number;
   }>;
+  /** Active companion/antagonist effects applied this tick. */
+  companionEffects: Array<{
+    speciesId: string;
+    row: number;
+    col: number;
+    buffs: Array<{
+      source: string;
+      effects: Array<{ type: string; modifier: number }>;
+    }>;
+  }>;
 }
 
 /** Result of the ADVANCE phase frost check. */
@@ -377,6 +387,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
     const stressed: DuskTickResult['stressed'] = [];
     const diseaseOnsets: DuskTickResult['diseaseOnsets'] = [];
     const harvestReady: DuskTickResult['harvestReady'] = [];
+    const companionEffects: DuskTickResult['companionEffects'] = [];
 
     const plants = world.with('species', 'growth', 'health', 'plotSlot');
     for (const p of plants) {
@@ -432,6 +443,20 @@ export function createGameSession(config: GameSessionConfig): GameSession {
           col: p.plotSlot.col,
         });
       }
+
+      // Companion effects
+      const companionBuffs = entity.companionBuffs?.buffs;
+      if (companionBuffs && companionBuffs.length > 0) {
+        companionEffects.push({
+          speciesId: p.species.speciesId,
+          row: p.plotSlot.row,
+          col: p.plotSlot.col,
+          buffs: companionBuffs.map((b) => ({
+            source: b.source,
+            effects: b.effects.map((e) => ({ type: e.type, modifier: e.modifier })),
+          })),
+        });
+      }
     }
 
     const duskResult: DuskTickResult = {
@@ -440,6 +465,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
       stressed,
       diseaseOnsets,
       harvestReady,
+      companionEffects,
     };
 
     tickResultStore.set(duskResult);
