@@ -27,6 +27,7 @@ const TEST_ZONE: ClimateZone = {
   first_frost_week_avg: 28,
   humidity_baseline: 0.5,
   special_event_weights: {},
+  pest_event_weights: {},
 };
 
 const speciesLookup = makeSpeciesLookup([TOMATO]);
@@ -212,6 +213,7 @@ describe('GameSession', () => {
       first_frost_week_avg: 0, // frost from week 0
       humidity_baseline: 0.5,
       special_event_weights: {},
+      pest_event_weights: {},
     };
 
     const session = createGameSession({
