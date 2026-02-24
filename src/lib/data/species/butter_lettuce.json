@@ -1,0 +1,229 @@
+{
+  "id": "butter_lettuce",
+  "common_name": "Butter Lettuce",
+  "botanical_name": "Lactuca sativa var. capitata (Butterhead Group)",
+  "family": "Asteraceae",
+  "type": "annual",
+  "growth": {
+    "habit": "rosette",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [1, 1],
+        "description": "Tiny pale seeds, barely a millimeter long, that need light to germinate — press into the surface, never bury."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 2],
+        "description": "Radicle pushes down while cotyledons lift free of the seed coat, pale and rounded like miniature paddles."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [2, 3],
+        "description": "First true leaves emerge — small, rounded, and impossibly tender, already hinting at the buttery texture to come."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [4, 6],
+        "description": "Leaves unfurl in overlapping rosette layers, outer ones spreading wide while inner leaves cup inward to form a loose, silky head."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [2, 3],
+        "description": "A central stalk shoots up through the head — the dreaded bolt. Small yellow composite flowers open like tiny dandelions. Leaves turn bitter."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [2, 3],
+        "description": "Flowers give way to tufted seed heads. Each seed carries a tiny white pappus for wind dispersal, like a dandelion in miniature."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [1, 2],
+        "description": "The stalk dries brown and brittle. Remaining leaves wither. Seeds scatter on the wind."
+      }
+    ],
+    "days_to_maturity": [7, 10],
+    "max_height_cm": 30,
+    "max_spread_cm": 28,
+    "growth_rate": "fast"
+  },
+  "needs": {
+    "sun": "partial",
+    "water": "high",
+    "soil_ph": [6.0, 7.0],
+    "nutrients": { "N": "high", "P": "low", "K": "moderate" },
+    "soil_temp_min_c": 4,
+    "frost_tolerance": "moderate"
+  },
+  "season": {
+    "sow_window": [1, 6],
+    "transplant_window": [2, 8],
+    "harvest_window": [7, 16],
+    "bolt_trigger": "heat"
+  },
+  "companions": [
+    {
+      "species_id": "carrot_nantes",
+      "effects": [{ "type": "growth_rate", "modifier": 0.15, "radius": 1 }],
+      "lore": "Carrots and lettuce are classic garden partners — the deep-rooted carrots break up soil below while shallow-rooted lettuce marks the row for slow-germinating carrot seedlings."
+    },
+    {
+      "species_id": "pea_sugar_snap",
+      "effects": [{ "type": "nutrient_sharing", "modifier": 0.25, "radius": 1 }],
+      "lore": "Pea root nodules fix atmospheric nitrogen into the soil, feeding this hungry leafy green. The pea vines also cast dappled shade that delays bolting."
+    },
+    {
+      "species_id": "strawberry_alpine",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Lettuce and strawberries share similar water needs and root depths. The lettuce acts as living mulch, keeping strawberry roots cool and moist."
+    }
+  ],
+  "antagonists": [
+    {
+      "species_id": "fennel",
+      "effects": [{ "type": "allelopathy", "modifier": -0.35, "radius": 2 }],
+      "lore": "Fennel's root exudates contain anethole and other compounds that suppress lettuce germination and stunt growth. A notorious garden bully."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "condition_id": "downy_mildew",
+      "susceptibility": 0.6,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.7 },
+        { "type": "temp_low", "threshold": 0.5 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "interveinal_yellowing",
+            "description": "Angular yellow patches appear between leaf veins. Faint gray fuzz visible on undersides in morning dew.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "leaf_browning",
+            "description": "Yellow patches turn brown and papery. Leaves curl downward. Fuzzy gray sporulation spreads across leaf undersides.",
+            "reversible": false
+          },
+          {
+            "week": 4,
+            "visual_overlay": "wilting",
+            "description": "Outer leaves collapse into a slimy mat. Inner head remains firm but unmarketable. The oomycete has overwhelmed the plant.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 6,
+        "spreads": true,
+        "spread_radius": 2
+      }
+    },
+    {
+      "condition_id": "tipburn",
+      "susceptibility": 0.5,
+      "triggers": [
+        { "type": "temp_high", "threshold": 0.6 },
+        { "type": "nutrient_deficiency", "threshold": 0.5 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "brown_edges",
+            "description": "Inner leaf margins turn brown and papery. Calcium can't reach fast-growing heart leaves — the plant is growing faster than it can hydrate.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "leaf_browning",
+            "description": "Brown edges expand inward. Affected leaves become papery and brittle. Secondary bacterial rot may set in on damaged tissue.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    },
+    {
+      "condition_id": "bottom_rot",
+      "susceptibility": 0.4,
+      "triggers": [
+        { "type": "overwater", "threshold": 0.6 },
+        { "type": "humidity_high", "threshold": 0.7 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "lower_leaf_spots",
+            "description": "Rust-brown spots appear where lower leaves touch wet soil. The soilborne fungus Rhizoctonia attacks from below.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "stem_lesions",
+            "description": "Brown rot creeps up the stem. Lower leaves become slimy and collapse. A faint web of fungal threads visible at the soil line.",
+            "reversible": false
+          },
+          {
+            "week": 4,
+            "visual_overlay": "wilting",
+            "description": "The entire head topples as the base rots through. The plant separates from its roots when lifted.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 6,
+        "spreads": true,
+        "spread_radius": 1
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 5,
+    "seed_saving": true,
+    "harvest_type": "leaf",
+    "continuous_harvest": true
+  },
+  "visual": {
+    "stem": {
+      "height": [1.5, 12],
+      "thickness": [0.4, 1.8],
+      "color": "#8db560",
+      "curve": 0.05,
+      "branch_frequency": 0.1,
+      "branch_angle": 40
+    },
+    "leaves": {
+      "shape": "simple_oval",
+      "count": [4, 28],
+      "size": [1.5, 7],
+      "color": "#4caf50",
+      "droop": [5, 25],
+      "distribution": "basal",
+      "opacity": [0.75, 1.0]
+    },
+    "flowers": {
+      "shape": "composite",
+      "petal_count": 12,
+      "color": "#ffeb3b",
+      "size": 1.2,
+      "bloom_density": 0.3
+    },
+    "fruit": null,
+    "animation": {
+      "sway_amplitude": 0.07,
+      "sway_frequency": 0.8,
+      "growth_spring_tension": 0.4,
+      "idle_breathing": 0.012
+    }
+  },
+  "lore": {
+    "description": "Soft, cupped leaves fold into a loose head with a texture like silk — the gentlest of the lettuces, and the fastest path from seed to salad.",
+    "origin": "Mediterranean basin; cultivated since ancient Egypt, where lettuce was sacred to the fertility god Min",
+    "fun_fact": "The name 'lettuce' comes from Latin lactuca, meaning milk — snap a stem and you'll see the white latex that ancient Romans believed was a mild sedative.",
+    "difficulty": "beginner"
+  }
+}
