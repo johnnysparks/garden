@@ -1,0 +1,158 @@
+{
+  "id": "mint_spearmint",
+  "common_name": "Spearmint",
+  "botanical_name": "Mentha spicata",
+  "family": "Lamiaceae",
+  "type": "perennial",
+  "growth": {
+    "habit": "ground_cover",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [1, 2],
+        "description": "Tiny, nearly dust-like seed."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 2],
+        "description": "First roots push down as the seed coat splits."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [1, 2],
+        "description": "Small rosette of toothed, fragrant leaves emerges."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [4, 6],
+        "description": "Square stems lengthen rapidly. Underground runners begin spreading outward in all directions."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [2, 3],
+        "description": "Pale purple flower spikes rise above the foliage, attracting pollinators."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [1, 2],
+        "description": "Tiny nutlets form. Runners continue spreading underground."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [2, 3],
+        "description": "Top growth dies back, but roots and runners persist underground for next season."
+      }
+    ],
+    "days_to_maturity": [8, 12],
+    "max_height_cm": 50,
+    "max_spread_cm": 120,
+    "growth_rate": "aggressive"
+  },
+  "needs": {
+    "sun": "partial",
+    "water": "high",
+    "soil_ph": [6.0, 7.0],
+    "nutrients": { "N": "moderate", "P": "low", "K": "low" },
+    "soil_temp_min_c": 10,
+    "frost_tolerance": "hard"
+  },
+  "season": {
+    "sow_window": [3, 8],
+    "transplant_window": [4, 10],
+    "harvest_window": [8, 24],
+    "bolt_trigger": null
+  },
+  "companions": [
+    {
+      "species_id": "tomato_cherokee_purple",
+      "effects": [{ "type": "pest_resistance", "modifier": 0.2, "radius": 1 }],
+      "lore": "Mint's strong scent deters aphids and other pests from nearby tomatoes."
+    }
+  ],
+  "antagonists": [],
+  "vulnerabilities": [
+    {
+      "condition_id": "mint_rust",
+      "susceptibility": 0.4,
+      "min_stage": "vegetative",
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.75 },
+        { "type": "overwater", "threshold": 0.8 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "orange_pustules",
+            "description": "Small orange-brown pustules appear on the undersides of leaves.",
+            "reversible": true
+          },
+          {
+            "week": 3,
+            "visual_overlay": "leaf_distortion",
+            "description": "Leaves curl and distort. Stems may swell at infection sites.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": true,
+        "spread_radius": 2
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 6,
+    "seed_saving": false,
+    "harvest_type": "leaf",
+    "continuous_harvest": true
+  },
+  "spreading": {
+    "runner": {
+      "rate": 0.35,
+      "radius": 1,
+      "min_stage": "vegetative"
+    },
+    "self_seed": {
+      "rate": 0.2
+    }
+  },
+  "visual": {
+    "stem": {
+      "height": [2, 15],
+      "thickness": [0.3, 1.5],
+      "color": "#6a994e",
+      "curve": 0.1,
+      "branch_frequency": 0.8,
+      "branch_angle": 55
+    },
+    "leaves": {
+      "shape": "simple_pointed",
+      "count": [6, 40],
+      "size": [1.5, 5],
+      "color": "#386641",
+      "droop": [0, 10],
+      "distribution": "opposite",
+      "opacity": [0.8, 1.0]
+    },
+    "flowers": {
+      "shape": "spike",
+      "petal_count": 4,
+      "color": "#d8b4fe",
+      "size": 0.6,
+      "bloom_density": 0.5
+    },
+    "fruit": null,
+    "animation": {
+      "sway_amplitude": 0.05,
+      "sway_frequency": 0.8,
+      "growth_spring_tension": 0.5,
+      "idle_breathing": 0.012
+    }
+  },
+  "lore": {
+    "description": "An aggressively spreading perennial herb prized for its cool, sweet flavor. Plant it in containers or be prepared to share your garden.",
+    "origin": "Europe and Asia, cultivated since ancient Rome",
+    "fun_fact": "Mint spreads via underground stolons (runners) that can extend several feet in a single season. A single plant can colonize an entire bed if unchecked — a lesson many new gardeners learn the hard way.",
+    "difficulty": "beginner"
+  }
+}

@@ -315,9 +315,87 @@ export const FENNEL: PlantSpecies = {
   },
 };
 
+// ── Mint (runner spreader) ────────────────────────────────────────────
+
+export const MINT: PlantSpecies = {
+  id: 'mint_spearmint',
+  common_name: 'Spearmint',
+  botanical_name: 'Mentha spicata',
+  family: 'Lamiaceae',
+  type: 'perennial',
+  growth: {
+    habit: 'ground_cover',
+    stages: [
+      { id: 'seed', duration_weeks: [1, 2], description: 'Tiny seed.' },
+      { id: 'germination', duration_weeks: [1, 2], description: 'Sprouting.' },
+      { id: 'seedling', duration_weeks: [1, 2], description: 'Small rosette.' },
+      { id: 'vegetative', duration_weeks: [4, 6], description: 'Runners extending.' },
+      { id: 'flowering', duration_weeks: [2, 3], description: 'Flower spikes.' },
+      { id: 'fruiting', duration_weeks: [1, 2], description: 'Setting seed.' },
+      { id: 'senescence', duration_weeks: [2, 3], description: 'Dormant.' },
+    ],
+    days_to_maturity: [8, 12],
+    max_height_cm: 50,
+    max_spread_cm: 120,
+    growth_rate: 'aggressive',
+  },
+  needs: {
+    sun: 'partial',
+    water: 'high',
+    soil_ph: [6.0, 7.0],
+    nutrients: { N: 'moderate', P: 'low', K: 'low' },
+    soil_temp_min_c: 10,
+    frost_tolerance: 'hard',
+  },
+  season: {
+    sow_window: [3, 8],
+    transplant_window: [4, 10],
+    harvest_window: [8, 24],
+    bolt_trigger: null,
+  },
+  companions: [
+    {
+      species_id: 'tomato_cherokee_purple',
+      effects: [{ type: 'pest_resistance', modifier: 0.2, radius: 1 }],
+      lore: 'Mint deters aphids from tomatoes.',
+    },
+  ],
+  antagonists: [],
+  vulnerabilities: [],
+  harvest: {
+    yield_potential: 6,
+    seed_saving: false,
+    harvest_type: 'leaf',
+    continuous_harvest: true,
+  },
+  spreading: {
+    runner: {
+      rate: 0.35,
+      radius: 1,
+      min_stage: 'vegetative',
+    },
+    self_seed: {
+      rate: 0.2,
+    },
+  },
+  visual: {
+    stem: { height: [2, 15], thickness: [0.3, 1.5], color: '#6a994e', curve: 0.1, branch_frequency: 0.8, branch_angle: 55 },
+    leaves: { shape: 'simple_pointed', count: [6, 40], size: [1.5, 5], color: '#386641', droop: [0, 10], distribution: 'opposite', opacity: [0.8, 1.0] },
+    flowers: { shape: 'spike', petal_count: 4, color: '#d8b4fe', size: 0.6, bloom_density: 0.5 },
+    fruit: null,
+    animation: { sway_amplitude: 0.05, sway_frequency: 0.8, growth_spring_tension: 0.5, idle_breathing: 0.012 },
+  },
+  lore: {
+    description: 'An aggressively spreading herb prized for its cool flavor.',
+    origin: 'Europe and Asia',
+    fun_fact: 'Mint can take over an entire garden bed in a single season if left unchecked.',
+    difficulty: 'beginner',
+  },
+};
+
 // ── Convenience helpers ──────────────────────────────────────────────
 
-export const ALL_SPECIES = [TOMATO, BASIL, ROSEMARY, FENNEL];
+export const ALL_SPECIES = [TOMATO, BASIL, ROSEMARY, FENNEL, MINT];
 
 export function makeSpeciesLookup(
   species: PlantSpecies[] = ALL_SPECIES,

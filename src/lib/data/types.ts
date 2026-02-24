@@ -165,6 +165,29 @@ export interface Vulnerability {
 }
 
 // ---------------------------------------------------------------------------
+// Spread behavior
+// ---------------------------------------------------------------------------
+
+export interface RunnerSpread {
+  /** Per-tick probability of attempting to spread to an adjacent empty plot. */
+  rate: number;
+  /** Maximum Chebyshev distance for runner reach. */
+  radius: number;
+  /** Plant must be at least this stage to start spreading. */
+  min_stage: GrowthStageId;
+}
+
+export interface SelfSeedBehavior {
+  /** Probability per tick (during harvest/senescence) of producing a volunteer seed. */
+  rate: number;
+}
+
+export interface SpreadBehavior {
+  runner?: RunnerSpread;
+  self_seed?: SelfSeedBehavior;
+}
+
+// ---------------------------------------------------------------------------
 // Harvest
 // ---------------------------------------------------------------------------
 
@@ -280,6 +303,7 @@ export interface PlantSpecies {
   antagonists: AntagonistEntry[];
   vulnerabilities: Vulnerability[];
   harvest: Harvest;
+  spreading?: SpreadBehavior;
   visual: PlantVisualParams;
   lore: Lore;
 }
