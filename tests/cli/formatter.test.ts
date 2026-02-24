@@ -945,11 +945,12 @@ describe('formatSpeciesList', () => {
 
   it('lists all provided species', () => {
     const output = formatSpeciesList(ALL_SPECIES);
-    expect(output).toContain('=== Available Species (4) ===');
+    expect(output).toContain('=== Available Species (5) ===');
     expect(output).toContain('tomato_cherokee_purple');
     expect(output).toContain('basil_genovese');
     expect(output).toContain('rosemary');
     expect(output).toContain('fennel');
+    expect(output).toContain('mint_spearmint');
   });
 });
 
