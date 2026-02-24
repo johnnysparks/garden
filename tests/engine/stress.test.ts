@@ -80,15 +80,11 @@ describe('stressAccumulateSystem', () => {
   });
 
   it('accumulates stress from extreme temperature', () => {
-    setupSinglePlot(world, 0, 0);
+    // Very cold soil (0°C, ideal = 25°C, diff = 25 > 10)
+    setupSinglePlot(world, 0, 0, { temperature_c: 0 });
     const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
 
-    // Very cold (avg = 0°C, ideal = 25°C, diff = 25 > 10)
-    const ctx = makeCtx(world, {
-      weather: makeDefaultWeather({ temp_high_c: 2, temp_low_c: -2 }),
-    });
-
-    stressAccumulateSystem(ctx);
+    stressAccumulateSystem(makeCtx(world));
 
     expect(plant.health!.stress).toBeGreaterThan(0);
   });

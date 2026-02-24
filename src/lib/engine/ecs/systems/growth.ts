@@ -129,9 +129,9 @@ export function growthTickSystem(ctx: SimulationContext): void {
     const baseRate = GROWTH_RATE_VALUE[species.growth.growth_rate] / weeks;
 
     // ── temp_modifier (gaussian around ideal growing temp) ───────
-    const avgTemp = (weather.temp_high_c + weather.temp_low_c) / 2;
+    const soilTemp = soil.temperature_c;
     const idealTemp = species.needs.soil_temp_min_c + 10;
-    const tempMod = gaussianFit(avgTemp, idealTemp, 8);
+    const tempMod = gaussianFit(soilTemp, idealTemp, 8);
 
     // ── water_modifier ──────────────────────────────────────────
     const idealMoisture = WATER_IDEAL[species.needs.water] ?? 0.5;
