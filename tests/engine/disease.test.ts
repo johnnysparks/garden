@@ -208,6 +208,46 @@ describe('diseaseCheckSystem', () => {
     expect(plant.activeConditions!.conditions.length).toBe(0);
   });
 
+  it('does not onset disease before min_stage is reached', () => {
+    setupSinglePlot(world, 0, 0, { nitrogen: 0.2, phosphorus: 0.2, potassium: 0.2, moisture: 0.8 });
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+    plant.growth!.stage = 'seedling'; // blossom_end_rot requires min_stage 'fruiting'
+    plant.health!.stress = 0.9;
+
+    const ctx = makeCtx(world);
+
+    for (let i = 0; i < 100; i++) {
+      diseaseCheckSystem({ ...ctx, rng: createRng(i) });
+    }
+
+    // blossom_end_rot should not appear on a seedling
+    const berConditions = plant.activeConditions!.conditions.filter(
+      (c) => c.conditionId === 'blossom_end_rot',
+    );
+    expect(berConditions.length).toBe(0);
+  });
+
+  it('can onset disease once min_stage is reached', () => {
+    setupSinglePlot(world, 0, 0, { nitrogen: 0.2, phosphorus: 0.2, potassium: 0.2, moisture: 0.8 });
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+    plant.growth!.stage = 'fruiting'; // meets min_stage for blossom_end_rot
+    plant.health!.stress = 0.5;
+
+    const ctx = makeCtx(world);
+
+    let berStarted = false;
+    for (let i = 0; i < 100; i++) {
+      const rng = createRng(i);
+      diseaseCheckSystem({ ...ctx, rng });
+      if (plant.activeConditions!.conditions.some((c) => c.conditionId === 'blossom_end_rot')) {
+        berStarted = true;
+        break;
+      }
+    }
+
+    expect(berStarted).toBe(true);
+  });
+
   it('dead plants are skipped', () => {
     setupSinglePlot(world, 0, 0);
     const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);

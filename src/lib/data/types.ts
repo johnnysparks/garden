@@ -159,6 +159,7 @@ export interface SymptomProgression {
 export interface Vulnerability {
   condition_id: string;
   susceptibility: number;
+  min_stage?: GrowthStageId;
   triggers: ConditionTrigger[];
   symptoms: SymptomProgression;
 }

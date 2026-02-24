@@ -123,6 +123,7 @@
     {
       "condition_id": "blossom_end_rot",
       "susceptibility": 0.4,
+      "min_stage": "fruiting",
       "triggers": [
         { "type": "nutrient_deficiency", "threshold": 0.5 },
         { "type": "overwater", "threshold": 0.7 }

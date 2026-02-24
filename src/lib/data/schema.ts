@@ -169,6 +169,7 @@ const SymptomProgressionSchema = z.object({
 const VulnerabilitySchema = z.object({
   condition_id: z.string().min(1),
   susceptibility: z.number().min(0).max(1),
+  min_stage: GrowthStageIdSchema.optional(),
   triggers: z.array(ConditionTriggerSchema).min(1),
   symptoms: SymptomProgressionSchema,
 });

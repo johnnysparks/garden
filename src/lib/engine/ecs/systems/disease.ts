@@ -10,8 +10,20 @@
 
 import type { SimulationContext, ActiveCondition } from '../components.js';
 import { getSoilAt } from '../world.js';
-import type { ConditionTrigger, PlantSpecies, Vulnerability } from '../../../data/types.js';
+import type { ConditionTrigger, GrowthStageId, PlantSpecies, Vulnerability } from '../../../data/types.js';
 import type { SoilState, WeekWeather } from '../components.js';
+
+/** Ordered growth stages for comparison. */
+const STAGE_ORDER: readonly GrowthStageId[] = [
+  'seed', 'germination', 'seedling', 'vegetative', 'flowering', 'fruiting', 'senescence',
+] as const;
+
+/** Returns true if `current` is at or past `minStage` in the growth sequence. */
+function isStageAtOrPast(current: string, minStage: GrowthStageId): boolean {
+  const curIdx = STAGE_ORDER.indexOf(current as GrowthStageId);
+  const minIdx = STAGE_ORDER.indexOf(minStage);
+  return curIdx >= minIdx;
+}
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
@@ -124,6 +136,11 @@ export function diseaseCheckSystem(ctx: SimulationContext): void {
     for (const vuln of species.vulnerabilities) {
       // Skip if already has this condition
       if (conditions.conditions.some((c) => c.conditionId === vuln.condition_id)) {
+        continue;
+      }
+
+      // Skip if plant hasn't reached the minimum growth stage for this disease
+      if (vuln.min_stage && growth && !isStageAtOrPast(growth.stage, vuln.min_stage)) {
         continue;
       }
 
