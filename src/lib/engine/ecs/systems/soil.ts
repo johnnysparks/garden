@@ -33,7 +33,7 @@ export function soilUpdateSystem(ctx: SimulationContext): void {
           for (const [key, delta] of Object.entries(a.effects)) {
             const k = key as keyof typeof soil;
             if (typeof soil[k] === 'number' && typeof delta === 'number') {
-              (soil as Record<string, number>)[k] = clamp(
+              (soil as unknown as Record<string, number>)[k] = clamp(
                 (soil[k] as number) + delta,
                 0,
                 k === 'ph' ? 14 : 1,
