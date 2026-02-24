@@ -123,12 +123,12 @@ The data pipeline (Zod validation, glob import) is solid. Tools data is complete
 - WS3.2 — Tools data (7 tools with unlock conditions and effects)
 
 **Remaining:**
-- **WS3.3 — Additional Species** (partial, 5 of ~16): Priority next species for gameplay variety:
+- **WS3.3 — Additional Species** (partial, 6 of ~16): Priority next species for gameplay variety:
   - Rosemary (perennial, Mediterranean, companion)
   - Pepper (Solanaceae, companion with tomato)
   - Marigold (pest resistance companion)
   - Beans (nitrogen fixer — crop rotation)
-  - Lettuce (cool season, bolt risk, fast cycle)
+  - ~~Lettuce (cool season, bolt risk, fast cycle)~~ — done
   - ~~Mint (spreading mechanic for WS1.4)~~ — done
   - Strawberry (perennial, multi-year)
   - Corn (Three Sisters set)

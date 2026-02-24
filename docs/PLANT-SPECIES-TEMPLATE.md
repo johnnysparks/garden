@@ -193,7 +193,7 @@ Species to create (each as its own agent session):
 | 3 | `marigold_french` | French Marigold | Pest resistance companion (not food — utility planting) | Not started |
 | 4 | `bean_provider` | Provider Bush Bean | Nitrogen fixer — teaches crop rotation, Three Sisters | Not started |
 | 5 | `squash_butternut` | Butternut Squash | Runner vine, Three Sisters, space management | Not started |
-| 6 | `lettuce_butterhead` | Butterhead Lettuce | Cool season, bolt risk (heat trigger), fast cycle | Not started |
+| 6 | `lettuce_butterhead` | Butterhead Lettuce | Cool season, bolt risk (heat trigger), fast cycle | Done |
 | 7 | `mint_spearmint` | Spearmint Mint | Invasive spread mechanic, containment lesson | Not started |
 | 8 | `strawberry_alpine` | Alpine Strawberry | Perennial, ground cover, multi-year progression | Not started |
 | 9 | `carrot_nantes` | Nantes Carrot | Root crop mechanic, slow visual reveal | Not started |
