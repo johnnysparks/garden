@@ -6,6 +6,7 @@
 		SEASON_PALETTES,
 		type SeasonId,
 	} from '$lib/render/palette.js';
+	import { createWindState, updateWind, type WindState } from '$lib/render/animation.js';
 	import { createRng } from '$lib/engine/rng.js';
 	import { getSpecies, getAllSpecies } from '$lib/data/index.js';
 	import type { Entity, SoilState } from '$lib/engine/ecs/components.js';
@@ -24,6 +25,25 @@
 	const GRID_ROWS = 3;
 	const GRID_COLS = 3;
 	const SEED = 42;
+
+	// ── Shared animation loop ───────────────────────────────────────────
+	// One rAF drives all AnimatedPlant instances via props.
+
+	let windState = $state<WindState>(createWindState());
+	let timeMs = $state(0);
+	let rafId: number | null = null;
+	let lastTimestamp = 0;
+
+	function animationTick(timestamp: number) {
+		if (lastTimestamp === 0) lastTimestamp = timestamp;
+		const deltaMs = Math.min(timestamp - lastTimestamp, 100);
+		lastTimestamp = timestamp;
+
+		windState = updateWind(windState, deltaMs);
+		timeMs = windState.elapsed;
+
+		rafId = requestAnimationFrame(animationTick);
+	}
 
 	// ── ECS World ───────────────────────────────────────────────────────
 
@@ -110,6 +130,9 @@
 	// 5 plants at various growth stages across a 3x3 grid.
 
 	onMount(() => {
+		// Start the shared animation loop
+		rafId = requestAnimationFrame(animationTick);
+
 		// Basil seedling — just getting started
 		addPlant(0, 0, 'basil_genovese', 0.15, 'seedling');
 
@@ -129,6 +152,13 @@
 		mulchPlot(2, 0);
 
 		ecsTick++;
+
+		return () => {
+			if (rafId !== null) {
+				cancelAnimationFrame(rafId);
+				rafId = null;
+			}
+		};
 	});
 
 	// ── Reactive queries ────────────────────────────────────────────────
@@ -282,6 +312,8 @@
 			cols={GRID_COLS}
 			{cells}
 			{palette}
+			{windState}
+			{timeMs}
 			{selectedPlot}
 			{onSelectPlot}
 		/>

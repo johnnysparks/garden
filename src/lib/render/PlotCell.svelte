@@ -1,6 +1,7 @@
 <script lang="ts">
 	import AnimatedPlant from './AnimatedPlant.svelte';
 	import { lerpColor, type SeasonPalette } from './palette.js';
+	import type { WindState } from './animation.js';
 	import type { SoilState } from '$lib/engine/ecs/components.js';
 	import type { PlantSpecies, GrowthStageId } from '$lib/data/types.js';
 
@@ -19,11 +20,13 @@
 		mulched: boolean;
 		plant: PlantData | null;
 		palette: SeasonPalette;
+		windState: WindState;
+		timeMs: number;
 		selected?: boolean;
 		onclick?: () => void;
 	}
 
-	let { soil, mulched, plant, palette, selected = false, onclick }: Props = $props();
+	let { soil, mulched, plant, palette, windState, timeMs, selected = false, onclick }: Props = $props();
 
 	// ── Soil color derivation ───────────────────────────────────────
 
@@ -132,11 +135,13 @@
 		{#if plant}
 			<g transform="translate({CELL_SVG / 2}, {CELL_SVG * 0.85}) scale({plantScale})">
 				<AnimatedPlant
-					params={plant.species.visual}
+					visualParams={plant.species.visual}
 					growthProgress={plant.growthProgress}
 					stress={plant.stress}
 					instanceSeed={plant.instanceSeed}
 					stage={plant.stage}
+					{windState}
+					{timeMs}
 				/>
 			</g>
 		{:else}

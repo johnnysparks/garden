@@ -22,12 +22,15 @@
 <script lang="ts">
 	import PlotCell from './PlotCell.svelte';
 	import type { SeasonPalette } from './palette.js';
+	import type { WindState } from './animation.js';
 
 	interface Props {
 		rows: number;
 		cols: number;
 		cells: CellData[];
 		palette: SeasonPalette;
+		windState: WindState;
+		timeMs: number;
 		selectedPlot?: { row: number; col: number } | null;
 		onSelectPlot?: (row: number, col: number) => void;
 	}
@@ -37,6 +40,8 @@
 		cols,
 		cells,
 		palette,
+		windState,
+		timeMs,
 		selectedPlot = null,
 		onSelectPlot,
 	}: Props = $props();
@@ -67,6 +72,8 @@
 					mulched={cell.mulched}
 					plant={cell.plant}
 					{palette}
+					{windState}
+					{timeMs}
 					selected={isSelected(row, col)}
 					onclick={() => onSelectPlot?.(row, col)}
 				/>
