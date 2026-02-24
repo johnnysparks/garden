@@ -5,7 +5,7 @@
 	import { generateFlower, type FlowerShape as RenderFlowerShape } from './shapes/flowers.js';
 	import { generateFruit } from './shapes/fruit.js';
 	import { individualize } from './individualize.js';
-	import { desaturate, lerpColor, deriveColor, SEASON_PALETTES, type SeasonPalette } from './palette.js';
+	import { desaturate, lerpColor, deriveColor, darkenColor, lightenColor, SEASON_PALETTES, type SeasonPalette } from './palette.js';
 
 	interface Props {
 		params: PlantVisualParams;
@@ -237,6 +237,23 @@
 
 	let leafPath = $derived(generateLeaf(indiv.leaves.shape, final.leafSize));
 
+	// Stroke: slightly darker than the leaf fill color.
+	let leafStrokeColor = $derived(darkenColor(final.leafColor, 0.3));
+
+	// Stroke width scales with leaf size — thin enough to read as a vein outline.
+	let leafStrokeWidth = $derived(Math.max(0.3, final.leafSize * 0.025));
+
+	// Per-leaf fill colors: leaves placed later in the array are at the growing
+	// tips (newer growth) and get a lighter, fresher hue — up to ~20% lighter.
+	let leafColors = $derived.by(() => {
+		const count = leafPlacements.length;
+		if (count === 0) return [] as string[];
+		return leafPlacements.map((_, i) => {
+			const freshness = count > 1 ? i / (count - 1) : 0;
+			return lightenColor(final.leafColor, freshness * 0.2);
+		});
+	});
+
 	// ── Flowers ──────────────────────────────────────────────────────
 
 	let showFlowers = $derived(
@@ -328,10 +345,13 @@
 	{/each}
 
 	<!-- Leaves -->
-	{#each leafPlacements as leaf}
+	{#each leafPlacements as leaf, i}
 		<path
 			d={leafPath}
-			fill={final.leafColor}
+			fill={leafColors[i]}
+			stroke={leafStrokeColor}
+			stroke-width={r(leafStrokeWidth)}
+			stroke-linejoin="round"
 			opacity={r(final.leafOpacity)}
 			transform="translate({r(leaf.x)}, {r(leaf.y)}) rotate({r(leaf.angle)})"
 		/>
