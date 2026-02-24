@@ -68,6 +68,7 @@
 		type Particle,
 	} from './animation.js';
 	import type { PlantVisualParams, GrowthStageId } from '$lib/data/types.js';
+	import type { SeasonPalette } from './palette.js';
 
 	// ── Props ────────────────────────────────────────────────────────────────────
 
@@ -77,9 +78,10 @@
 		stress: number; // 0-1
 		instanceSeed: number;
 		stage: GrowthStageId;
+		palette?: SeasonPalette;
 	}
 
-	let { params, growthProgress, stress, instanceSeed, stage }: Props = $props();
+	let { params, growthProgress, stress, instanceSeed, stage, palette }: Props = $props();
 
 	// ── Springs ──────────────────────────────────────────────────────────────────
 	// Smooth transitions when game-tick values jump between frames.
@@ -208,6 +210,7 @@
 		stress={stressSpring.current}
 		{instanceSeed}
 		{stage}
+		{palette}
 	/>
 
 	<!-- Harvest particle burst -->

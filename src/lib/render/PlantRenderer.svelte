@@ -5,7 +5,7 @@
 	import { generateFlower, type FlowerShape as RenderFlowerShape } from './shapes/flowers.js';
 	import { generateFruit } from './shapes/fruit.js';
 	import { individualize } from './individualize.js';
-	import { desaturate, lerpColor } from './palette.js';
+	import { desaturate, lerpColor, deriveColor, SEASON_PALETTES, type SeasonPalette } from './palette.js';
 
 	interface Props {
 		params: PlantVisualParams;
@@ -13,9 +13,10 @@
 		stress: number; // 0-1
 		instanceSeed: number;
 		stage: GrowthStageId;
+		palette?: SeasonPalette;
 	}
 
-	let { params, growthProgress, stress, instanceSeed, stage }: Props = $props();
+	let { params, growthProgress, stress, instanceSeed, stage, palette = SEASON_PALETTES.summer }: Props = $props();
 
 	// ── Helpers ───────────────────────────────────────────────────────
 
@@ -94,13 +95,8 @@
 		// Leaf droop increases with stress (up to +30 degrees)
 		const leafDroop = interp.leafDroop + stress * 30;
 
-		// Color desaturates with stress
-		let leafColor = desaturate(interp.leafColor, stress * 0.5);
-
-		// Hue shifts toward yellow/brown at higher stress
-		if (stress > 0.3) {
-			leafColor = lerpColor(leafColor, '#c9a94e', (stress - 0.3) * 0.6);
-		}
+		// Blend species color with seasonal palette, then apply health/stress
+		let leafColor = deriveColor(interp.leafColor, palette, 1 - stress);
 
 		// Stem curve increases (wilting)
 		const stemCurve = interp.stemCurve + stress * 0.3;

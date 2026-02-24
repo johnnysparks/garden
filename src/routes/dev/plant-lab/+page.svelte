@@ -130,6 +130,7 @@
 					stress={effectiveStress}
 					{instanceSeed}
 					stage={selectedStage}
+					{palette}
 				/>
 			</svg>
 		{/if}
