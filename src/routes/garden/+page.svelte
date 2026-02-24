@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { get } from 'svelte/store';
 	import { fly } from 'svelte/transition';
 	import GardenGrid, { type CellData } from '$lib/render/GardenGrid.svelte';
@@ -84,7 +84,12 @@
 
 		if (phase === 'DUSK') {
 			// Simulation tick has already run (via onPhaseChange callback)
-			ecsTick++;
+			// Use untrack to prevent ecsTick from becoming a dependency of
+			// this effect — otherwise the read-modify-write of ecsTick++
+			// re-triggers the effect while phase is still DUSK, creating an
+			// infinite loop that cancels the setTimeout on every iteration
+			// and freezes the game.
+			untrack(() => ecsTick++);
 
 			// Auto-advance to ADVANCE after a short pause
 			const timer = setTimeout(() => {
@@ -94,7 +99,7 @@
 		}
 
 		if (phase === 'ADVANCE') {
-			ecsTick++;
+			untrack(() => ecsTick++);
 			const advResult = get(s.advanceResult$);
 			if (advResult?.runEnded) {
 				console.log('Killing frost! The growing season has ended.', advResult);
