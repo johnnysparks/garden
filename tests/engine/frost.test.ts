@@ -220,3 +220,155 @@ describe('frostCheckSystem', () => {
     expect(result!.killed).not.toContain('tomato_cherokee_purple');
   });
 });
+
+// ── Frost tolerance tier tests ────────────────────────────────────────────────
+
+describe('frostCheckSystem – tolerance tiers', () => {
+  let world: GameWorld;
+
+  beforeEach(() => {
+    world = createWorld();
+  });
+
+  it('light tolerance plant is killed by any occurring frost (severity always >= 0.5)', () => {
+    // Fennel has frost_tolerance: "light" — killed when frostSeverity > 0.5
+    // frostSeverity = 0.5 + rng.next() * 0.5, so minimum is 0.5 (exclusive from multiplication)
+    // In practice severity will sometimes equal exactly 0.5; light tolerance threshold is > 0.5
+    // so the test looks for death across many seeds
+    setupSinglePlot(world, 0, 0);
+    const fennel = plantSpecies(world, 'fennel', 0, 0);
+
+    let killed = false;
+    for (let i = 0; i < 200; i++) {
+      if ((fennel as { dead?: boolean }).dead) {
+        world.removeComponent(fennel, 'dead');
+      }
+      const result = frostCheckSystem(
+        makeCtx(world, {
+          currentWeek: 40,
+          firstFrostWeekAvg: 30,
+          rng: createRng(i),
+        }),
+      );
+      if (result.killingFrost && (fennel as { dead?: boolean }).dead) {
+        killed = true;
+        break;
+      }
+    }
+
+    expect(killed).toBe(true);
+  });
+
+  it('moderate tolerance plant sometimes survives frost (severity <= 0.8)', () => {
+    // Create a plant with moderate frost tolerance
+    const customLookup = (id: string) => {
+      const species = makeSpeciesLookup()(id);
+      if (!species || id !== 'tomato_cherokee_purple') return species;
+      return { ...species, needs: { ...species.needs, frost_tolerance: 'moderate' as const } };
+    };
+
+    setupSinglePlot(world, 0, 0);
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    // Find a seed where frost occurs but plant survives (mild frost)
+    let survived = false;
+    for (let i = 0; i < 200; i++) {
+      if ((plant as { dead?: boolean }).dead) {
+        world.removeComponent(plant, 'dead');
+      }
+      const result = frostCheckSystem(
+        makeCtx(world, {
+          currentWeek: 40,
+          firstFrostWeekAvg: 30,
+          rng: createRng(i),
+          speciesLookup: customLookup,
+        }),
+      );
+      if (result.killingFrost && !(plant as { dead?: boolean }).dead) {
+        survived = true;
+        break;
+      }
+    }
+
+    expect(survived).toBe(true);
+  });
+
+  it('moderate tolerance plant is eventually killed by severe frosts (severity > 0.8)', () => {
+    const customLookup = (id: string) => {
+      const species = makeSpeciesLookup()(id);
+      if (!species || id !== 'tomato_cherokee_purple') return species;
+      return { ...species, needs: { ...species.needs, frost_tolerance: 'moderate' as const } };
+    };
+
+    setupSinglePlot(world, 0, 0);
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    let killed = false;
+    for (let i = 0; i < 500; i++) {
+      if ((plant as { dead?: boolean }).dead) {
+        world.removeComponent(plant, 'dead');
+      }
+      const result = frostCheckSystem(
+        makeCtx(world, {
+          currentWeek: 40,
+          firstFrostWeekAvg: 30,
+          rng: createRng(i),
+          speciesLookup: customLookup,
+        }),
+      );
+      if (result.killingFrost && (plant as { dead?: boolean }).dead) {
+        killed = true;
+        break;
+      }
+    }
+
+    expect(killed).toBe(true);
+  });
+
+  it('mixed garden: frost-intolerant plants die while hard-tolerance plants survive', () => {
+    setupSinglePlot(world, 0, 0);
+    setupSinglePlot(world, 0, 1);
+    const tomato = plantSpecies(world, 'tomato_cherokee_purple', 0, 0); // frost_tolerance: none
+    const rosemary = plantSpecies(world, 'rosemary', 0, 1);             // frost_tolerance: hard
+
+    let result;
+    for (let i = 0; i < 100; i++) {
+      if ((tomato as { dead?: boolean }).dead) world.removeComponent(tomato, 'dead');
+      result = frostCheckSystem(
+        makeCtx(world, {
+          currentWeek: 40,
+          firstFrostWeekAvg: 30,
+          rng: createRng(i),
+        }),
+      );
+      if (result.killingFrost) break;
+    }
+
+    expect(result!.killingFrost).toBe(true);
+    expect((tomato as { dead?: boolean }).dead).toBe(true);
+    expect((rosemary as { dead?: boolean }).dead).toBeFalsy();
+    expect(result!.killed).toContain('tomato_cherokee_purple');
+    expect(result!.killed).not.toContain('rosemary');
+  });
+
+  it('killed list contains all none-tolerance plants killed in one frost event', () => {
+    // Three frost-intolerant plants
+    for (let i = 0; i < 3; i++) {
+      setupSinglePlot(world, 0, i);
+      plantSpecies(world, 'tomato_cherokee_purple', 0, i);
+    }
+
+    let result;
+    for (let seed = 0; seed < 100; seed++) {
+      for (const e of world.with('species').entities) {
+        if ((e as { dead?: boolean }).dead) world.removeComponent(e, 'dead');
+      }
+      result = frostCheckSystem(
+        makeCtx(world, { currentWeek: 40, firstFrostWeekAvg: 30, rng: createRng(seed) }),
+      );
+      if (result.killingFrost) break;
+    }
+
+    expect(result!.killed.filter((id) => id === 'tomato_cherokee_purple').length).toBe(3);
+  });
+});

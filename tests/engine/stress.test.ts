@@ -234,4 +234,103 @@ describe('stressAccumulateSystem', () => {
 
     expect(plant.health!.stress).toBe(stressBefore);
   });
+
+  it('accumulates stress when pH is above the maximum', () => {
+    // Tomato max pH is 6.8; soil pH of 8.0 is well above
+    setupSinglePlot(world, 0, 0, { ph: 8.0 });
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    stressAccumulateSystem(makeCtx(world));
+
+    // stressDelta from pH = 0.05 * (8.0 - 6.8) = 0.06
+    expect(plant.health!.stress).toBeGreaterThan(0);
+  });
+
+  it('pH stress is proportional to how far outside the range', () => {
+    // Slightly above max pH
+    setupSinglePlot(world, 0, 0, { ph: 7.0 }); // 0.2 above tomato max 6.8
+    const slightlyHigh = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    // Well above max pH
+    setupSinglePlot(world, 1, 0, { ph: 8.5 }); // 1.7 above tomato max 6.8
+    const veryHigh = plantSpecies(world, 'tomato_cherokee_purple', 1, 0);
+
+    stressAccumulateSystem(makeCtx(world));
+
+    expect(veryHigh.health!.stress).toBeGreaterThan(slightlyHigh.health!.stress);
+  });
+
+  it('accumulates stress from very high temperature (too hot)', () => {
+    // Tomato ideal soil temp = 15 + 10 = 25°C; very hot = 45°C (diff=20 > 10)
+    setupSinglePlot(world, 0, 0, { temperature_c: 45 });
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    stressAccumulateSystem(makeCtx(world));
+
+    expect(plant.health!.stress).toBeGreaterThan(0);
+  });
+
+  it('temperature stress is proportional to deviation above ideal', () => {
+    setupSinglePlot(world, 0, 0, { temperature_c: 36 }); // 11°C above ideal 25
+    const slightlyHot = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    setupSinglePlot(world, 1, 0, { temperature_c: 50 }); // 25°C above ideal
+    const veryHot = plantSpecies(world, 'tomato_cherokee_purple', 1, 0);
+
+    stressAccumulateSystem(makeCtx(world));
+
+    expect(veryHot.health!.stress).toBeGreaterThan(slightlyHot.health!.stress);
+  });
+
+  it('no temperature stress within 10°C of ideal', () => {
+    // Tomato ideal = 25°C; 30°C is 5°C away (within the 10°C tolerance band)
+    setupSinglePlot(world, 0, 0, {
+      ph: 6.4,
+      moisture: 0.5,
+      nitrogen: 0.6,
+      phosphorus: 0.6,
+      potassium: 0.6,
+      temperature_c: 30, // 5°C above ideal 25, within tolerance
+    });
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    const ctx = makeCtx(world, {
+      weather: makeDefaultWeather({ temp_high_c: 30, temp_low_c: 20 }),
+    });
+
+    stressAccumulateSystem(ctx);
+
+    // All conditions met + temp within tolerance = recovery (-0.06), so stress stays at 0
+    expect(plant.health!.stress).toBe(0);
+  });
+
+  it('low water-need plant (rosemary) stresses when overwatered', () => {
+    // Rosemary needs water: 'low' (ideal 0.3); moisture 0.8 is overwatered
+    setupSinglePlot(world, 0, 0, { moisture: 0.8 }); // 0.5 above ideal 0.3 = diff 0.5 > 0.25
+    const plant = plantSpecies(world, 'rosemary', 0, 0);
+
+    stressAccumulateSystem(makeCtx(world));
+
+    expect(plant.health!.stress).toBeGreaterThan(0);
+  });
+
+  it('high water-need plant stresses when underwatered', () => {
+    // Custom species with water: 'high' (ideal 0.7); moisture 0.2 is dry
+    const customSpecies = {
+      ...makeSpeciesLookup()('tomato_cherokee_purple')!,
+      needs: {
+        ...makeSpeciesLookup()('tomato_cherokee_purple')!.needs,
+        water: 'high' as const,
+      },
+    };
+    const customLookup = (id: string) =>
+      id === 'tomato_cherokee_purple' ? customSpecies : makeSpeciesLookup()(id);
+
+    setupSinglePlot(world, 0, 0, { moisture: 0.2 }); // diff = 0.2 - 0.7 = -0.5, below -0.25
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    stressAccumulateSystem(makeCtx(world, { speciesLookup: customLookup }));
+
+    expect(plant.health!.stress).toBeGreaterThan(0);
+  });
 });
