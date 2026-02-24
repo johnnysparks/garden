@@ -42,7 +42,7 @@
 | Amendments data | done | 6 amendments: compost, lime, sulfur, fertilizer, mulch, inoculant |
 | Tools data | done | 7 tools defined with unlock conditions and effects |
 | Species data | done | 5 species: tomato, basil, carrot, zucchini, mint (validated by Zod schema) |
-| Zone data | done | 1 zone: zone_8a |
+| Zone data | done | 2 zones: zone_8a, zone_7b |
 | Game session (shared) | done | Shared engine session used by both CLI and web UI |
 | CLI interface | done | Full REPL, all commands, piped mode, save/load, Node.js data loader |
 | SVG plant rendering | done | Parametric stems, leaves (8 shapes), flowers (4 shapes), fruit (5 shapes) |
@@ -66,7 +66,7 @@
 | Pest visual overlays | todo | No SVG overlays for pest infestations |
 | Audio system | todo | ambient.ts and sfx.ts are placeholders |
 | Additional species | todo | 4 of many planned species exist |
-| Additional zones | todo | Only zone_8a; climate ladder needs more |
+| Additional zones | partial | zone_7b added; climate ladder needs more |
 | Web UI — amend action | todo | No amendment UI flow |
 | Web UI — diagnose action | todo | No diagnosis UI flow |
 | Web UI — intervene action | todo | No intervention/harvest/prune/treat UI |
@@ -132,7 +132,7 @@ The data pipeline (Zod validation, glob import) is solid. Tools data is complete
   - ~~Mint (spreading mechanic for WS1.4)~~ — done
   - Strawberry (perennial, multi-year)
   - Corn (Three Sisters set)
-- **WS3.4 — Additional Climate Zones** (todo): Spec doc 05 §Climate Ladder — zone_7b, 7a, 6b, 6a, 5b, 5a (cold path) + zone_9a, 10a (heat path). Only zone_8a exists.
+- **WS3.4 — Additional Climate Zones** (partial): Spec doc 05 §Climate Ladder — ~~zone_7b~~, 7a, 6b, 6a, 5b, 5a (cold path) + zone_9a, 10a (heat path). zone_7b added.
 
 ### WS4: CLI Interface — COMPLETE
 

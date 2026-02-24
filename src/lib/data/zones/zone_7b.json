@@ -1,0 +1,30 @@
+{
+  "id": "zone_7b",
+  "name": "USDA Zone 7b — Mid-Atlantic / Upper South",
+  "avg_temps_by_week": [
+    7, 8, 10, 12, 15, 18, 21, 24, 27, 29,
+    30, 31, 32, 32, 32, 31, 30, 28, 26, 23,
+    20, 17, 14, 11, 9, 7, 5, 4, 3, 2
+  ],
+  "temp_variance": 3.5,
+  "precip_pattern": "summer_wet",
+  "frost_free_weeks": [5, 22],
+  "first_frost_week_avg": 23,
+  "humidity_baseline": 0.70,
+  "special_event_weights": {
+    "heatwave": 0.04,
+    "drought": 0.03,
+    "heavy_rain": 0.05,
+    "hail": 0.02,
+    "early_frost": 0.03,
+    "indian_summer": 0.04
+  },
+  "pest_event_weights": {
+    "aphids": 0.05,
+    "whitefly": 0.03,
+    "thrips": 0.03,
+    "tomato_hornworm": 0.03,
+    "spider_mite": 0.035,
+    "cabbage_moth": 0.02
+  }
+}
