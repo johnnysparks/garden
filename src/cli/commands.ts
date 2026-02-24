@@ -1,16 +1,16 @@
 /**
  * Command parser and dispatcher for the CLI.
  *
- * Parses one-line text commands, validates arguments, checks phase/energy
- * constraints, and dispatches to the session + formatter.
+ * Parses one-line text commands, validates arguments, and dispatches to
+ * the session's action methods + formatter. Game logic (phase/energy/bounds
+ * validation, event dispatch, ECS mutations) lives in the session; this
+ * module handles text I/O only.
  */
 
-import { writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { TurnPhase } from '../lib/engine/turn-manager.js';
-import type { CliSession, DuskTickResult, AdvanceResult } from './session.js';
-import { createCliSession, type CliSessionConfig } from './session.js';
-import { getAllSpecies, getAllSpeciesIds, getSpeciesLookup, getZone, getAllAmendments, getAmendment } from './data-loader.js';
-import type { PlantSpecies } from '../lib/data/types.js';
+import type { CliSession } from './session.js';
+import { getAllSpecies, getAllAmendments, getAmendment } from './data-loader.js';
 import {
   formatStatus,
   formatGrid,
@@ -36,7 +36,7 @@ export interface CommandResult {
 
 // ── Parse helpers ────────────────────────────────────────────────────
 
-function parseRowCol(args: string[]): { row: number; col: number } | string {
+export function parseRowCol(args: string[]): { row: number; col: number } | string {
   if (args.length < 2) return 'Missing ROW COL arguments.';
   const row = parseInt(args[0], 10);
   const col = parseInt(args[1], 10);
@@ -44,35 +44,13 @@ function parseRowCol(args: string[]): { row: number; col: number } | string {
   return { row, col };
 }
 
-function requirePhase(session: CliSession, required: TurnPhase): string | null {
-  const current = session.getPhase();
-  if (current !== required) {
-    return `Error: Not in ${required} phase (current: ${current}). Use 'advance' to change phase.`;
-  }
-  return null;
-}
-
-function requireEnergy(session: CliSession, cost: number): string | null {
-  const energy = session.getEnergy();
-  if (energy.current < cost) {
-    return `Error: Not enough energy. Need ${cost}, have ${energy.current}.`;
-  }
-  return null;
-}
-
-function requireBounds(session: CliSession, row: number, col: number): string | null {
-  if (!session.inBounds(row, col)) {
-    return `Error: Plot [${row}, ${col}] out of bounds. Grid is ${session.gridRows}x${session.gridCols} (valid: 0-${session.gridRows - 1}).`;
-  }
-  return null;
-}
-
 /**
- * After spending energy, if the action exhausted energy and auto-transitioned
- * to DUSK, format the dusk tick + advance results and auto-advance through
- * non-interactive phases to DAWN. Returns empty string if still in ACT.
+ * After an action that spent energy, if the action exhausted energy and
+ * auto-transitioned to DUSK, format the dusk tick + advance results and
+ * auto-advance through non-interactive phases to DAWN.
+ * Returns empty string if still in ACT.
  */
-function formatAutoAdvance(session: CliSession): string {
+export function formatAutoAdvance(session: CliSession): string {
   if (session.getPhase() !== TurnPhase.DUSK) return '';
 
   const parts: string[] = [];
@@ -121,8 +99,9 @@ export function executeCommand(session: CliSession, input: string): CommandResul
     case 'inspect': {
       const rc = parseRowCol(args);
       if (typeof rc === 'string') return { output: `Error: ${rc}` };
-      const boundsErr = requireBounds(session, rc.row, rc.col);
-      if (boundsErr) return { output: boundsErr };
+      if (!session.inBounds(rc.row, rc.col)) {
+        return { output: `Error: Plot [${rc.row}, ${rc.col}] out of bounds. Grid is ${session.gridRows}x${session.gridCols} (valid: 0-${session.gridRows - 1}).` };
+      }
       return { output: formatInspect(session, rc.row, rc.col) };
     }
 
@@ -135,8 +114,9 @@ export function executeCommand(session: CliSession, input: string): CommandResul
     case 'soil': {
       const rc = parseRowCol(args);
       if (typeof rc === 'string') return { output: `Error: ${rc}` };
-      const boundsErr = requireBounds(session, rc.row, rc.col);
-      if (boundsErr) return { output: boundsErr };
+      if (!session.inBounds(rc.row, rc.col)) {
+        return { output: `Error: Plot [${rc.row}, ${rc.col}] out of bounds. Grid is ${session.gridRows}x${session.gridCols} (valid: 0-${session.gridRows - 1}).` };
+      }
       return { output: formatSoil(session, rc.row, rc.col) };
     }
 
@@ -238,10 +218,11 @@ export function executeCommand(session: CliSession, input: string): CommandResul
     }
 
     // ── Action commands (ACT phase) ─────────────────────────────────
+    //
+    // Each action delegates to session.*Action() for validation + execution,
+    // then handles CLI-specific arg parsing and output formatting.
 
     case 'plant': {
-      const phaseErr = requirePhase(session, TurnPhase.ACT);
-      if (phaseErr) return { output: phaseErr };
       if (args.length < 3) {
         return { output: 'Error: Usage: plant SPECIES_ID ROW COL' };
       }
@@ -249,51 +230,18 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       const rc = parseRowCol(args.slice(1));
       if (typeof rc === 'string') return { output: `Error: ${rc}` };
 
-      const boundsErr = requireBounds(session, rc.row, rc.col);
-      if (boundsErr) return { output: boundsErr };
+      const result = session.plantAction(speciesId, rc.row, rc.col);
+      if (!result.ok) return { output: `Error: ${result.error}` };
 
       const species = session.speciesLookup(speciesId);
-      if (!species) {
-        return {
-          output: `Error: Unknown species '${speciesId}'. Use 'species' to list available species.`,
-        };
-      }
-
-      if (session.isOccupied(rc.row, rc.col)) {
-        const existing = session.getPlantAt(rc.row, rc.col);
-        return {
-          output: `Error: Plot [${rc.row}, ${rc.col}] is already occupied by ${existing?.speciesId ?? 'a plant'}.`,
-        };
-      }
-
-      const energyErr = requireEnergy(session, 1);
-      if (energyErr) return { output: energyErr };
-
-      // Spend energy
-      session.spendEnergy(1);
-
-      // Record event
-      const week = session.getWeek();
-      session.dispatch({
-        type: 'PLANT',
-        species_id: speciesId,
-        plot: [rc.row, rc.col],
-        week,
-      });
-
-      // Add plant entity via shared factory
-      session.addPlant(speciesId, rc.row, rc.col);
-
       const energy = session.getEnergy();
-      let output = `Planted ${species.common_name} (${speciesId}) at [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`;
+      let output = `Planted ${species?.common_name ?? speciesId} (${speciesId}) at [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`;
       const autoAdv = formatAutoAdvance(session);
       if (autoAdv) output += '\n\n' + autoAdv;
       return { output };
     }
 
     case 'amend': {
-      const phaseErr = requirePhase(session, TurnPhase.ACT);
-      if (phaseErr) return { output: phaseErr };
       if (args.length < 3) {
         return { output: 'Error: Usage: amend AMENDMENT ROW COL' };
       }
@@ -301,6 +249,7 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       const rc = parseRowCol(args.slice(1));
       if (typeof rc === 'string') return { output: `Error: ${rc}` };
 
+      // Look up the amendment definition (CLI-specific data loading)
       const amendmentDef = getAmendment(amendmentId);
       if (!amendmentDef) {
         const available = getAllAmendments();
@@ -312,31 +261,8 @@ export function executeCommand(session: CliSession, input: string): CommandResul
         };
       }
 
-      const boundsErr = requireBounds(session, rc.row, rc.col);
-      if (boundsErr) return { output: boundsErr };
-
-      const energyErr = requireEnergy(session, 1);
-      if (energyErr) return { output: energyErr };
-
-      session.spendEnergy(1);
-
-      const week = session.getWeek();
-      session.dispatch({
-        type: 'AMEND',
-        amendment: amendmentId,
-        plot: [rc.row, rc.col],
-        week,
-      });
-
-      // TODO: BUG — Amendment is dispatched as an event but never added to the
-      // plot entity's `amendments.pending` component. The soilUpdateSystem
-      // (soil.ts:27-48) reads `plot.amendments.pending` to apply effects after
-      // delay, but nothing populates it. Need a `session.addAmendment()` method
-      // (similar to `session.addPlant()`) that finds the plot entity at (row,col),
-      // initializes the `amendments` component if absent, and pushes a
-      // PendingAmendment with { type: amendmentId, applied_week, effect_delay_weeks,
-      // effects } from the amendment definition data. Without this, all amendments
-      // are no-ops — soil values never change despite "Applied X" confirmation.
+      const result = session.amendAction(rc.row, rc.col, amendmentDef);
+      if (!result.ok) return { output: `Error: ${result.error}` };
 
       const energy = session.getEnergy();
       let output = `Applied ${amendmentDef.name} to [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`;
@@ -346,29 +272,11 @@ export function executeCommand(session: CliSession, input: string): CommandResul
     }
 
     case 'diagnose': {
-      const phaseErr = requirePhase(session, TurnPhase.ACT);
-      if (phaseErr) return { output: phaseErr };
       const rc = parseRowCol(args);
       if (typeof rc === 'string') return { output: `Error: ${rc}` };
 
-      const boundsErr = requireBounds(session, rc.row, rc.col);
-      if (boundsErr) return { output: boundsErr };
-
-      const plant = session.getPlantAt(rc.row, rc.col);
-      if (!plant) {
-        return { output: `Error: No plant at [${rc.row}, ${rc.col}].` };
-      }
-
-      const energyErr = requireEnergy(session, 1);
-      if (energyErr) return { output: energyErr };
-
-      session.spendEnergy(1);
-      session.dispatch({
-        type: 'DIAGNOSE',
-        plant_id: `${rc.row},${rc.col}`,
-        hypothesis: 'visual_inspection',
-        week: session.getWeek(),
-      });
+      const result = session.diagnoseAction(rc.row, rc.col);
+      if (!result.ok) return { output: `Error: ${result.error}` };
 
       let output = formatDiagnose(session, rc.row, rc.col);
       const autoAdv = formatAutoAdvance(session);
@@ -377,8 +285,6 @@ export function executeCommand(session: CliSession, input: string): CommandResul
     }
 
     case 'intervene': {
-      const phaseErr = requirePhase(session, TurnPhase.ACT);
-      if (phaseErr) return { output: phaseErr };
       if (args.length < 3) {
         return { output: 'Error: Usage: intervene ACTION ROW COL' };
       }
@@ -386,49 +292,24 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       const rc = parseRowCol(args.slice(1));
       if (typeof rc === 'string') return { output: `Error: ${rc}` };
 
-      const boundsErr = requireBounds(session, rc.row, rc.col);
-      if (boundsErr) return { output: boundsErr };
-
-      const plant = session.getPlantAt(rc.row, rc.col);
-      if (!plant) {
-        return { output: `Error: No plant at [${rc.row}, ${rc.col}].` };
-      }
-
-      const energyErr = requireEnergy(session, 1);
-      if (energyErr) return { output: energyErr };
-
-      session.spendEnergy(1);
-      session.dispatch({
-        type: 'INTERVENE',
-        plant_id: `${rc.row},${rc.col}`,
-        action,
-        week: session.getWeek(),
-      });
+      const result = session.interveneAction(action, rc.row, rc.col);
+      if (!result.ok) return { output: `Error: ${result.error}` };
 
       const energy = session.getEnergy();
-      let output = `Intervened on ${plant.speciesId} at [${rc.row}, ${rc.col}]: ${action}. Energy: ${energy.current}/${energy.max}`;
+      let output = `Intervened on ${result.plant.speciesId} at [${rc.row}, ${rc.col}]: ${action}. Energy: ${energy.current}/${energy.max}`;
       const autoAdv = formatAutoAdvance(session);
       if (autoAdv) output += '\n\n' + autoAdv;
       return { output };
     }
 
     case 'scout': {
-      const phaseErr = requirePhase(session, TurnPhase.ACT);
-      if (phaseErr) return { output: phaseErr };
       if (args.length < 1) {
         return { output: 'Error: Usage: scout TARGET (weather, pests, soil)' };
       }
-
-      const energyErr = requireEnergy(session, 1);
-      if (energyErr) return { output: energyErr };
-
-      session.spendEnergy(1);
       const target = args[0];
-      session.dispatch({
-        type: 'SCOUT',
-        target,
-        week: session.getWeek(),
-      });
+
+      const result = session.scoutAction(target);
+      if (!result.ok) return { output: `Error: ${result.error}` };
 
       if (target === 'weather') {
         let output = formatWeather(session);
@@ -444,8 +325,9 @@ export function executeCommand(session: CliSession, input: string): CommandResul
     }
 
     case 'wait': {
-      const phaseErr = requirePhase(session, TurnPhase.ACT);
-      if (phaseErr) return { output: phaseErr };
+      if (session.getPhase() !== TurnPhase.ACT) {
+        return { output: `Error: Not in ACT phase (current: ${session.getPhase()}).` };
+      }
 
       // endActions triggers DUSK phase callback (simulation runs)
       const duskResult = session.endActions();

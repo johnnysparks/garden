@@ -34,8 +34,14 @@ import type { GameEvent } from '../state/events.js';
 import { runTick, type TickResult } from './simulation.js';
 import type { FrostResult } from './ecs/systems/frost.js';
 import type { With } from 'miniplex';
+import type { SoilAmendment } from '../data/types.js';
 
 // ── Public types ─────────────────────────────────────────────────────
+
+/** Result of a game action that may fail with a validation error. */
+export type ActionResult<T = Record<string, never>> =
+  | ({ ok: true } & T)
+  | { ok: false; error: string };
 
 /** Summary of what happened during the DUSK simulation tick. */
 export interface DuskTickResult {
@@ -180,10 +186,33 @@ export interface GameSession {
   ): Entity;
 
   /**
+   * Add a pending amendment to a plot entity. Initializes the amendments
+   * component if absent.
+   */
+  addAmendment(row: number, col: number, amendment: SoilAmendment): void;
+
+  /**
    * Run a full week cycle: DAWN → PLAN → beginWork → endActions → (DUSK)
    *                         → (ADVANCE) → next DAWN.
    */
   processWeek(): { tick: DuskTickResult; advance: AdvanceResult };
+
+  // ── Game actions (validate + execute atomically) ────────────────────
+
+  /** Plant a species at a plot. Validates phase, energy, bounds, species, and occupancy. */
+  plantAction(speciesId: string, row: number, col: number): ActionResult<{ entity: Entity }>;
+
+  /** Apply a soil amendment to a plot. Validates phase, energy, and bounds. */
+  amendAction(row: number, col: number, amendment: SoilAmendment): ActionResult;
+
+  /** Diagnose a plant at a plot. Validates phase, energy, bounds, and plant presence. */
+  diagnoseAction(row: number, col: number): ActionResult<{ plant: PlantInfo }>;
+
+  /** Intervene on a plant at a plot. Validates phase, energy, bounds, and plant presence. */
+  interveneAction(action: string, row: number, col: number): ActionResult<{ plant: PlantInfo }>;
+
+  /** Scout a target. Validates phase and energy. */
+  scoutAction(target: string): ActionResult;
 
   // ── Queries ────────────────────────────────────────────────────────
 
@@ -656,7 +685,186 @@ export function createGameSession(config: GameSessionConfig): GameSession {
       return added;
     },
 
+    addAmendment(row: number, col: number, amendment: SoilAmendment): void {
+      const plot = getPlotAt(world, row, col) as Entity | undefined;
+      if (!plot) return;
+
+      if (!plot.amendments) {
+        plot.amendments = { pending: [] };
+      }
+
+      plot.amendments.pending.push({
+        type: amendment.id,
+        applied_week: get(turnManager.week),
+        effect_delay_weeks: amendment.delay_weeks,
+        effects: amendment.effects as Partial<SoilState>,
+      });
+      worldVersion.update((v) => v + 1);
+    },
+
     processWeek,
+
+    // ── Game actions ─────────────────────────────────────────────────
+
+    plantAction(speciesId: string, row: number, col: number): ActionResult<{ entity: Entity }> {
+      if (get(turnManager.phase) !== TurnPhase.ACT) {
+        return { ok: false, error: `Not in ACT phase (current: ${get(turnManager.phase)}).` };
+      }
+      const species = speciesLookup(speciesId);
+      if (!species) {
+        return { ok: false, error: `Unknown species '${speciesId}'.` };
+      }
+      if (row < 0 || row >= gridRows || col < 0 || col >= gridCols) {
+        return { ok: false, error: `Plot [${row}, ${col}] out of bounds. Grid is ${gridRows}x${gridCols}.` };
+      }
+      const plants = world.with('species', 'plotSlot');
+      for (const p of plants) {
+        if (p.plotSlot.row === row && p.plotSlot.col === col && !(p as Entity).dead) {
+          return { ok: false, error: `Plot [${row}, ${col}] is already occupied by ${p.species.speciesId}.` };
+        }
+      }
+      const energy = get(turnManager.energy);
+      if (energy.current < 1) {
+        return { ok: false, error: `Not enough energy. Need 1, have ${energy.current}.` };
+      }
+
+      turnManager.spendEnergy(1);
+      eventLog.append({ type: 'PLANT', species_id: speciesId, plot: [row, col], week: get(turnManager.week) });
+      const entity: Partial<Entity> = {
+        plotSlot: { row, col },
+        species: { speciesId },
+        growth: { progress: 0, stage: 'seed', rate_modifier: 1.0 },
+        health: { value: 1.0, stress: 0 },
+        activeConditions: { conditions: [] },
+        companionBuffs: { buffs: [] },
+      };
+      if (species) {
+        entity.harvestState = {
+          ripe: false,
+          remaining: species.harvest.yield_potential,
+          quality: 1.0,
+        };
+      }
+      const added = world.add(entity as Entity);
+      worldVersion.update((v) => v + 1);
+      return { ok: true, entity: added };
+    },
+
+    amendAction(row: number, col: number, amendment: SoilAmendment): ActionResult {
+      if (get(turnManager.phase) !== TurnPhase.ACT) {
+        return { ok: false, error: `Not in ACT phase (current: ${get(turnManager.phase)}).` };
+      }
+      if (row < 0 || row >= gridRows || col < 0 || col >= gridCols) {
+        return { ok: false, error: `Plot [${row}, ${col}] out of bounds. Grid is ${gridRows}x${gridCols}.` };
+      }
+      const energy = get(turnManager.energy);
+      if (energy.current < 1) {
+        return { ok: false, error: `Not enough energy. Need 1, have ${energy.current}.` };
+      }
+
+      turnManager.spendEnergy(1);
+      eventLog.append({ type: 'AMEND', amendment: amendment.id, plot: [row, col], week: get(turnManager.week) });
+
+      // Add the pending amendment to the plot entity so soilUpdateSystem processes it
+      const plot = getPlotAt(world, row, col) as Entity | undefined;
+      if (plot) {
+        if (!plot.amendments) {
+          plot.amendments = { pending: [] };
+        }
+        plot.amendments.pending.push({
+          type: amendment.id,
+          applied_week: get(turnManager.week),
+          effect_delay_weeks: amendment.delay_weeks,
+          effects: amendment.effects as Partial<SoilState>,
+        });
+      }
+      worldVersion.update((v) => v + 1);
+      return { ok: true };
+    },
+
+    diagnoseAction(row: number, col: number): ActionResult<{ plant: PlantInfo }> {
+      if (get(turnManager.phase) !== TurnPhase.ACT) {
+        return { ok: false, error: `Not in ACT phase (current: ${get(turnManager.phase)}).` };
+      }
+      if (row < 0 || row >= gridRows || col < 0 || col >= gridCols) {
+        return { ok: false, error: `Plot [${row}, ${col}] out of bounds. Grid is ${gridRows}x${gridCols}.` };
+      }
+      const plantEntities = world.with('species', 'growth', 'health', 'plotSlot');
+      let plantInfo: PlantInfo | undefined;
+      for (const p of plantEntities) {
+        if (p.plotSlot.row === row && p.plotSlot.col === col && !(p as Entity).dead) {
+          plantInfo = toPlantInfo(p);
+          break;
+        }
+      }
+      if (!plantInfo) {
+        return { ok: false, error: `No plant at [${row}, ${col}].` };
+      }
+      const energy = get(turnManager.energy);
+      if (energy.current < 1) {
+        return { ok: false, error: `Not enough energy. Need 1, have ${energy.current}.` };
+      }
+
+      turnManager.spendEnergy(1);
+      eventLog.append({
+        type: 'DIAGNOSE',
+        plant_id: `${row},${col}`,
+        hypothesis: 'visual_inspection',
+        week: get(turnManager.week),
+      });
+      return { ok: true, plant: plantInfo };
+    },
+
+    interveneAction(action: string, row: number, col: number): ActionResult<{ plant: PlantInfo }> {
+      if (get(turnManager.phase) !== TurnPhase.ACT) {
+        return { ok: false, error: `Not in ACT phase (current: ${get(turnManager.phase)}).` };
+      }
+      if (row < 0 || row >= gridRows || col < 0 || col >= gridCols) {
+        return { ok: false, error: `Plot [${row}, ${col}] out of bounds. Grid is ${gridRows}x${gridCols}.` };
+      }
+      const plantEntities = world.with('species', 'growth', 'health', 'plotSlot');
+      let plantInfo: PlantInfo | undefined;
+      for (const p of plantEntities) {
+        if (p.plotSlot.row === row && p.plotSlot.col === col && !(p as Entity).dead) {
+          plantInfo = toPlantInfo(p);
+          break;
+        }
+      }
+      if (!plantInfo) {
+        return { ok: false, error: `No plant at [${row}, ${col}].` };
+      }
+      const energy = get(turnManager.energy);
+      if (energy.current < 1) {
+        return { ok: false, error: `Not enough energy. Need 1, have ${energy.current}.` };
+      }
+
+      turnManager.spendEnergy(1);
+      eventLog.append({
+        type: 'INTERVENE',
+        plant_id: `${row},${col}`,
+        action,
+        week: get(turnManager.week),
+      });
+      return { ok: true, plant: plantInfo };
+    },
+
+    scoutAction(target: string): ActionResult {
+      if (get(turnManager.phase) !== TurnPhase.ACT) {
+        return { ok: false, error: `Not in ACT phase (current: ${get(turnManager.phase)}).` };
+      }
+      const energy = get(turnManager.energy);
+      if (energy.current < 1) {
+        return { ok: false, error: `Not enough energy. Need 1, have ${energy.current}.` };
+      }
+
+      turnManager.spendEnergy(1);
+      eventLog.append({
+        type: 'SCOUT',
+        target,
+        week: get(turnManager.week),
+      });
+      return { ok: true };
+    },
 
     // Queries
     getPlants() {
