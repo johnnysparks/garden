@@ -17,6 +17,7 @@ import type {
   WeekWeather,
   SpeciesLookup,
   PestEvent,
+  PendingAmendment,
 } from './ecs/components.js';
 import { createRng, type SeededRng } from './rng.js';
 import { generateSeasonWeather, type ClimateZone } from './weather-gen.js';
@@ -190,6 +191,8 @@ export interface GameSession {
   getPlants(): PlantInfo[];
   /** Get soil state at a position. */
   getSoil(row: number, col: number): SoilState | undefined;
+  /** Get pending amendments at a position. */
+  getPendingAmendments(row: number, col: number): PendingAmendment[];
   /** Get a plant at a position. */
   getPlantAt(row: number, col: number): PlantInfo | undefined;
   /** Check if a plot is occupied by a living plant. */
@@ -665,6 +668,11 @@ export function createGameSession(config: GameSessionConfig): GameSession {
 
     getSoil(row: number, col: number) {
       return getPlotAt(world, row, col)?.soil;
+    },
+
+    getPendingAmendments(row: number, col: number) {
+      const plot = getPlotAt(world, row, col) as Entity | undefined;
+      return plot?.amendments?.pending ?? [];
     },
 
     getPlantAt(row: number, col: number) {
