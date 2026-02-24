@@ -17,6 +17,7 @@
 	let selectedStage = $state<GrowthStageId>('vegetative');
 	let showDiseaseOverlay = $state(false);
 	let instanceSeed = $state(Math.floor(Math.random() * 100000));
+	let showLiveParams = $state(false);
 
 	let species = $derived(allSpecies.find((s) => s.id === selectedSpeciesId) ?? allSpecies[0]);
 	let palette = $derived(SEASON_PALETTES[selectedSeason]);
@@ -135,15 +136,27 @@
 	</div>
 
 	<div class="json-panel">
-		<h2>Live Params</h2>
-		<pre>{JSON.stringify(paramsSnapshot, null, 2)}</pre>
+		<div class="json-panel-header">
+			<h2>Live Params</h2>
+			<button
+				type="button"
+				class="json-toggle"
+				onclick={() => (showLiveParams = !showLiveParams)}
+				aria-expanded={showLiveParams}
+			>
+				{showLiveParams ? 'Hide' : 'Show'} JSON
+			</button>
+		</div>
+		{#if showLiveParams}
+			<pre>{JSON.stringify(paramsSnapshot, null, 2)}</pre>
+		{/if}
 	</div>
 </div>
 
 <style>
 	.lab {
 		display: grid;
-		grid-template-columns: 260px 1fr 320px;
+		grid-template-columns: minmax(280px, 340px) 1fr minmax(300px, 360px);
 		grid-template-rows: 1fr;
 		height: 100vh;
 		font-family: monospace;
@@ -179,9 +192,12 @@
 	}
 
 	.controls button {
-		padding: 4px 12px;
+		padding: 8px 12px;
 		cursor: pointer;
 		font-family: monospace;
+		border-radius: 999px;
+		border: 1px solid #ddd;
+		background: #efefef;
 	}
 
 	.checkbox-row {
@@ -214,10 +230,13 @@
 		align-items: center;
 		justify-content: center;
 		overflow: hidden;
+		min-height: 320px;
 	}
 
 	.canvas svg {
 		display: block;
+		width: min(92vw, 560px);
+		height: min(92vw, 560px);
 	}
 
 	.json-panel {
@@ -228,10 +247,29 @@
 		border-left: 1px solid #333;
 	}
 
+	.json-panel-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 8px;
+	}
+
 	.json-panel h2 {
 		font-size: 14px;
-		margin: 0 0 8px 0;
+		margin: 0;
 		color: #9cdcfe;
+	}
+
+	.json-toggle {
+		border: 1px solid #3e3e3e;
+		border-radius: 999px;
+		padding: 6px 10px;
+		font-family: monospace;
+		font-size: 11px;
+		background: #2a2a2a;
+		color: #d4d4d4;
+		cursor: pointer;
 	}
 
 	.json-panel pre {
@@ -240,5 +278,28 @@
 		word-break: break-all;
 		font-size: 11px;
 		line-height: 1.5;
+	}
+
+	@media (max-width: 1024px) {
+		.lab {
+			grid-template-columns: 1fr;
+			grid-template-rows: auto minmax(300px, 50vh) auto;
+			height: auto;
+			min-height: 100vh;
+		}
+
+		.controls {
+			border-right: 0;
+			border-bottom: 1px solid #ddd;
+		}
+
+		.canvas {
+			border-bottom: 1px solid #bbb;
+		}
+
+		.json-panel {
+			border-left: 0;
+			border-top: 1px solid #333;
+		}
 	}
 </style>
