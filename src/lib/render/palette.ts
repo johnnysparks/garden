@@ -162,6 +162,24 @@ export function lerpColor(colorA: string, colorB: string, t: number): string {
 	]);
 }
 
+/** Darken a hex color by reducing its lightness. amount 0-1. */
+export function darkenColor(color: string, amount: number): string {
+	const [r, g, b] = parseHex(color);
+	const [h, s, l] = rgbToHsl(r, g, b);
+	const newL = l * (1 - Math.max(0, Math.min(1, amount)));
+	const rgb = hslToRgb(h, s, newL);
+	return toHex(rgb);
+}
+
+/** Lighten a hex color by raising its lightness toward white. amount 0-1. */
+export function lightenColor(color: string, amount: number): string {
+	const [r, g, b] = parseHex(color);
+	const [h, s, l] = rgbToHsl(r, g, b);
+	const newL = l + (1 - l) * Math.max(0, Math.min(1, amount));
+	const rgb = hslToRgb(h, s, newL);
+	return toHex(rgb);
+}
+
 /** Desaturate a hex color by `amount` (0 = no change, 1 = fully grey). */
 export function desaturate(color: string, amount: number): string {
 	const [r, g, b] = parseHex(color);
