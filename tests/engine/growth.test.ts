@@ -235,3 +235,87 @@ describe('growthTickSystem', () => {
     expect(plant.growth!.progress).toBeLessThan(noDebuff.growth!.progress);
   });
 });
+
+// ── Sun-matching tests ────────────────────────────────────────────────────────
+
+describe('growthTickSystem – sun matching', () => {
+  let world: GameWorld;
+
+  beforeEach(() => {
+    world = createWorld();
+  });
+
+  it('full-sun plant grows faster in full sun than partial sun', () => {
+    setupSinglePlot(world, 0, 0); // full sun (default from setupSinglePlot)
+    const fullSunPlant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    // Partial sun plot with identical soil
+    world.add({
+      plotSlot: { row: 1, col: 0 },
+      soil: { ph: 6.5, nitrogen: 0.6, phosphorus: 0.6, potassium: 0.6, organic_matter: 0.5, moisture: 0.5, temperature_c: 22, compaction: 0.2, biology: 0.5 },
+      sunExposure: { level: 'partial' },
+    });
+    const partialPlant = plantSpecies(world, 'tomato_cherokee_purple', 1, 0);
+
+    growthTickSystem(makeCtx(world));
+
+    expect(fullSunPlant.growth!.progress).toBeGreaterThan(partialPlant.growth!.progress);
+  });
+
+  it('full-sun plant grows slowest in shade', () => {
+    setupSinglePlot(world, 0, 0); // full sun
+    const fullSunPlant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    world.add({
+      plotSlot: { row: 1, col: 0 },
+      soil: { ph: 6.5, nitrogen: 0.6, phosphorus: 0.6, potassium: 0.6, organic_matter: 0.5, moisture: 0.5, temperature_c: 22, compaction: 0.2, biology: 0.5 },
+      sunExposure: { level: 'shade' },
+    });
+    const shadePlant = plantSpecies(world, 'tomato_cherokee_purple', 1, 0);
+
+    growthTickSystem(makeCtx(world));
+
+    // Shade receives 0.35 modifier vs 1.0 for full sun — significant difference
+    expect(fullSunPlant.growth!.progress).toBeGreaterThan(shadePlant.growth!.progress);
+  });
+
+  it('sun mismatch gradient: full > partial > shade for full-sun plant', () => {
+    setupSinglePlot(world, 0, 0); // full
+    const fullSunPlant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    world.add({
+      plotSlot: { row: 1, col: 0 },
+      soil: { ph: 6.5, nitrogen: 0.6, phosphorus: 0.6, potassium: 0.6, organic_matter: 0.5, moisture: 0.5, temperature_c: 22, compaction: 0.2, biology: 0.5 },
+      sunExposure: { level: 'partial' },
+    });
+    const partialPlant = plantSpecies(world, 'tomato_cherokee_purple', 1, 0);
+
+    world.add({
+      plotSlot: { row: 2, col: 0 },
+      soil: { ph: 6.5, nitrogen: 0.6, phosphorus: 0.6, potassium: 0.6, organic_matter: 0.5, moisture: 0.5, temperature_c: 22, compaction: 0.2, biology: 0.5 },
+      sunExposure: { level: 'shade' },
+    });
+    const shadePlant = plantSpecies(world, 'tomato_cherokee_purple', 2, 0);
+
+    growthTickSystem(makeCtx(world));
+
+    expect(fullSunPlant.growth!.progress).toBeGreaterThan(partialPlant.growth!.progress);
+    expect(partialPlant.growth!.progress).toBeGreaterThan(shadePlant.growth!.progress);
+  });
+
+  it('rate_modifier is higher for matching sun level', () => {
+    setupSinglePlot(world, 0, 0); // full sun
+    const fullSunPlant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    world.add({
+      plotSlot: { row: 1, col: 0 },
+      soil: { ph: 6.5, nitrogen: 0.6, phosphorus: 0.6, potassium: 0.6, organic_matter: 0.5, moisture: 0.5, temperature_c: 22, compaction: 0.2, biology: 0.5 },
+      sunExposure: { level: 'shade' },
+    });
+    const shadePlant = plantSpecies(world, 'tomato_cherokee_purple', 1, 0);
+
+    growthTickSystem(makeCtx(world));
+
+    expect(fullSunPlant.growth!.rate_modifier).toBeGreaterThan(shadePlant.growth!.rate_modifier);
+  });
+});

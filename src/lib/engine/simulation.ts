@@ -13,6 +13,7 @@
  *   6. DISEASE_CHECK
  *   7. PEST_CHECK
  *   8. HARVEST_CHECK
+ *   9. SPREAD_CHECK
  *  10. FROST_CHECK
  */
 
@@ -28,6 +29,7 @@ import { stressAccumulateSystem } from './ecs/systems/stress.js';
 import { diseaseCheckSystem } from './ecs/systems/disease.js';
 import { pestCheckSystem } from './ecs/systems/pest.js';
 import { harvestCheckSystem } from './ecs/systems/harvest.js';
+import { spreadCheckSystem } from './ecs/systems/spread.js';
 import { frostCheckSystem } from './ecs/systems/frost.js';
 import type { FrostResult } from './ecs/systems/frost.js';
 
@@ -86,6 +88,9 @@ export function runTick(
 
   // 8. Harvest check
   harvestCheckSystem(ctx);
+
+  // 9. Spread check
+  spreadCheckSystem(ctx);
 
   // 10. Frost check
   const frost = frostCheckSystem(ctx);
