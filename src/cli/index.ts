@@ -124,13 +124,8 @@ function loadSession(path: string): CliSession | null {
   // Replay events (skip RUN_START since createCliSession already added it)
   for (const event of events.slice(1)) {
     if (event.type === 'PLANT') {
-      // Re-create plant entity
-      session.world.add({
-        plotSlot: { row: event.plot[0], col: event.plot[1] },
-        species: { speciesId: event.species_id },
-        growth: { progress: 0, stage: 'seed', rate_modifier: 1.0 },
-        health: { value: 1.0, stress: 0 },
-      });
+      // Re-create plant entity via shared factory
+      session.addPlant(event.species_id, event.plot[0], event.plot[1]);
       session.dispatch(event);
     } else if (event.type === 'ADVANCE_WEEK') {
       // Advance through phases to simulate the week
