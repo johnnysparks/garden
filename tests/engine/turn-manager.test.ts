@@ -72,6 +72,26 @@ describe('phase transitions', () => {
     expect(get(tm.week)).toBe(2);
   });
 
+  it('resets energy to 0/0 when wrapping from ADVANCE to DAWN', () => {
+    const tm = createTurnManager();
+    const weather = makeDefaultWeather();
+
+    // Complete a full cycle so energy has been set and partially/fully spent
+    tm.advancePhase();     // DAWN → PLAN
+    tm.beginWork(weather); // PLAN → ACT (sets energy)
+    const budget = get(tm.energy).max;
+    expect(budget).toBeGreaterThan(0);
+
+    tm.spendEnergy(1);     // spend some energy
+    tm.endActions();        // ACT → DUSK
+    tm.advancePhase();     // DUSK → ADVANCE
+    tm.advancePhase();     // ADVANCE → DAWN (should reset energy)
+
+    const e = get(tm.energy);
+    expect(e.current).toBe(0);
+    expect(e.max).toBe(0);
+  });
+
   it('increments week each time ADVANCE wraps to DAWN', () => {
     const tm = createTurnManager();
     const weather = makeDefaultWeather();

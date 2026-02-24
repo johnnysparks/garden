@@ -190,15 +190,10 @@ export function createTurnManager(): TurnManager {
     const idx = PHASE_ORDER.indexOf(current);
 
     if (current === TurnPhase.ADVANCE) {
-      // Leaving ADVANCE: increment week, wrap to DAWN
-      // TODO: BUG — Energy is not reset when entering a new week's DAWN phase.
-      // Energy is only set during the PLAN→ACT transition via beginWork().
-      // This means `status` at DAWN shows the stale energy value from the
-      // previous week (e.g., 0/5 or 2/5 after spending). The display is
-      // misleading — players see "Energy: 0/5" at DAWN even though it will
-      // be recalculated at ACT. Should either reset energy here or show
-      // a placeholder like "—" for energy during DAWN/PLAN phases.
+      // Leaving ADVANCE: increment week, reset energy, wrap to DAWN.
+      // Energy budget is recalculated in beginWork() during PLAN→ACT.
       week.update((w) => w + 1);
+      energy.set({ current: 0, max: 0 });
       transition(TurnPhase.DAWN);
     } else {
       transition(PHASE_ORDER[idx + 1]);
