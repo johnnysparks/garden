@@ -1,0 +1,241 @@
+{
+  "id": "zucchini_black_beauty",
+  "common_name": "Black Beauty Zucchini",
+  "botanical_name": "Cucurbita pepo var. cylindrica 'Black Beauty'",
+  "family": "Cucurbitaceae",
+  "type": "annual",
+  "growth": {
+    "habit": "bush",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [1, 1],
+        "description": "A large flat cream-colored seed with a prominent ridge along one edge."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 1],
+        "description": "Thick hypocotyl muscles through the soil, often lifting the seed coat above ground."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [1, 2],
+        "description": "Two oversized round cotyledons unfold. First true leaf already hints at palmate shape with rough bristly texture."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [3, 4],
+        "description": "Explosive outward growth. Enormous palmate leaves on thick hollow petioles double the plant's footprint weekly, shading everything beneath."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [2, 3],
+        "description": "Large golden-orange trumpet flowers open at dawn. Male flowers appear first on long stems; female flowers sit close to the stem with a miniature fruit visible at the base."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [5, 8],
+        "description": "Dark green cylindrical fruit swells at an almost absurd rate — check daily or they become baseball-bat-sized marrows. Each fruit hides under the canopy of leaves."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [2, 3],
+        "description": "Powdery white patches spread across leaves. Stems become hollow and snap easily. Last fruits are pale and seedy."
+      }
+    ],
+    "days_to_maturity": [7, 9],
+    "max_height_cm": 75,
+    "max_spread_cm": 120,
+    "growth_rate": "aggressive"
+  },
+  "needs": {
+    "sun": "full",
+    "water": "high",
+    "soil_ph": [6.0, 7.5],
+    "nutrients": { "N": "high", "P": "moderate", "K": "moderate" },
+    "soil_temp_min_c": 18,
+    "frost_tolerance": "none"
+  },
+  "season": {
+    "sow_window": [6, 10],
+    "transplant_window": [7, 11],
+    "harvest_window": [10, 22],
+    "bolt_trigger": null
+  },
+  "companions": [
+    {
+      "species_id": "corn_golden_bantam",
+      "effects": [{ "type": "shade_benefit", "modifier": 0.15, "radius": 1 }],
+      "lore": "Traditional Three Sisters planting. Corn provides vertical structure while squash leaves shade the ground, retaining moisture for both."
+    },
+    {
+      "species_id": "bean_provider",
+      "effects": [{ "type": "nutrient_sharing", "modifier": 0.25, "radius": 1 }],
+      "lore": "The other Three Sisters partner. Beans fix atmospheric nitrogen that feeds the hungry squash plant's aggressive growth."
+    },
+    {
+      "species_id": "marigold_french",
+      "effects": [{ "type": "pest_resistance", "modifier": 0.3, "radius": 1 }],
+      "lore": "French marigolds repel squash bugs and cucumber beetles with their pungent root exudates and strong scent."
+    }
+  ],
+  "antagonists": [
+    {
+      "species_id": "fennel",
+      "effects": [{ "type": "allelopathy", "modifier": -0.3, "radius": 2 }],
+      "lore": "Fennel's allelopathic root exudates inhibit cucurbit growth. A bad neighbor for nearly everything in the garden."
+    },
+    {
+      "species_id": "potato_yukon",
+      "effects": [{ "type": "growth_rate", "modifier": -0.25, "radius": 1 }],
+      "lore": "Potatoes and squash compete aggressively for the same soil nutrients and moisture, stunting both. Potatoes may also increase squash susceptibility to blight."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "condition_id": "powdery_mildew",
+      "susceptibility": 0.7,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.6 },
+        { "type": "crowding", "threshold": 0.7 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "powdery_coating",
+            "description": "White powdery spots appear on upper leaf surfaces, starting with oldest leaves closest to the ground.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "yellowing_uniform",
+            "description": "Affected leaves yellow as photosynthesis is blocked. White coating spreads to stems and new growth. Fruit production drops.",
+            "reversible": false
+          },
+          {
+            "week": 4,
+            "visual_overlay": "leaf_browning",
+            "description": "Leaves become crispy brown and curl. Severely weakened plant may still produce small, pale fruit.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 8,
+        "spreads": true,
+        "spread_radius": 2
+      }
+    },
+    {
+      "condition_id": "squash_vine_borer",
+      "susceptibility": 0.5,
+      "triggers": [
+        { "type": "temp_high", "threshold": 0.6 },
+        { "type": "pest_vector", "threshold": 0.5 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "wilting",
+            "description": "Sudden wilting of a single vine section in midday heat, recovering by evening. Look for sawdust-like frass at the stem base.",
+            "reversible": true
+          },
+          {
+            "week": 1,
+            "visual_overlay": "stem_lesions",
+            "description": "Mushy, hollowed-out stem section where the larva is boring through. Frass accumulates visibly. Affected vine wilts permanently.",
+            "reversible": false
+          },
+          {
+            "week": 3,
+            "visual_overlay": "total_wilt",
+            "description": "Entire plant collapses as the borer severs internal vascular tissue. Stem crumbles when squeezed.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 5,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    },
+    {
+      "condition_id": "blossom_end_rot",
+      "susceptibility": 0.35,
+      "triggers": [
+        { "type": "nutrient_deficiency", "threshold": 0.5 },
+        { "type": "overwater", "threshold": 0.7 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "fruit_base_discolor",
+            "description": "Water-soaked spot appears on the blossom end of developing fruit. Calcium transport disrupted by irregular watering.",
+            "reversible": true
+          },
+          {
+            "week": 1,
+            "visual_overlay": "fruit_base_rot",
+            "description": "Dark, sunken, leathery patch on fruit tip. Fruit is still edible if the rot is cut away, but quality is lost.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 9,
+    "seed_saving": true,
+    "harvest_type": "fruit",
+    "continuous_harvest": true
+  },
+  "visual": {
+    "stem": {
+      "height": [3, 25],
+      "thickness": [1.0, 4.0],
+      "color": "#4a7a2e",
+      "curve": 0.1,
+      "branch_frequency": 0.8,
+      "branch_angle": 60
+    },
+    "leaves": {
+      "shape": "palmate",
+      "count": [2, 14],
+      "size": [3, 12],
+      "color": "#2e7d32",
+      "droop": [5, 25],
+      "distribution": "alternate",
+      "opacity": [0.8, 1.0]
+    },
+    "flowers": {
+      "shape": "simple",
+      "petal_count": 5,
+      "color": "#f9a825",
+      "size": 3.0,
+      "bloom_density": 0.5
+    },
+    "fruit": {
+      "shape": "elongated",
+      "size": [1, 6.0],
+      "color_unripe": "#8bc34a",
+      "color_ripe": "#33691e",
+      "cluster_count": 1,
+      "hang_angle": 25
+    },
+    "animation": {
+      "sway_amplitude": 0.05,
+      "sway_frequency": 0.5,
+      "growth_spring_tension": 0.35,
+      "idle_breathing": 0.01
+    }
+  },
+  "lore": {
+    "description": "A vigorous bush zucchini that produces glossy dark green cylindrical fruit at an almost alarming rate — the classic 'leave them on your neighbor's porch' summer squash.",
+    "origin": "Central America (Mesoamerica); the cultivar name and modern form developed in Italy, where 'zucchini' means 'little squash'",
+    "fun_fact": "A single zucchini plant can produce 6-10 pounds of fruit per week at peak season. Miss one harvest and you'll find a fruit the size of your forearm hiding under those enormous leaves.",
+    "difficulty": "beginner"
+  }
+}
