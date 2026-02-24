@@ -1,0 +1,190 @@
+{
+  "id": "lettuce_butterhead",
+  "common_name": "Butterhead Lettuce",
+  "botanical_name": "Lactuca sativa var. capitata",
+  "family": "Asteraceae",
+  "type": "annual",
+  "growth": {
+    "habit": "rosette",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [1, 1],
+        "description": "A tiny achene, silver-white with fine lengthwise ribs. Requires light to germinate — do not bury deep."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 1],
+        "description": "One of the quickest-sprouting vegetables — a threadlike radicle emerges within days in cool, moist soil. Germination stalls above 27°C."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [1, 2],
+        "description": "Two small spoon-shaped cotyledons open. First true leaves appear pale and slightly cupped, already hinting at the soft texture to come."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [3, 5],
+        "description": "The rosette fills quickly. Outer leaves fold loosely inward, building the characteristic soft head. This is the harvest window — tender, buttery, mildly sweet."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [2, 3],
+        "description": "Heat triggers bolting: a central stalk shoots up dramatically in days. Leaves turn bitter and tough almost overnight as the plant redirects energy to seed."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [2, 3],
+        "description": "Small yellow composite flowers open along tall branching stalks. Fluffy white pappus forms on mature seeds, ready for wind dispersal."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [1, 2],
+        "description": "Stalks dry and hollow. Seeds scatter on the breeze. The plant collapses back into the soil, leaving volunteers as a promise for next season."
+      }
+    ],
+    "days_to_maturity": [6, 9],
+    "max_height_cm": 35,
+    "max_spread_cm": 35,
+    "growth_rate": "fast"
+  },
+  "needs": {
+    "sun": "partial",
+    "water": "moderate",
+    "soil_ph": [6.0, 7.0],
+    "nutrients": { "N": "moderate", "P": "low", "K": "moderate" },
+    "soil_temp_min_c": 4,
+    "frost_tolerance": "light"
+  },
+  "season": {
+    "sow_window": [2, 8],
+    "transplant_window": [3, 10],
+    "harvest_window": [6, 16],
+    "bolt_trigger": "heat"
+  },
+  "companions": [
+    {
+      "species_id": "carrot_nantes",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Shallow-rooted lettuce and deep-rooted carrots occupy different soil layers without competing. Lettuce's leaf canopy shades the soil surface, keeping it cool and moist — a benefit for both crops."
+    },
+    {
+      "species_id": "tomato_cherokee_purple",
+      "effects": [{ "type": "shade_benefit", "modifier": 0.15, "radius": 1 }],
+      "lore": "In midsummer heat, lettuce bolts quickly in full sun. Planted beneath the canopy of tomato plants, it gains enough shade to extend the harvest window by several weeks."
+    }
+  ],
+  "antagonists": [],
+  "vulnerabilities": [
+    {
+      "condition_id": "downy_mildew",
+      "susceptibility": 0.65,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.75 },
+        { "type": "temp_low", "threshold": 0.35 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "interveinal_yellowing",
+            "description": "Pale yellow patches appear between the veins of outer leaves. Flip a leaf — a faint gray-lavender fuzz is forming on the underside. Bremia lactucae, the lettuce specialist.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "leaf_browning",
+            "description": "Yellow patches turn tan and papery. Spore masses on the undersides become dense and gray. Outer leaves collapse, wetting the inner head and accelerating spread to neighboring plants.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 4,
+        "spreads": true,
+        "spread_radius": 2
+      }
+    },
+    {
+      "condition_id": "aphid_damage",
+      "susceptibility": 0.7,
+      "triggers": [
+        { "type": "pest_vector", "threshold": 0.4 },
+        { "type": "crowding", "threshold": 0.6 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "small_insects_on_leaves",
+            "description": "Pale green aphids cluster in the crinkled inner leaves, nearly invisible against the foliage. Sticky honeydew coats nearby surfaces.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "leaf_curl",
+            "description": "Inner leaves cup and curl as colonies expand. Ants may be seen farming the aphids. New growth emerges stunted and malformed.",
+            "reversible": true
+          },
+          {
+            "week": 4,
+            "visual_overlay": "yellowing",
+            "description": "Heavy infestation causes overall yellowing. The inner head fails to form. Unsalvageable for table use, though still safe to eat if washed very thoroughly.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 5,
+    "seed_saving": true,
+    "harvest_type": "leaf",
+    "continuous_harvest": true
+  },
+  "spreading": {
+    "self_seed": {
+      "rate": 0.15
+    }
+  },
+  "visual": {
+    "stem": {
+      "height": [0, 8],
+      "thickness": [0.4, 1.5],
+      "color": "#8db87b",
+      "curve": 0.05,
+      "branch_frequency": 0.1,
+      "branch_angle": 30
+    },
+    "leaves": {
+      "shape": "heart",
+      "count": [4, 24],
+      "size": [2, 10],
+      "color": "#a8d87c",
+      "droop": [5, 25],
+      "distribution": "basal",
+      "opacity": [0.75, 1.0]
+    },
+    "flowers": {
+      "shape": "composite",
+      "petal_count": 16,
+      "color": "#f5e642",
+      "size": 0.8,
+      "bloom_density": 0.3
+    },
+    "fruit": null,
+    "animation": {
+      "sway_amplitude": 0.09,
+      "sway_frequency": 0.85,
+      "growth_spring_tension": 0.5,
+      "idle_breathing": 0.02
+    }
+  },
+  "lore": {
+    "description": "The quintessential garden salad green — pale, buttery, quick to mature, and swift to bolt. Butterhead forms a soft, loose head that melts in the mouth, but demands cool weather and rewards attentive timing.",
+    "origin": "Cultivated from wild Lactuca serriola across the Mediterranean and Near East since antiquity; butterhead types formalized in 19th-century European market gardens",
+    "fun_fact": "Lettuce contains trace amounts of lactucarium — a milky latex from its stem — with mild sedative properties. Ancient Romans ate lettuce at the end of meals to aid sleep, and 19th-century physicians prescribed lettuce preparations as a painkiller substitute.",
+    "difficulty": "beginner"
+  }
+}
