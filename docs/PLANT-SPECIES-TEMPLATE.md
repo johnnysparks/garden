@@ -149,24 +149,24 @@ Follow these rules strictly:
 
 ### Phase 4: Validate
 
-Run these commands and fix any errors:
+Run all three commands and fix any errors before proceeding:
 
 ```bash
-npm run validate:species
+npm run validate:species   # Zod schema check on all species JSON
+npm test                   # Full test suite — includes render and data schema tests
+npm run check              # TypeScript + Svelte type checking
 ```
 
-This runs the Zod schema validator against all species JSON. The validator checks:
+`npm run validate:species` checks:
 - All required fields present with correct types
 - Hex colors match #RRGGBB pattern
 - Numeric ranges are valid (e.g., susceptibility 0-1, modifier -1 to 1)
 - snake_case ID format
 - ID matches filename
 
-Also run the test suite to ensure nothing breaks:
+`npm test` catches regressions in `tests/render/plant-design-validation.test.ts` and the data schema tests triggered by your new species file.
 
-```bash
-npm run test
-```
+`npm run check` confirms no TypeScript errors — data changes can surface type inference issues in the loader or components.
 
 ### Phase 5: Verify companion cross-references
 
@@ -348,7 +348,8 @@ Before considering a species complete, verify:
 
 **Automated validation:**
 - [ ] `npm run validate:species` passes
-- [ ] `npm run test` passes (includes `tests/render/plant-design-validation.test.ts`)
+- [ ] `npm test` passes (includes `tests/render/plant-design-validation.test.ts`)
+- [ ] `npm run check` passes (TypeScript + Svelte type checking)
 
 **Integration:**
 - [ ] Cross-references updated in other species files

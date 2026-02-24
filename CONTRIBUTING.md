@@ -2,6 +2,8 @@
 
 Thanks for your interest in contributing to Perennial. This guide covers the main types of work on our roadmap and the standards we hold contributions to.
 
+> **Automated and AI contributors:** Read this file in full before making any changes. The validation and testing requirements apply to every contribution type, including data-only additions like new species, zones, or amendments. Do not open a PR until `npm test`, `npm run check`, and `npm run build` all pass.
+
 ## Getting Started
 
 ```bash
@@ -40,8 +42,10 @@ Adding a species requires no code changes — just a JSON file. See `docs/PLANT-
 1. Create `src/lib/data/species/{species_id}.json`. The `id` field must match the filename (without `.json`), and both must be `snake_case`.
 2. Reference existing species files and `src/lib/data/types.ts` for the schema.
 3. Run `npm run validate:species` to check against the Zod schema.
-4. **Verify in-game behavior.** Use the CLI (`npx perennial play`) to plant the species and observe a few weeks of growth, stress, and harvest behavior. Note any unrealistic results in the PR description.
-5. **Cross-reference real horticulture.** Growth rates, companion effects, pH and temperature ranges, and disease susceptibility should reflect real-world data. Cite sources in your PR description.
+4. Run `npm test` — species additions are exercised by `tests/render/plant-design-validation.test.ts` and the data schema tests. All tests must pass.
+5. Run `npm run check` — TypeScript and Svelte type checking must pass even for data-only changes.
+6. **Verify in-game behavior.** Use the CLI (`npx perennial play`) to plant the species and observe a few weeks of growth, stress, and harvest behavior. Note any unrealistic results in the PR description.
+7. **Cross-reference real horticulture.** Growth rates, companion effects, pH and temperature ranges, and disease susceptibility should reflect real-world data. Cite sources in your PR description.
 
 ### New Engine Systems or System Changes
 
@@ -72,6 +76,7 @@ The CLI (`src/cli/`) is a thin wrapper around the shared engine.
 - Zones go in `src/lib/data/zones/`, amendments in `amendments.json`, tools in `tools.json`.
 - All data is validated at build time by Zod schemas.
 - **Ground your data in reality.** Temperature ranges, frost dates, and nutrient profiles should reflect real-world agricultural data.
+- **Run the full suite even for data-only changes.** After editing any JSON data file, run `npm run validate:species` (or the relevant validator), then `npm test` and `npm run check`. Data changes can break schema tests, data loader tests, and type inference — treat them like code changes.
 
 ## Testing Standards
 
