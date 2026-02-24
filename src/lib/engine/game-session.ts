@@ -179,6 +179,20 @@ export interface GameSession {
   ): Entity;
 
   /**
+   * Add a pending amendment to a plot entity's amendments component.
+   * Finds the plot at (row, col), initializes the amendments component
+   * if absent, and pushes a PendingAmendment so the soilUpdateSystem
+   * will apply the effects after the delay.
+   */
+  addAmendment(
+    amendmentId: string,
+    row: number,
+    col: number,
+    effects: Partial<SoilState>,
+    delayWeeks: number,
+  ): boolean;
+
+  /**
    * Run a full week cycle: DAWN → PLAN → beginWork → endActions → (DUSK)
    *                         → (ADVANCE) → next DAWN.
    */
@@ -651,6 +665,30 @@ export function createGameSession(config: GameSessionConfig): GameSession {
       const added = world.add(entity as Entity);
       worldVersion.update((v) => v + 1);
       return added;
+    },
+
+    addAmendment(
+      amendmentId: string,
+      row: number,
+      col: number,
+      effects: Partial<SoilState>,
+      delayWeeks: number,
+    ): boolean {
+      const plot = getPlotAt(world, row, col);
+      if (!plot) return false;
+
+      const entity = plot as Entity;
+      if (!entity.amendments) {
+        entity.amendments = { pending: [] };
+      }
+      entity.amendments.pending.push({
+        type: amendmentId,
+        applied_week: get(turnManager.week),
+        effect_delay_weeks: delayWeeks,
+        effects,
+      });
+      worldVersion.update((v) => v + 1);
+      return true;
     },
 
     processWeek,

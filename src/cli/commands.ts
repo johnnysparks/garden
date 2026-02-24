@@ -328,15 +328,13 @@ export function executeCommand(session: CliSession, input: string): CommandResul
         week,
       });
 
-      // TODO: BUG — Amendment is dispatched as an event but never added to the
-      // plot entity's `amendments.pending` component. The soilUpdateSystem
-      // (soil.ts:27-48) reads `plot.amendments.pending` to apply effects after
-      // delay, but nothing populates it. Need a `session.addAmendment()` method
-      // (similar to `session.addPlant()`) that finds the plot entity at (row,col),
-      // initializes the `amendments` component if absent, and pushes a
-      // PendingAmendment with { type: amendmentId, applied_week, effect_delay_weeks,
-      // effects } from the amendment definition data. Without this, all amendments
-      // are no-ops — soil values never change despite "Applied X" confirmation.
+      session.addAmendment(
+        amendmentId,
+        rc.row,
+        rc.col,
+        amendmentDef.effects,
+        amendmentDef.delay_weeks,
+      );
 
       const energy = session.getEnergy();
       let output = `Applied ${amendmentDef.name} to [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`;

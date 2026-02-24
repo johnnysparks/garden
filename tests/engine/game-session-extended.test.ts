@@ -327,6 +327,59 @@ describe('GameSession – determinism', () => {
 	});
 });
 
+describe('GameSession – addAmendment', () => {
+	it('adds a pending amendment to the plot entity', () => {
+		const session = createTestSession();
+		const result = session.addAmendment('compost', 0, 0, { nitrogen: 0.05 }, 2);
+		expect(result).toBe(true);
+
+		const plot = session.world.with('plotSlot', 'soil').entities.find(
+			(p) => p.plotSlot.row === 0 && p.plotSlot.col === 0,
+		)!;
+		const entity = plot as import('../../src/lib/engine/ecs/components.js').Entity;
+		expect(entity.amendments).toBeDefined();
+		expect(entity.amendments!.pending).toHaveLength(1);
+		expect(entity.amendments!.pending[0].type).toBe('compost');
+		expect(entity.amendments!.pending[0].effect_delay_weeks).toBe(2);
+	});
+
+	it('returns false for out-of-bounds coordinates', () => {
+		const session = createTestSession({ gridRows: 2, gridCols: 2 });
+		const result = session.addAmendment('compost', 5, 5, { nitrogen: 0.05 }, 2);
+		expect(result).toBe(false);
+	});
+
+	it('stacks multiple amendments on the same plot', () => {
+		const session = createTestSession();
+		session.addAmendment('compost', 0, 0, { nitrogen: 0.05 }, 2);
+		session.addAmendment('lime', 0, 0, { ph: 0.5 }, 3);
+
+		const plot = session.world.with('plotSlot', 'soil').entities.find(
+			(p) => p.plotSlot.row === 0 && p.plotSlot.col === 0,
+		)!;
+		const entity = plot as import('../../src/lib/engine/ecs/components.js').Entity;
+		expect(entity.amendments!.pending).toHaveLength(2);
+	});
+
+	it('amendments actually affect soil after delay expires', () => {
+		const session = createTestSession();
+		const soilBefore = session.getSoil(0, 0)!;
+		const phBefore = soilBefore.ph;
+
+		// Add lime with 1-week delay
+		session.addAmendment('lime', 0, 0, { ph: 0.5 }, 1);
+
+		// Process 2 weeks so the amendment matures and is applied
+		for (let i = 0; i < 2; i++) {
+			const { advance } = session.processWeek();
+			if (advance.runEnded) break;
+		}
+
+		const soilAfter = session.getSoil(0, 0)!;
+		expect(soilAfter.ph).toBeGreaterThan(phBefore);
+	});
+});
+
 describe('GameSession – season weather', () => {
 	it('pre-generates 30 weeks of weather', () => {
 		const session = createTestSession();
