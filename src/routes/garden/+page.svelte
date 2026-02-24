@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
+	import { fly } from 'svelte/transition';
 	import GardenGrid, { type CellData } from '$lib/render/GardenGrid.svelte';
 	import {
 		SEASON_PALETTES,
@@ -47,29 +48,61 @@
 	let session = $state<GameSession | null>(null);
 	let ecsTick = $state(0);
 
-	/** Advance from DUSK (or ACT) through to the next week's ACT phase. */
-	function advanceToNextWeek() {
+	/** Transition PLAN → ACT with the current week's energy budget. */
+	function handleBeginWork() {
 		if (!session) return;
-		const phase = get(session.turnManager.phase);
-
-		if (phase === 'ACT') {
-			session.turnManager.endActions(); // ACT → DUSK (sim runs via callback)
-		}
-		// DUSK → ADVANCE (frost check via callback)
-		session.turnManager.advancePhase();
-		// ADVANCE → DAWN (increments week)
-		session.turnManager.advancePhase();
-
-		// Begin next week: DAWN → PLAN → ACT
 		const weekIdx = Math.min(
 			get(session.turnManager.week) - 1,
 			session.seasonWeather.length - 1,
 		);
-		session.turnManager.advancePhase(); // DAWN → PLAN
-		session.turnManager.beginWork(session.seasonWeather[weekIdx]); // PLAN → ACT
-
-		ecsTick++;
+		session.turnManager.beginWork(session.seasonWeather[weekIdx]);
 	}
+
+	// ── Phase-reactive behavior ────────────────────────────────────────
+	// Subscribes to turn.phase and drives automated transitions with
+	// timeouts (DAWN, DUSK) or immediate logic (ADVANCE).
+
+	$effect(() => {
+		const phase = turn.phase;
+		const s = session;
+		if (!s) return;
+
+		if (phase === 'DAWN') {
+			// Reveal this week's weather on the HUD
+			const weekIdx = Math.min(
+				get(s.turnManager.week) - 1,
+				s.seasonWeather.length - 1,
+			);
+			weather.current = s.seasonWeather[weekIdx];
+
+			// Auto-advance to PLAN after a short pause
+			const timer = setTimeout(() => {
+				s.turnManager.advancePhase(); // DAWN → PLAN
+			}, 1500);
+			return () => clearTimeout(timer);
+		}
+
+		if (phase === 'DUSK') {
+			// Simulation tick has already run (via onPhaseChange callback)
+			ecsTick++;
+
+			// Auto-advance to ADVANCE after a short pause
+			const timer = setTimeout(() => {
+				s.turnManager.advancePhase(); // DUSK → ADVANCE
+			}, 1500);
+			return () => clearTimeout(timer);
+		}
+
+		if (phase === 'ADVANCE') {
+			ecsTick++;
+			const advResult = get(s.advanceResult$);
+			if (advResult?.runEnded) {
+				console.log('Killing frost! The growing season has ended.', advResult);
+			} else {
+				s.turnManager.advancePhase(); // ADVANCE → DAWN (increments week)
+			}
+		}
+	});
 
 	onMount(() => {
 		const seed = Math.floor(Math.random() * 2 ** 32);
@@ -103,12 +136,8 @@
 		season.totalWeeks = 30;
 		season.frostStartWeek = zone.frost_free_weeks[1];
 
-		// Advance from DAWN → PLAN → ACT so the player can interact
-		const weekIdx = Math.min(get(s.turnManager.week) - 1, s.seasonWeather.length - 1);
-		s.turnManager.advancePhase(); // DAWN → PLAN
-		s.turnManager.beginWork(s.seasonWeather[weekIdx]); // PLAN → ACT
-
-		ecsTick++;
+		// Session starts in DAWN — the $effect will auto-advance to PLAN
+		// after 1500ms, then the player taps "Begin Work" to enter ACT.
 
 		// Start the shared animation loop
 		rafId = requestAnimationFrame(animationTick);
@@ -252,10 +281,8 @@
 			});
 		}
 
-		// If energy depleted, spendEnergy auto-transitions to DUSK — advance to next week
-		if (get(session.turnManager.phase) !== 'ACT') {
-			advanceToNextWeek();
-		}
+		// If energy depleted, spendEnergy auto-transitions to DUSK.
+		// The $effect handles DUSK → ADVANCE → DAWN automatically.
 
 		ecsTick++;
 		showSeedSelector = false;
@@ -273,7 +300,7 @@
 				break;
 			}
 			case 'wait': {
-				advanceToNextWeek();
+				session.turnManager.endActions(); // ACT → DUSK
 				selectedPlot = null;
 				break;
 			}
@@ -306,6 +333,13 @@
 
 	<footer class="bottom-bar" style:background={palette.ui_bg}>
 		<EnergyBar />
+		{#if turn.phase === 'PLAN'}
+			<div class="begin-work-wrapper" transition:fly={{ y: 40, duration: 250 }}>
+				<button class="begin-work-btn" onclick={handleBeginWork}>
+					Begin Work
+				</button>
+			</div>
+		{/if}
 		<ActionToolbar
 			{selectedPlot}
 			{selectedPlotHasPlant}
@@ -348,5 +382,36 @@
 	.bottom-bar {
 		border-top: 1px solid rgba(0, 0, 0, 0.08);
 		flex-shrink: 0;
+	}
+
+	.begin-work-wrapper {
+		display: flex;
+		justify-content: center;
+		padding: 8px 12px 12px;
+	}
+
+	.begin-work-btn {
+		padding: 10px 32px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 12px;
+		background: rgba(76, 175, 80, 0.85);
+		color: #fff;
+		font-size: 15px;
+		font-weight: 600;
+		font-family: monospace;
+		letter-spacing: 0.5px;
+		cursor: pointer;
+		transition:
+			background 0.15s ease,
+			transform 0.1s ease;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.begin-work-btn:hover {
+		background: rgba(76, 175, 80, 1);
+	}
+
+	.begin-work-btn:active {
+		transform: scale(0.96);
 	}
 </style>
