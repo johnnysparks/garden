@@ -192,6 +192,13 @@ export function formatInspect(session: CliSession, row: number, col: number): st
     lines.push(`Plant: [empty]`);
   }
 
+  // TODO: BUG — Pending amendments are not displayed in inspect output.
+  // The scenario doc says inspect should show pending amendments, but this
+  // formatter never reads the plot entity's `amendments` component. Even once
+  // the amendment-not-applied bug is fixed, players won't see pending amendments
+  // here. Need to query the plot entity's `amendments.pending` array and display
+  // each pending amendment with its type, applied_week, and weeks remaining.
+
   const soil = session.getSoil(row, col);
   if (soil) {
     lines.push(`Soil:`);
