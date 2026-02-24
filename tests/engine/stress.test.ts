@@ -123,6 +123,52 @@ describe('stressAccumulateSystem', () => {
     expect(plant.health!.stress).toBeLessThan(0.5);
   });
 
+  it('stress recovery rate is sufficient to recover from seasonal stress within a season', () => {
+    // Simulates zucchini stressed to 0.69 by week 8 due to cold soil,
+    // then conditions improve. Recovery should be meaningful (~0.06/week).
+    setupSinglePlot(world, 0, 0, {
+      ph: 6.5,
+      moisture: 0.5,
+      nitrogen: 0.6,
+      phosphorus: 0.6,
+      potassium: 0.6,
+    });
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+    plant.health!.stress = 0.69; // high stress from early-season cold
+
+    const ctx = makeCtx(world, {
+      weather: makeDefaultWeather({ temp_high_c: 28, temp_low_c: 22 }),
+    });
+
+    stressAccumulateSystem(ctx);
+
+    // Should recover by at least 0.05 per tick (enough to matter within a season)
+    expect(plant.health!.stress).toBeLessThanOrEqual(0.64);
+  });
+
+  it('stress stabilizes when conditions are nearly ideal (partial recovery)', () => {
+    // pH very slightly outside range (6.0 min, soil is 5.95): stressDelta = 0.05 * 0.05 = 0.0025
+    // This tiny stressor should still allow partial recovery (-0.02), so net delta is negative.
+    setupSinglePlot(world, 0, 0, {
+      ph: 5.95, // just 0.05 below tomato's 6.0 minimum
+      moisture: 0.5,
+      nitrogen: 0.6,
+      phosphorus: 0.6,
+      potassium: 0.6,
+    });
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+    plant.health!.stress = 0.3;
+
+    const ctx = makeCtx(world, {
+      weather: makeDefaultWeather({ temp_high_c: 28, temp_low_c: 22 }),
+    });
+
+    stressAccumulateSystem(ctx);
+
+    // Near-ideal conditions should allow partial recovery, not further accumulation
+    expect(plant.health!.stress).toBeLessThan(0.3);
+  });
+
   it('stress is clamped to [0, 1]', () => {
     setupSinglePlot(world, 0, 0, {
       ph: 4.0,

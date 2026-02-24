@@ -93,7 +93,15 @@ export function stressAccumulateSystem(ctx: SimulationContext): void {
 
     // ── Recovery ─────────────────────────────────────────────────
     if (allConditionsMet) {
-      stressDelta -= 0.03;
+      // Full recovery when all conditions are ideal. Rate is high enough
+      // that a plant stressed early in the season (e.g. ~0.6 stress by week 8)
+      // can meaningfully recover once summer conditions arrive.
+      stressDelta -= 0.06;
+    } else if (stressDelta < 0.04) {
+      // Partial recovery when conditions are nearly ideal (only minor stressors
+      // present). Prevents runaway stress accumulation from tiny deviations and
+      // lets plants stabilize as conditions gradually improve.
+      stressDelta -= 0.02;
     }
 
     plant.health.stress = clamp(plant.health.stress + stressDelta, 0, 1);
