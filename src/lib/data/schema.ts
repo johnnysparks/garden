@@ -175,6 +175,25 @@ const VulnerabilitySchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Spread behavior
+// ---------------------------------------------------------------------------
+
+const RunnerSpreadSchema = z.object({
+  rate: z.number().min(0).max(1),
+  radius: z.number().int().min(1),
+  min_stage: GrowthStageIdSchema,
+});
+
+const SelfSeedBehaviorSchema = z.object({
+  rate: z.number().min(0).max(1),
+});
+
+const SpreadBehaviorSchema = z.object({
+  runner: RunnerSpreadSchema.optional(),
+  self_seed: SelfSeedBehaviorSchema.optional(),
+});
+
+// ---------------------------------------------------------------------------
 // Harvest
 // ---------------------------------------------------------------------------
 
@@ -292,6 +311,7 @@ export const PlantSpeciesSchema = z.object({
   antagonists: z.array(AntagonistEntrySchema),
   vulnerabilities: z.array(VulnerabilitySchema),
   harvest: HarvestSchema,
+  spreading: SpreadBehaviorSchema.optional(),
   visual: PlantVisualParamsSchema,
   lore: LoreSchema,
 });

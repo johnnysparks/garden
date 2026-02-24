@@ -46,7 +46,7 @@ Build runs `validate:species` before `vite build`. Both must pass for CI to succ
 | ECS         | miniplex                  | Entity-component-system for game entities          |
 | State       | Event sourcing            | Append-only event log, replay for save/load        |
 | Validation  | Zod                       | Schema validation for species JSON at build time   |
-| Testing     | Vitest                    | 607 tests across engine, data, render, and state   |
+| Testing     | Vitest                    | 719 tests across engine, data, render, and state   |
 
 **Web UI**
 
@@ -153,9 +153,8 @@ The simulation runs once per in-game week. System execution order matters for em
 6. `diseaseCheckSystem` — stress + triggers may cause disease
 7. `pestCheckSystem` — pest events, counter-species, companion resistance
 8. `harvestCheckSystem` — harvest window detection, quality decay
+9. `spreadCheckSystem` — disease spread, runner spreading, self-seeding, weed pressure
 10. `frostCheckSystem` — late-season probability roll for killing frost
-
-System not yet implemented: spread check (9).
 
 ### Data Flow
 
