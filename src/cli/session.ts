@@ -145,6 +145,10 @@ export interface CliSession {
   /** Whether the run has ended. */
   isRunEnded(): boolean;
 
+  /** Consume the last dusk tick result (if any). Used to display results
+   *  from auto-transitions when energy runs out during an action. */
+  consumeLastDuskResult(): DuskTickResult | undefined;
+
   /** Grid dimensions. */
   readonly gridRows: number;
   readonly gridCols: number;
@@ -481,6 +485,12 @@ export function createCliSession(config: CliSessionConfig): CliSession {
 
     isRunEnded() {
       return runEnded;
+    },
+
+    consumeLastDuskResult() {
+      const result = lastDuskResult;
+      lastDuskResult = null;
+      return result ?? undefined;
     },
   };
 }
