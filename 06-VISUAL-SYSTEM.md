@@ -6,6 +6,77 @@
 
 **Mood:** Quiet, meditative, alive. The garden should feel like a calm place you want to return to, even when things are dying.
 
+## Visual Validation Loop (for coding agents)
+
+When procedural plants feel "symbolic" instead of botanical, use a strict visual loop rather than ad-hoc tweaking.
+
+### 1) Define the target look first
+
+- Pick 1-3 reference images per species (seedling, vegetative, flowering, fruiting).
+- Write a **plant silhouette brief** with measurable traits:
+  - main stem lean/curve
+  - branch count and spacing
+  - leaf mass ratio (foliage area vs stem area)
+  - canopy width/height ratio
+  - fruit cluster density and attachment points
+- Keep this brief in-repo so the agent is optimizing toward explicit geometry, not vibes.
+
+### 2) Lock reproducibility before tuning
+
+- Always tune with fixed seeds in the dev lab.
+- Build a fixed pose matrix for each species:
+  - growth: 0.2 / 0.5 / 0.8 / 1.0
+  - stress: 0.0 / 0.3 / 0.7
+  - season: spring / summer / autumn
+- Save these as canonical scenarios so visual diffs compare like-for-like.
+
+### 3) Evaluate shape language before color polish
+
+In order of importance:
+
+1. **Silhouette readability** (does the outline read as the species at thumbnail size?)
+2. **Structural plausibility** (branching and phyllotaxy feel biologically believable)
+3. **Mass distribution** (foliage/fruit/stem balance)
+4. **Color and shading**
+
+Most "doesn't look like a plant" failures are silhouette + mass issues, not palette issues.
+
+### 4) Use side-by-side visual regression as a gate
+
+- For each canonical scenario, capture screenshots of:
+  - current main branch
+  - candidate branch
+- Compare side-by-side (or pixel/SSIM diff) with the reference image visible in review.
+- Reject changes that improve one stage but break another (especially mature stage readability).
+
+### 5) Add acceptance checks agents can execute
+
+Use lightweight metrics agents can report in PRs:
+
+- stem-to-leaf area ratio within target bounds
+- canopy width-to-height ratio within species bounds
+- fruit count and clustering in fruiting stage
+- minimum visible leaf count at growth >= 0.6
+
+These are not art replacements; they are guardrails that catch obvious regressions.
+
+### 6) Run a two-pass review
+
+- **Pass A (botanical):** "Would a player call this a tomato without UI labels?"
+- **Pass B (style):** "Does it match our flat-vector, calm-motion art direction?"
+
+Only merge when both pass.
+
+### 7) PR checklist (recommended)
+
+- [ ] includes before/after screenshots for canonical scenarios
+- [ ] states which silhouette traits changed and why
+- [ ] confirms no stage regressed (seedling/veg/flowering/fruiting)
+- [ ] lists any param range changes made to species JSON
+- [ ] includes follow-up TODOs if realism is still partial
+
+This loop makes visual work reviewable by humans and repeatable by agents.
+
 ## Parametric SVG Rendering
 
 Every plant is rendered from its `PlantVisualParams` at runtime. No pre-made sprites. This means:
