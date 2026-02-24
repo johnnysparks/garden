@@ -16,9 +16,11 @@ import type {
   SoilState,
   WeekWeather,
   SpeciesLookup,
+  PestEvent,
 } from './ecs/components.js';
 import { createRng, type SeededRng } from './rng.js';
 import { generateSeasonWeather, type ClimateZone } from './weather-gen.js';
+import { generateSeasonPests } from './pest-gen.js';
 import {
   createTurnManager,
   TurnPhase,
@@ -89,6 +91,8 @@ export interface GameSession {
   readonly eventLog: EventLog;
   readonly rng: SeededRng;
   readonly seasonWeather: readonly WeekWeather[];
+  /** Pre-generated pest events for the season, sorted by arrival_week. */
+  readonly seasonPests: readonly PestEvent[];
 
   // Stores for UI binding
   readonly plants$: Readable<With<Entity, 'species' | 'growth' | 'health' | 'plotSlot'>[]>;
@@ -147,6 +151,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
   const world = createWorld();
   const rng = createRng(seed);
   const seasonWeather = generateSeasonWeather(zone, seed);
+  const seasonPests = generateSeasonPests(zone, seed);
   const turnManager = createTurnManager();
   const eventLog = createEventLog();
 
@@ -170,6 +175,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
     rng,
     speciesLookup,
     firstFrostWeekAvg: zone.first_frost_week_avg,
+    pestEvents: seasonPests,
   };
 
   // ── Reactive stores ───────────────────────────────────────────────
@@ -375,6 +381,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
     eventLog,
     rng,
     seasonWeather,
+    seasonPests,
 
     plants$,
     soilStates$,
