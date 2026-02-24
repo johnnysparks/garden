@@ -1,60 +1,6 @@
-<script lang="ts" module>
-	// ── Shared rAF Loop ─────────────────────────────────────────────────────────
-	// One loop drives all AnimatedPlant instances. Each instance registers a
-	// per-frame callback; the loop updates global wind once, then invokes them all.
-
-	import {
-		updateWind,
-		createWindState,
-		type WindState,
-	} from './animation.js';
-
-	type FrameCallback = (wind: WindState, timeMs: number, deltaMs: number) => void;
-
-	const callbacks = new Set<FrameCallback>();
-	let windState: WindState = createWindState();
-	let lastTimestamp = 0;
-	let rafId: number | null = null;
-
-	function tick(timestamp: number) {
-		if (lastTimestamp === 0) lastTimestamp = timestamp;
-		const deltaMs = Math.min(timestamp - lastTimestamp, 100); // cap at 100 ms
-		lastTimestamp = timestamp;
-
-		// Global wind — computed once, shared by every plant.
-		windState = updateWind(windState, deltaMs);
-
-		for (const cb of callbacks) {
-			cb(windState, windState.elapsed, deltaMs);
-		}
-
-		if (callbacks.size > 0) {
-			rafId = requestAnimationFrame(tick);
-		} else {
-			rafId = null;
-		}
-	}
-
-	function registerCallback(cb: FrameCallback) {
-		callbacks.add(cb);
-		if (rafId === null) {
-			lastTimestamp = 0;
-			rafId = requestAnimationFrame(tick);
-		}
-	}
-
-	function unregisterCallback(cb: FrameCallback) {
-		callbacks.delete(cb);
-		if (callbacks.size === 0 && rafId !== null) {
-			cancelAnimationFrame(rafId);
-			rafId = null;
-		}
-	}
-</script>
-
 <script lang="ts">
 	import { Spring } from 'svelte/motion';
-	import { onMount, untrack } from 'svelte';
+	import { untrack } from 'svelte';
 	import PlantRenderer from './PlantRenderer.svelte';
 	import {
 		calculateSway,
@@ -62,31 +8,45 @@
 		stressTremor,
 		harvestPop,
 		generateParticleBurst,
-		type WindState as WindStateAlias,
+		type WindState,
 		type Particle,
 	} from './animation.js';
 	import type { PlantVisualParams, GrowthStageId } from '$lib/data/types.js';
 	import type { SeasonPalette } from './palette.js';
 
 	// ── Props ────────────────────────────────────────────────────────────────────
+	// The parent manages a single rAF loop for the whole garden and passes
+	// windState + timeMs down. This component computes its transforms
+	// synchronously — no per-plant animation frame.
 
 	interface Props {
-		params: PlantVisualParams;
+		visualParams: PlantVisualParams;
 		growthProgress: number; // 0-1
 		stress: number; // 0-1
 		instanceSeed: number;
+		windState: WindState;
+		timeMs: number;
 		stage: GrowthStageId;
 		palette?: SeasonPalette;
 	}
 
-	let { params, growthProgress, stress, instanceSeed, stage, palette }: Props = $props();
+	let {
+		visualParams,
+		growthProgress,
+		stress,
+		instanceSeed,
+		windState,
+		timeMs,
+		stage,
+		palette,
+	}: Props = $props();
 
 	// ── Springs ──────────────────────────────────────────────────────────────────
 	// Smooth transitions when game-tick values jump between frames.
 	// Initial prop capture is intentional; $effect blocks below track changes.
 
 	const growthSpring = new Spring(untrack(() => growthProgress), {
-		stiffness: untrack(() => params.animation.growth_spring_tension),
+		stiffness: untrack(() => visualParams.animation.growth_spring_tension),
 		damping: 0.7,
 	});
 
@@ -104,78 +64,72 @@
 
 	// ── Derived constants ────────────────────────────────────────────────────────
 
-	let plantMass = $derived(params.stem.height[1] * params.leaves.count[1]);
-
-	let particleColor = $derived(
-		params.fruit?.color_ripe ?? params.flowers?.color ?? '#ffd700',
+	let plantMass = $derived(
+		visualParams.stem.height[1] * visualParams.leaves.count[1],
 	);
 
-	// ── Per-frame state (written by rAF, read by template) ───────────────────────
+	let particleColor = $derived(
+		visualParams.fruit?.color_ripe ?? visualParams.flowers?.color ?? '#ffd700',
+	);
 
-	let transformStyle = $state('');
-	let plantOpacity = $state(1);
+	// ── Synchronous per-frame animation values ──────────────────────────────────
+	// Recomputed reactively whenever the parent updates timeMs or windState.
+
+	let swayX = $derived(
+		calculateSway(
+			visualParams.animation.sway_amplitude,
+			visualParams.animation.sway_frequency,
+			plantMass,
+			windState,
+			timeMs,
+		),
+	);
+
+	let breatheScale = $derived(
+		breathe(timeMs, visualParams.animation.idle_breathing),
+	);
+
+	let tremor = $derived(stressTremor(timeMs, stressSpring.current));
 
 	// ── Harvest animation ────────────────────────────────────────────────────────
 
 	const HARVEST_DURATION = 600; // ms
 
 	let harvesting = $state(false);
-	let harvestStartTime = 0; // plain var — only rAF + triggerHarvest touch it
-	let particles = $state<Particle[]>([]);
+	let harvestStartTime = 0;
 
-	// ── rAF callback ─────────────────────────────────────────────────────────────
+	let harvestProgress = $derived(
+		harvesting
+			? Math.min(1, (timeMs - harvestStartTime) / HARVEST_DURATION)
+			: 0,
+	);
 
-	function onFrame(wind: WindStateAlias, timeMs: number, _dt: number) {
-		const currentStress = stressSpring.current;
+	let pop = $derived(harvesting ? harvestPop(harvestProgress) : null);
 
-		// Sway
-		const swayX = calculateSway(
-			params.animation.sway_amplitude,
-			params.animation.sway_frequency,
-			plantMass,
-			wind,
-			timeMs,
-		);
+	let particles = $derived<Particle[]>(
+		harvesting ? generateParticleBurst(5, harvestProgress) : [],
+	);
 
-		// Breathing
-		const breatheScale = breathe(timeMs, params.animation.idle_breathing);
+	// Auto-end harvest when animation completes
+	$effect(() => {
+		if (harvesting && harvestProgress >= 1) {
+			harvesting = false;
+		}
+	});
 
-		// Stress tremor
-		const tremor = stressTremor(timeMs, currentStress);
+	// ── Final transform ─────────────────────────────────────────────────────────
 
-		if (harvesting) {
-			const progress = Math.min(1, (timeMs - harvestStartTime) / HARVEST_DURATION);
-			const pop = harvestPop(progress);
-
-			particles = generateParticleBurst(5, progress);
-
-			const tx = swayX + tremor.x;
+	let transformStyle = $derived.by(() => {
+		const tx = swayX + tremor.x;
+		if (pop) {
 			const ty = tremor.y + pop.y;
 			const s = breatheScale * pop.scale;
-
-			transformStyle = `translate(${tx}px, ${ty}px) scale(${s})`;
-			plantOpacity = pop.opacity;
-
-			if (progress >= 1) {
-				harvesting = false;
-				particles = [];
-				plantOpacity = 1;
-			}
-		} else {
-			const tx = swayX + tremor.x;
-			const ty = tremor.y;
-
-			transformStyle = `translate(${tx}px, ${ty}px) scale(${breatheScale})`;
-			plantOpacity = 1;
+			return `translate(${tx}px, ${ty}px) scale(${s})`;
 		}
-	}
-
-	// ── Lifecycle ────────────────────────────────────────────────────────────────
-
-	onMount(() => {
-		registerCallback(onFrame);
-		return () => unregisterCallback(onFrame);
+		return `translate(${tx}px, ${tremor.y}px) scale(${breatheScale})`;
 	});
+
+	let plantOpacity = $derived(pop ? pop.opacity : 1);
 
 	// ── Public API ───────────────────────────────────────────────────────────────
 
@@ -186,14 +140,14 @@
 	export function triggerHarvest() {
 		if (harvesting) return;
 		harvesting = true;
-		harvestStartTime = windState.elapsed;
+		harvestStartTime = timeMs;
 	}
 </script>
 
 <!--
   Outer <g> receives CSS transforms every frame.
   will-change hints the browser to promote to its own compositing layer.
-  No SVG structure inside PlantRenderer is touched during animation.
+  style: bindings (not attribute bindings) for GPU-composited transforms.
 -->
 <g
 	class="animated-plant"
@@ -203,7 +157,7 @@
 	style:transform-origin="center bottom"
 >
 	<PlantRenderer
-		{params}
+		params={visualParams}
 		growthProgress={growthSpring.current}
 		stress={stressSpring.current}
 		{instanceSeed}
