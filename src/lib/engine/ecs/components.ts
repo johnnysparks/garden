@@ -56,6 +56,24 @@ export interface PendingAmendment {
   effects: Partial<SoilState>;
 }
 
+// ── Pest events (zone-level, pre-generated at season start) ─────────
+
+export interface PestEvent {
+  pest_id: string;
+  target_families: string[];
+  arrival_week: number;
+  severity: number;
+  duration_weeks: number;
+  countered_by: string[];
+  visual: string;
+}
+
+export interface PestInfestationEntry {
+  pest_id: string;
+  severity: number;
+  visual: string;
+}
+
 // ── Plant condition / buff tracking ──────────────────────────────────
 
 export interface ActiveCondition {
@@ -103,6 +121,9 @@ export interface Entity {
   // Companion buffs (rebuilt each tick)
   companionBuffs?: { buffs: CompanionBuff[] };
 
+  // Active pest infestations
+  pestInfestation?: { infestations: PestInfestationEntry[] };
+
   // Visual
   visual?: { params: PlantVisualParams; instanceSeed: number };
 
@@ -131,4 +152,6 @@ export interface SimulationContext {
   rng: SeededRng;
   speciesLookup: SpeciesLookup;
   firstFrostWeekAvg: number;
+  /** All pest events for the season. The pest system filters by currentWeek. */
+  pestEvents?: PestEvent[];
 }
