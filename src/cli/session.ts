@@ -17,6 +17,7 @@ import { createRng, type SeededRng } from '../lib/engine/rng.js';
 import { generateSeasonWeather, type ClimateZone } from '../lib/engine/weather-gen.js';
 import {
   createTurnManager,
+  calculateEnergyBudget,
   TurnPhase,
   type TurnManager,
 } from '../lib/engine/turn-manager.js';
@@ -190,6 +191,10 @@ export function createCliSession(config: CliSessionConfig): CliSession {
 
   // ── Initialize event log with RUN_START ───────────────────────────
   eventLog.append({ type: 'RUN_START', seed, zone: zone.id });
+
+  // ── Set initial energy budget so it's visible from Week 1 DAWN ────
+  const week1Budget = calculateEnergyBudget(1, seasonWeather[0]);
+  turnManager.energy.set({ current: week1Budget, max: week1Budget });
 
   // ── Create plot grid with starting soil ───────────────────────────
   for (let r = 0; r < gridRows; r++) {
