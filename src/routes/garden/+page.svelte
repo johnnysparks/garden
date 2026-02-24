@@ -7,14 +7,17 @@
 		type SeasonId,
 	} from '$lib/render/palette.js';
 	import { createRng } from '$lib/engine/rng.js';
-	import { getSpecies } from '$lib/data/index.js';
+	import { getSpecies, getAllSpecies } from '$lib/data/index.js';
 	import type { Entity, SoilState } from '$lib/engine/ecs/components.js';
 	import type { GameWorld } from '$lib/engine/ecs/world.js';
 	import type { GrowthStageId } from '$lib/data/types.js';
 	import SeasonBar from '$lib/ui/SeasonBar.svelte';
 	import WeatherRibbon from '$lib/ui/WeatherRibbon.svelte';
 	import EnergyBar from '$lib/ui/EnergyBar.svelte';
-	import { season, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
+	import ActionToolbar from '$lib/ui/ActionToolbar.svelte';
+	import SeedSelector from '$lib/ui/SeedSelector.svelte';
+	import { season, energy, turn, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
+	import { dispatch } from '$lib/state/stores.js';
 
 	// ── Constants ───────────────────────────────────────────────────────
 
@@ -194,6 +197,73 @@
 			selectedPlot = { row, col };
 		}
 	}
+
+	/** Check whether the currently selected plot has a living plant. */
+	let selectedPlotHasPlant = $derived.by(() => {
+		void ecsTick;
+		if (!selectedPlot) return false;
+		const plantEntities = world.with('plotSlot', 'species');
+		for (const pe of plantEntities) {
+			if (
+				pe.plotSlot.row === selectedPlot.row &&
+				pe.plotSlot.col === selectedPlot.col &&
+				!pe.dead
+			) {
+				return true;
+			}
+		}
+		return false;
+	});
+
+	// ── Seed selector state ─────────────────────────────────────────────
+
+	let showSeedSelector = $state(false);
+
+	/** All species currently available for planting. */
+	let availableSpecies = $derived(getAllSpecies());
+
+	function onSelectSeed(speciesId: string) {
+		if (!selectedPlot) return;
+		if (energy.current < 1) return;
+
+		// Dispatch PLANT event
+		dispatch({
+			type: 'PLANT',
+			species_id: speciesId,
+			plot: [selectedPlot.row, selectedPlot.col],
+			week: season.week,
+		});
+
+		// Add plant entity to ECS world
+		addPlant(selectedPlot.row, selectedPlot.col, speciesId, 0.0, 'seed');
+
+		// Decrement energy
+		energy.current = Math.max(0, energy.current - 1);
+
+		// Update ECS tick and clean up UI state
+		ecsTick++;
+		showSeedSelector = false;
+		selectedPlot = null;
+	}
+
+	// ── Action dispatch ─────────────────────────────────────────────────
+
+	function onAction(actionId: string) {
+		switch (actionId) {
+			case 'plant': {
+				if (!selectedPlot || selectedPlotHasPlant) return;
+				showSeedSelector = true;
+				break;
+			}
+			case 'wait': {
+				// Spend remaining energy, advance to DUSK phase
+				energy.current = 0;
+				turn.phase = 'DUSK';
+				selectedPlot = null;
+				break;
+			}
+		}
+	}
 </script>
 
 <svelte:head>
@@ -219,8 +289,21 @@
 
 	<footer class="bottom-bar" style:background={palette.ui_bg}>
 		<EnergyBar />
+		<ActionToolbar
+			{selectedPlot}
+			{selectedPlotHasPlant}
+			{onAction}
+		/>
 	</footer>
 </div>
+
+{#if showSeedSelector}
+	<SeedSelector
+		species={availableSpecies}
+		onSelect={onSelectSeed}
+		onClose={() => (showSeedSelector = false)}
+	/>
+{/if}
 
 <style>
 	.garden-page {
