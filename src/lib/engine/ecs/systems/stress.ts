@@ -69,9 +69,9 @@ export function stressAccumulateSystem(ctx: SimulationContext): void {
     }
 
     // ── Temperature stress ───────────────────────────────────────
-    const avgTemp = (weather.temp_high_c + weather.temp_low_c) / 2;
+    const soilTemp = soil.temperature_c;
     const idealTemp = species.needs.soil_temp_min_c + 10;
-    const tempDist = Math.abs(avgTemp - idealTemp);
+    const tempDist = Math.abs(soilTemp - idealTemp);
     if (tempDist > 10) {
       stressDelta += 0.05 * ((tempDist - 10) / 10);
       allConditionsMet = false;

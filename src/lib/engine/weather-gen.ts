@@ -238,6 +238,27 @@ export function generateSeasonWeather(zone: ClimateZone, seed: number): WeekWeat
   let activeEvent: ActiveSpecialEvent | null = null;
 
   for (let w = 0; w < SEASON_WEEKS; w++) {
+    // --- Expire previous week's event & generate new events FIRST ---
+    // This ensures multi-week events (heatwave, drought, indian_summer)
+    // affect temperature/precipitation on the week they start, not just
+    // subsequent weeks.
+    if (activeEvent) {
+      activeEvent.remaining_weeks--;
+      if (activeEvent.remaining_weeks <= 0) {
+        activeEvent = null;
+      }
+    }
+
+    const newEvent = tryGenerateSpecialEvent(rng, w, zone, activeEvent);
+    if (newEvent) {
+      activeEvent = {
+        event: newEvent,
+        remaining_weeks: getEventDuration(newEvent),
+      };
+    }
+
+    const special = activeEvent ? activeEvent.event : null;
+
     // --- Temperature ---
     const baseHigh = zone.avg_temps_by_week[w];
     let highDeviation = rng.nextGaussian(0, zone.temp_variance);
@@ -286,17 +307,6 @@ export function generateSeasonWeather(zone: ClimateZone, seed: number): WeekWeat
     const windIdx = rng.weightedIndex([...WIND_WEIGHTS]);
     const wind = WIND_LEVELS[windIdx];
 
-    // --- Special events ---
-    const newEvent = tryGenerateSpecialEvent(rng, w, zone, activeEvent);
-    if (newEvent) {
-      activeEvent = {
-        event: newEvent,
-        remaining_weeks: getEventDuration(newEvent),
-      };
-    }
-
-    const special = activeEvent ? activeEvent.event : null;
-
     // --- Frost ---
     const frostProb = frostProbability(w, zone.first_frost_week_avg);
     let frost = rng.next() < frostProb;
@@ -325,14 +335,6 @@ export function generateSeasonWeather(zone: ClimateZone, seed: number): WeekWeat
       frost,
       special,
     });
-
-    // Decrement active event
-    if (activeEvent) {
-      activeEvent.remaining_weeks--;
-      if (activeEvent.remaining_weeks <= 0) {
-        activeEvent = null;
-      }
-    }
   }
 
   return weeks;
