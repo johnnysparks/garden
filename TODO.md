@@ -79,14 +79,14 @@
 
 ### Known Bugs
 
-Found via CLI gameplay testing. Marked with `// TODO: BUG` in source.
+Found via CLI gameplay testing. All four bugs are now fixed.
 
 | Bug | File | Status | Description |
 |-----|------|--------|-------------|
 | ~~Amendment not applied~~ | ~~`src/cli/commands.ts`~~ | fixed | Refactored into shared `GameSession.amendAction()` |
-| Unrealistic starting soil temp | `src/lib/engine/game-session.ts:260` | open | Initial soil temp 20°C is too warm for early spring; should derive from zone |
+| ~~Unrealistic starting soil temp~~ | ~~`src/lib/engine/game-session.ts`~~ | fixed | `defaultSoil()` now accepts initial temp; `createGameSession` passes `zone.avg_temps_by_week[0]` |
 | ~~Energy not reset~~ | ~~`src/lib/engine/turn-manager.ts`~~ | fixed | Energy now resets to 0/0 on ADVANCE→DAWN transition |
-| Slow warm-season growth | `src/lib/engine/ecs/systems/growth.ts:132` | open | Warm-season crops (tomato, basil) grow very slowly in zone_8a early season; partially mitigated by switching to soil temp but still needs tuning |
+| ~~Slow warm-season growth~~ | ~~`src/lib/engine/ecs/systems/growth.ts`~~ | fixed | Temperature tolerance widened from 8 to 12; regression tests added |
 
 ---
 
@@ -164,7 +164,7 @@ Data layer is complete and tested. All UI is missing.
 
 | # | Task | Status |
 |---|------|--------|
-| 1 | Fix remaining gameplay bugs (soil temp init, warm-season growth) | todo |
+| 1 | Fix remaining gameplay bugs (soil temp init, warm-season growth) | done |
 | 2 | Amend action UI (WS5.1) | todo |
 | 3 | Intervene/harvest action UI (WS5.3) | todo |
 | 4 | Run end screen (WS5.5) | todo |
