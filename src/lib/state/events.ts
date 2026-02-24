@@ -35,6 +35,8 @@ export interface InterveneEvent {
   type: 'INTERVENE';
   plant_id: string;
   action: string;
+  /** Condition the player believes they are treating. */
+  target_condition: string;
   week: number;
 }
 

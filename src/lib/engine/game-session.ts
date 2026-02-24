@@ -86,6 +86,15 @@ export interface DuskTickResult {
       effects: Array<{ type: string; modifier: number }>;
     }>;
   }>;
+  /** Treatment outcomes resolved this tick (delayed feedback from INTERVENE). */
+  treatmentOutcomes: Array<{
+    speciesId: string;
+    row: number;
+    col: number;
+    action: string;
+    targetCondition: string;
+    result: 'resolved' | 'stabilized' | 'ineffective' | 'worsened';
+  }>;
 }
 
 /** Result of the ADVANCE phase frost check. */
@@ -209,7 +218,7 @@ export interface GameSession {
   diagnoseAction(row: number, col: number): ActionResult<{ plant: PlantInfo }>;
 
   /** Intervene on a plant at a plot. Validates phase, energy, bounds, and plant presence. */
-  interveneAction(action: string, row: number, col: number): ActionResult<{ plant: PlantInfo }>;
+  interveneAction(action: string, row: number, col: number, targetCondition?: string): ActionResult<{ plant: PlantInfo }>;
 
   /** Scout a target. Validates phase and energy. */
   scoutAction(target: string): ActionResult;
@@ -490,6 +499,17 @@ export function createGameSession(config: GameSessionConfig): GameSession {
       }
     }
 
+    // Treatment outcomes (from the treatment feedback system)
+    const treatmentOutcomes: DuskTickResult['treatmentOutcomes'] =
+      tickResult.treatmentFeedback.outcomes.map((o) => ({
+        speciesId: o.speciesId,
+        row: o.row,
+        col: o.col,
+        action: o.outcome.action,
+        targetCondition: o.outcome.targetCondition,
+        result: o.outcome.result,
+      }));
+
     const duskResult: DuskTickResult = {
       week: currentWeek,
       grown,
@@ -497,6 +517,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
       diseaseOnsets,
       harvestReady,
       companionEffects,
+      treatmentOutcomes,
     };
 
     tickResultStore.set(duskResult);
@@ -813,7 +834,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
       return { ok: true, plant: plantInfo };
     },
 
-    interveneAction(action: string, row: number, col: number): ActionResult<{ plant: PlantInfo }> {
+    interveneAction(action: string, row: number, col: number, targetCondition?: string): ActionResult<{ plant: PlantInfo }> {
       if (get(turnManager.phase) !== TurnPhase.ACT) {
         return { ok: false, error: `Not in ACT phase (current: ${get(turnManager.phase)}).` };
       }
@@ -821,14 +842,16 @@ export function createGameSession(config: GameSessionConfig): GameSession {
         return { ok: false, error: `Plot [${row}, ${col}] out of bounds. Grid is ${gridRows}x${gridCols}.` };
       }
       const plantEntities = world.with('species', 'growth', 'health', 'plotSlot');
+      let foundEntity: Entity | undefined;
       let plantInfo: PlantInfo | undefined;
       for (const p of plantEntities) {
         if (p.plotSlot.row === row && p.plotSlot.col === col && !(p as Entity).dead) {
+          foundEntity = p as Entity;
           plantInfo = toPlantInfo(p);
           break;
         }
       }
-      if (!plantInfo) {
+      if (!plantInfo || !foundEntity) {
         return { ok: false, error: `No plant at [${row}, ${col}].` };
       }
       const energy = get(turnManager.energy);
@@ -836,13 +859,43 @@ export function createGameSession(config: GameSessionConfig): GameSession {
         return { ok: false, error: `Not enough energy. Need 1, have ${energy.current}.` };
       }
 
+      // Resolve target condition: use explicit param, or infer from last diagnosis
+      const plantId = `${row},${col}`;
+      let resolvedTarget = targetCondition ?? '';
+      if (!resolvedTarget) {
+        // Find the most recent DIAGNOSE event for this plant
+        const diagnoses = eventLog.state.diagnoses.filter(
+          (d) => d.plant_id === plantId,
+        );
+        if (diagnoses.length > 0) {
+          resolvedTarget = diagnoses[diagnoses.length - 1].hypothesis;
+        }
+      }
+
       turnManager.spendEnergy(1);
+      const currentWeek = get(turnManager.week);
       eventLog.append({
         type: 'INTERVENE',
-        plant_id: `${row},${col}`,
+        plant_id: plantId,
         action,
-        week: get(turnManager.week),
+        target_condition: resolvedTarget,
+        week: currentWeek,
       });
+
+      // Record the treatment on the plant entity for the feedback system
+      if (!foundEntity.activeTreatments) {
+        foundEntity.activeTreatments = { treatments: [] };
+      }
+      // Feedback delay: 1 week for early-game feel, 2 weeks for advanced conditions
+      const feedbackDelay = (foundEntity.activeConditions?.conditions.length ?? 0) > 1 ? 2 : 1;
+      foundEntity.activeTreatments.treatments.push({
+        action,
+        targetCondition: resolvedTarget,
+        applied_week: currentWeek,
+        feedback_week: currentWeek + feedbackDelay,
+      });
+
+      worldVersion.update((v) => v + 1);
       return { ok: true, plant: plantInfo };
     },
 

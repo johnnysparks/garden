@@ -550,6 +550,7 @@ describe('formatDuskTick', () => {
       diseaseOnsets: [],
       harvestReady: [],
       companionEffects: [],
+      treatmentOutcomes: [],
     };
     const output = formatDuskTick(result);
     expect(output).toContain('=== DUSK — Simulation Tick (Week 5) ===');
@@ -563,6 +564,7 @@ describe('formatDuskTick', () => {
       diseaseOnsets: [],
       harvestReady: [],
       companionEffects: [],
+      treatmentOutcomes: [],
     };
     const output = formatDuskTick(result);
     expect(output).toContain('Growth: none');
@@ -583,6 +585,7 @@ describe('formatDuskTick', () => {
       diseaseOnsets: [],
       harvestReady: [],
       companionEffects: [],
+      treatmentOutcomes: [],
     };
     const output = formatDuskTick(result);
     expect(output).toContain('Growth:');
@@ -604,6 +607,7 @@ describe('formatDuskTick', () => {
       diseaseOnsets: [],
       harvestReady: [],
       companionEffects: [],
+      treatmentOutcomes: [],
     };
     const output = formatDuskTick(result);
     expect(output).toContain('(stalled)');
@@ -623,6 +627,7 @@ describe('formatDuskTick', () => {
       diseaseOnsets: [],
       harvestReady: [],
       companionEffects: [],
+      treatmentOutcomes: [],
     };
     const output = formatDuskTick(result);
     expect(output).toContain('Stress:');
@@ -642,6 +647,7 @@ describe('formatDuskTick', () => {
       }],
       harvestReady: [],
       companionEffects: [],
+      treatmentOutcomes: [],
     };
     const output = formatDuskTick(result);
     expect(output).toContain('Disease:');
@@ -660,6 +666,7 @@ describe('formatDuskTick', () => {
         col: 1,
       }],
       companionEffects: [],
+      treatmentOutcomes: [],
     };
     const output = formatDuskTick(result);
     expect(output).toContain('Harvest ready:');
@@ -682,6 +689,7 @@ describe('formatDuskTick', () => {
           effects: [{ type: 'pest_resistance', modifier: 0.3 }],
         }],
       }],
+      treatmentOutcomes: [],
     };
     const output = formatDuskTick(result);
     expect(output).toContain('Companions:');
@@ -696,6 +704,7 @@ describe('formatDuskTick', () => {
       diseaseOnsets: [],
       harvestReady: [],
       companionEffects: [],
+      treatmentOutcomes: [],
     };
     const output = formatDuskTick(result);
     expect(output).not.toContain('Stress:');

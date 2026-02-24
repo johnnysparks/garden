@@ -286,17 +286,23 @@ export function executeCommand(session: CliSession, input: string): CommandResul
 
     case 'intervene': {
       if (args.length < 3) {
-        return { output: 'Error: Usage: intervene ACTION ROW COL' };
+        return { output: 'Error: Usage: intervene ACTION ROW COL [CONDITION]' };
       }
       const action = args[0];
       const rc = parseRowCol(args.slice(1));
       if (typeof rc === 'string') return { output: `Error: ${rc}` };
+      // Optional: explicit target condition (4th arg after ACTION ROW COL)
+      const targetCondition = args.length >= 4 ? args[3] : undefined;
 
-      const result = session.interveneAction(action, rc.row, rc.col);
+      const result = session.interveneAction(action, rc.row, rc.col, targetCondition);
       if (!result.ok) return { output: `Error: ${result.error}` };
 
       const energy = session.getEnergy();
       let output = `Intervened on ${result.plant.speciesId} at [${rc.row}, ${rc.col}]: ${action}. Energy: ${energy.current}/${energy.max}`;
+      if (targetCondition) {
+        output += `\nTreating: ${targetCondition}`;
+      }
+      output += '\nFeedback will appear in 1-2 weeks.';
       const autoAdv = formatAutoAdvance(session);
       if (autoAdv) output += '\n\n' + autoAdv;
       return { output };

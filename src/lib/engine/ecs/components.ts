@@ -83,6 +83,32 @@ export interface ActiveCondition {
   severity: number;
 }
 
+// ── Treatment tracking ──────────────────────────────────────────────
+
+/** A treatment applied via the INTERVENE action, pending feedback. */
+export interface ActiveTreatment {
+  /** The treatment action applied (e.g., 'prune', 'spray_fungicide'). */
+  action: string;
+  /** The condition the player believes they are treating. */
+  targetCondition: string;
+  /** Week the treatment was applied. */
+  applied_week: number;
+  /** Week when the outcome becomes visible (applied + 1–2). */
+  feedback_week: number;
+}
+
+/** Result of evaluating a treatment, produced by the feedback system. */
+export interface TreatmentOutcome {
+  action: string;
+  targetCondition: string;
+  /** Whether the diagnosed condition was actually present. */
+  diagnosisCorrect: boolean;
+  /** Whether the treatment action was appropriate for the condition. */
+  treatmentEffective: boolean;
+  /** Overall result category. */
+  result: 'resolved' | 'stabilized' | 'ineffective' | 'worsened';
+}
+
 export interface CompanionBuff {
   source: string;
   effects: InteractionEffect[];
@@ -117,6 +143,9 @@ export interface Entity {
 
   // Conditions
   activeConditions?: { conditions: ActiveCondition[] };
+
+  // Pending treatments awaiting feedback
+  activeTreatments?: { treatments: ActiveTreatment[] };
 
   // Companion buffs (rebuilt each tick)
   companionBuffs?: { buffs: CompanionBuff[] };

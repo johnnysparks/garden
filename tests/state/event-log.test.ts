@@ -49,6 +49,7 @@ const INTERVENE: GameEvent = {
   type: 'INTERVENE',
   plant_id: 'tomato_cherokee_purple@1,2',
   action: 'prune',
+  target_condition: 'early_blight',
   week: 3,
 };
 const SCOUT: GameEvent = {
