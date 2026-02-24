@@ -33,6 +33,7 @@ describe('diseaseCheckSystem', () => {
   it('does not start disease when triggers are not met', () => {
     setupSinglePlot(world, 0, 0);
     const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+    plant.growth!.stage = 'vegetative';
 
     // Low humidity = early_blight trigger not met (needs >= 0.7)
     const ctx = makeCtx(world, {
@@ -48,6 +49,7 @@ describe('diseaseCheckSystem', () => {
   it('can onset disease when triggers are met and RNG allows', () => {
     setupSinglePlot(world, 0, 0);
     const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+    plant.growth!.stage = 'vegetative';
     plant.health!.stress = 0.5; // high stress increases probability
 
     // High humidity triggers early_blight
@@ -72,6 +74,7 @@ describe('diseaseCheckSystem', () => {
   it('progresses existing disease symptom stages', () => {
     setupSinglePlot(world, 0, 0);
     const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+    plant.growth!.stage = 'vegetative';
 
     // Pre-existing disease from week 5
     plant.activeConditions = {
@@ -91,6 +94,7 @@ describe('diseaseCheckSystem', () => {
   it('kills plant when disease reaches weeks_to_death', () => {
     setupSinglePlot(world, 0, 0);
     const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+    plant.growth!.stage = 'vegetative';
 
     // Disease started 8 weeks ago (early_blight weeks_to_death = 8)
     plant.activeConditions = {
@@ -108,6 +112,7 @@ describe('diseaseCheckSystem', () => {
   it('does not duplicate existing conditions', () => {
     setupSinglePlot(world, 0, 0);
     const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+    plant.growth!.stage = 'vegetative';
     plant.health!.stress = 0.9;
 
     plant.activeConditions = {
@@ -146,6 +151,7 @@ describe('diseaseCheckSystem', () => {
       const w1 = createWorld();
       setupSinglePlot(w1, 0, 0);
       const p1 = plantSpecies(w1, 'tomato_cherokee_purple', 0, 0);
+      p1.growth!.stage = 'vegetative';
       p1.health!.stress = 0.9;
       diseaseCheckSystem({
         ...makeCtx(w1, { weather: makeDefaultWeather({ humidity: 0.9 }) }),
@@ -157,6 +163,7 @@ describe('diseaseCheckSystem', () => {
       const w2 = createWorld();
       setupSinglePlot(w2, 0, 0);
       const p2 = plantSpecies(w2, 'tomato_cherokee_purple', 0, 0);
+      p2.growth!.stage = 'vegetative';
       p2.health!.stress = 0;
       diseaseCheckSystem({
         ...makeCtx(w2, { weather: makeDefaultWeather({ humidity: 0.9 }) }),
@@ -169,9 +176,26 @@ describe('diseaseCheckSystem', () => {
     expect(stressedOnsets).toBeGreaterThan(calmOnsets);
   });
 
+  it('seeds and germinating plants are immune to disease', () => {
+    setupSinglePlot(world, 0, 0);
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+    // plant starts at 'seed' stage by default
+
+    const ctx = makeCtx(world, {
+      weather: makeDefaultWeather({ humidity: 0.95 }),
+    });
+
+    for (let i = 0; i < 50; i++) {
+      diseaseCheckSystem({ ...ctx, rng: createRng(i) });
+    }
+
+    expect(plant.activeConditions!.conditions.length).toBe(0);
+  });
+
   it('species with no vulnerabilities are unaffected', () => {
     setupSinglePlot(world, 0, 0);
     const plant = plantSpecies(world, 'rosemary', 0, 0); // rosemary has no vulns
+    plant.growth!.stage = 'vegetative';
 
     const ctx = makeCtx(world, {
       weather: makeDefaultWeather({ humidity: 0.95 }),

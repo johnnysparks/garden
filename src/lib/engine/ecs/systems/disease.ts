@@ -69,6 +69,10 @@ export function diseaseCheckSystem(ctx: SimulationContext): void {
   for (const plant of plants) {
     if ((plant as { dead?: boolean }).dead) continue;
 
+    // Seeds and germinating plants are pre-emergence — skip disease checks
+    const growth = (plant as { growth?: { stage: string } }).growth;
+    if (growth && (growth.stage === 'seed' || growth.stage === 'germination')) continue;
+
     const species = speciesLookup(plant.species.speciesId);
     if (!species) continue;
 

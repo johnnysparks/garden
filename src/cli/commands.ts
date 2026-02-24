@@ -178,9 +178,7 @@ export function executeCommand(session: CliSession, input: string): CommandResul
           outputParts.push(formatAdvance(result.advance, session.config.zone));
         }
 
-        // Stop when we've reached PLAN (start of new week's action window)
-        if (result.phase === TurnPhase.PLAN) break;
-        // Also stop when we hit ACT (from PLAN → ACT)
+        // Stop when we've reached ACT (start of the action window)
         if (result.phase === TurnPhase.ACT) break;
       }
 
