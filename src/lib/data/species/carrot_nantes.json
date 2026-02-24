@@ -1,0 +1,202 @@
+{
+  "id": "carrot_nantes",
+  "common_name": "Nantes Carrot",
+  "botanical_name": "Daucus carota subsp. sativus 'Nantes'",
+  "family": "Apiaceae",
+  "type": "biennial",
+  "growth": {
+    "habit": "root_crop",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [1, 2],
+        "description": "Tiny oblong seed with fine longitudinal ridges. Slow to wake — patience is the first lesson."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 2],
+        "description": "A thin white radicle pushes down into the soil — the very beginning of the taproot. Surface shows nothing yet."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [2, 3],
+        "description": "Thread-like cotyledons emerge, easily mistaken for grass. First true leaves show delicate fernlike divisions. Below soil, the taproot is no thicker than a matchstick."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [4, 6],
+        "description": "Feathery pinnate foliage fans outward from the crown in a lacy rosette. Underground, the root swells in secret — only the faintest orange shoulder hints at what's forming below."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [2, 3],
+        "description": "A bolt — a tall central stalk shoots skyward bearing flat-topped white umbels. Queen Anne's lace in miniature. The root turns woody and fibrous. A loss."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [2, 3],
+        "description": "Tiny ridged seeds develop as the umbels dry and curl inward. The root is spent, all its sugar converted to reproductive energy."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [1, 2],
+        "description": "Foliage yellows and collapses against the soil. In the ground, the unharvested root slowly softens and returns to earth."
+      }
+    ],
+    "days_to_maturity": [9, 11],
+    "max_height_cm": 40,
+    "max_spread_cm": 20,
+    "growth_rate": "moderate"
+  },
+  "needs": {
+    "sun": "full",
+    "water": "moderate",
+    "soil_ph": [6.0, 6.8],
+    "nutrients": { "N": "low", "P": "moderate", "K": "moderate" },
+    "soil_temp_min_c": 7,
+    "frost_tolerance": "light"
+  },
+  "season": {
+    "sow_window": [2, 6],
+    "transplant_window": [3, 7],
+    "harvest_window": [10, 18],
+    "bolt_trigger": "cold"
+  },
+  "companions": [
+    {
+      "species_id": "tomato_cherokee_purple",
+      "effects": [{ "type": "pest_resistance", "modifier": 0.25, "radius": 1 }],
+      "lore": "Tomato foliage exudes solanine-scented compounds that mask carrot scent from the carrot rust fly."
+    },
+    {
+      "species_id": "rosemary",
+      "effects": [{ "type": "pest_resistance", "modifier": 0.2, "radius": 1 }],
+      "lore": "Rosemary's intense volatile oils confuse the carrot rust fly, which navigates by smell to find its host."
+    },
+    {
+      "species_id": "lettuce_butterhead",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Shallow-rooted lettuce occupies the top soil layer without competing with the deep carrot taproot, and its leaf canopy shades the soil to retain moisture."
+    }
+  ],
+  "antagonists": [
+    {
+      "species_id": "fennel",
+      "effects": [{ "type": "allelopathy", "modifier": -0.3, "radius": 2 }],
+      "lore": "Fellow Apiaceae family member — fennel's root exudates inhibit carrot growth, and cross-pollination ruins seed saving for both."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "condition_id": "carrot_rust_fly",
+      "susceptibility": 0.5,
+      "triggers": [
+        { "type": "pest_vector", "threshold": 0.5 },
+        { "type": "crowding", "threshold": 0.7 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "wilting",
+            "description": "Foliage droops slightly in afternoon heat despite adequate water. The damage is underground — larvae tunneling through the root — but the only clue is this subtle wilt.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "yellowing_uniform",
+            "description": "Outer leaves yellow and redden at the tips. Pull a sacrificial carrot and you'll find rusty-brown tunnels riddling the flesh.",
+            "reversible": false
+          },
+          {
+            "week": 4,
+            "visual_overlay": "total_wilt",
+            "description": "Foliage collapses. The root below is a maze of larval galleries, soft and reeking. Unsalvageable.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 6,
+        "spreads": true,
+        "spread_radius": 1
+      }
+    },
+    {
+      "condition_id": "leaf_blight",
+      "susceptibility": 0.45,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.7 },
+        { "type": "overwater", "threshold": 0.6 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "leaf_spots",
+            "description": "Small dark brown spots with yellow halos appear on older outer leaves. Alternaria dauci — the signature blight of carrots.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "spreading_spots_yellowing",
+            "description": "Spots coalesce and spread inward to younger foliage. Leaf margins curl and blacken. The weakened canopy slows root development below.",
+            "reversible": true
+          },
+          {
+            "week": 4,
+            "visual_overlay": "leaf_browning",
+            "description": "Severe defoliation. Most fronds are brown and collapsed. The root survives but will be stunted — less sugar, less size, less flavor.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": true,
+        "spread_radius": 1
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 6,
+    "seed_saving": true,
+    "harvest_type": "root",
+    "continuous_harvest": false
+  },
+  "visual": {
+    "stem": {
+      "height": [1, 14],
+      "thickness": [0.3, 1.2],
+      "color": "#4a9644",
+      "curve": 0.05,
+      "branch_frequency": 0.1,
+      "branch_angle": 35
+    },
+    "leaves": {
+      "shape": "pinnate_compound",
+      "count": [2, 16],
+      "size": [2, 12],
+      "color": "#2d8e3e",
+      "droop": [2, 20],
+      "distribution": "basal",
+      "opacity": [0.7, 0.95]
+    },
+    "flowers": {
+      "shape": "umbel",
+      "petal_count": 5,
+      "color": "#f5f0e0",
+      "size": 1.5,
+      "bloom_density": 0.3
+    },
+    "fruit": null,
+    "animation": {
+      "sway_amplitude": 0.07,
+      "sway_frequency": 0.85,
+      "growth_spring_tension": 0.35,
+      "idle_breathing": 0.01
+    }
+  },
+  "lore": {
+    "description": "The classic cylindrical carrot — blunt-tipped, sweet-cored, and completely hidden underground until you decide to pull it. Growing carrots is an act of faith.",
+    "origin": "Nantes, France, 1850s (bred from earlier Dutch orange carrots)",
+    "fun_fact": "The orange color was likely popularized in the 17th-century Netherlands as a tribute to William of Orange — before that, most carrots were purple, white, or yellow.",
+    "difficulty": "beginner"
+  }
+}
