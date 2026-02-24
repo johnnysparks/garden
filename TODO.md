@@ -1,6 +1,6 @@
 # Perennial — Project Roadmap
 
-> Last updated 2026-02-24. All engine systems except spread are implemented and tested. Diagnosis engine, condition database, tools data, and 2 additional species landed since last update. What remains: Web UI action flows, diagnosis UI, meta-progression UI, visual overlays, more content, bug fixes, and polish.
+> Last updated 2026-02-24. All engine systems are implemented and tested, including spread check (runners, self-seeding, weed pressure, disease spread). Diagnosis engine, condition database, tools data, and mint species landed. What remains: Web UI action flows, diagnosis UI, meta-progression UI, visual overlays, more content, bug fixes, and polish.
 
 ---
 
@@ -36,12 +36,12 @@
 | Weather apply system | done | Hail damage, heavy rain compaction |
 | Harvest check system | done | Harvest windows, quality decay, continuous harvest |
 | Scoring engine | done | Four-category ScoreCard, zone multipliers, Three Sisters bonus |
-| Simulation orchestrator | done | Slots 1–8, 10 wired (only spread #9 missing) |
+| Simulation orchestrator | done | All 10 slots wired (1–10) |
 | Diagnosis engine | done | Hypothesis generation, confidence scoring, similar-condition red herrings |
 | Condition database | done | 21 conditions (7 fungal, 7 nutrient, 4 pest, 3 abiotic) |
 | Amendments data | done | 6 amendments: compost, lime, sulfur, fertilizer, mulch, inoculant |
 | Tools data | done | 7 tools defined with unlock conditions and effects |
-| Species data | done | 4 species: tomato, basil, carrot, zucchini (validated by Zod schema) |
+| Species data | done | 5 species: tomato, basil, carrot, zucchini, mint (validated by Zod schema) |
 | Zone data | done | 1 zone: zone_8a |
 | Game session (shared) | done | Shared engine session used by both CLI and web UI |
 | CLI interface | done | Full REPL, all commands, piped mode, save/load, Node.js data loader |
@@ -60,7 +60,7 @@
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Spread check system | todo | Placeholder — no invasive spreading, self-seeding, weeds |
+| Spread check system | done | Runner spreading, self-seeding, weed pressure, disease spread |
 | Pest conditions in diagnosis DB | done | 4 pest conditions (aphid, whitefly, hornworm, spider mite) in CONDITION_DATABASE |
 | Disease overlays (visual) | todo | Placeholder — no SVG disease indicators |
 | Pest visual overlays | todo | No SVG overlays for pest infestations |
@@ -93,12 +93,12 @@ Found via CLI gameplay testing sessions. Marked with `// TODO: BUG` in source.
 
 ## Workstreams
 
-### WS1: Simulation Loop — COMPLETE (except spread)
+### WS1: Simulation Loop — COMPLETE
 
-All 9 active systems are wired into the tick orchestrator. Only the spread system (slot #9) remains as a placeholder. This is non-blocking for core gameplay.
+All 10 systems are wired into the tick orchestrator, including the spread check system (slot #9).
 
-**Remaining:**
-- **WS1.4 — Spread Check System** (todo): `src/lib/engine/ecs/systems/spread.ts` is a placeholder. Spec: doc 03 §9 — mint runners, self-seeding, weed pressure. Needs a spreading species (mint) to be useful. Low priority.
+**Done:**
+- WS1.4 — Spread Check System: `src/lib/engine/ecs/systems/spread.ts` — disease spread, runner spreading (mint), self-seeding, weed pressure. Mint species created. 36 tests.
 
 ### WS2: Diagnosis System — Engine Done, UI Remaining
 
@@ -123,13 +123,13 @@ The data pipeline (Zod validation, glob import) is solid. Tools data is complete
 - WS3.2 — Tools data (7 tools with unlock conditions and effects)
 
 **Remaining:**
-- **WS3.3 — Additional Species** (partial, 4 of ~16): Priority next species for gameplay variety:
+- **WS3.3 — Additional Species** (partial, 5 of ~16): Priority next species for gameplay variety:
   - Rosemary (perennial, Mediterranean, companion)
   - Pepper (Solanaceae, companion with tomato)
   - Marigold (pest resistance companion)
   - Beans (nitrogen fixer — crop rotation)
   - Lettuce (cool season, bolt risk, fast cycle)
-  - Mint (spreading mechanic for WS1.4)
+  - ~~Mint (spreading mechanic for WS1.4)~~ — done
   - Strawberry (perennial, multi-year)
   - Corn (Three Sisters set)
 - **WS3.4 — Additional Climate Zones** (todo): Spec doc 05 §Climate Ladder — zone_7b, 7a, 6b, 6a, 5b, 5a (cold path) + zone_9a, 10a (heat path). Only zone_8a exists.
@@ -223,7 +223,7 @@ Data layer is complete and tested. All UI is missing.
 
 | # | Task | Status |
 |---|------|--------|
-| 23 | Spread check system (WS1.4) | todo |
+| 23 | Spread check system (WS1.4) | done |
 | 24 | More species — mint, strawberry, zone-specific (WS3.3/3.5) | todo |
 | 25 | Full zone ladder (WS3.4) | todo |
 | 26 | Audio system (WS7.1) | todo |
@@ -240,5 +240,5 @@ Data layer is complete and tested. All UI is missing.
 - **Test convention:** Every new system should have a corresponding test file in `tests/` following existing patterns (fixtures, deterministic RNG, real system code with controlled inputs).
 - **Species are data:** Adding species requires only a JSON file + `npm run validate:species`. No code changes.
 - **CLI shares engine:** The CLI must not import from `src/lib/render/`, `src/lib/audio/`, `src/lib/state/stores.ts`, or `src/routes/`. It shares `engine/`, `data/`, `state/events.ts`, and `state/event-log.ts`.
-- **The doc 03 tick order** (1-10) is the canonical reference. `simulation.ts` runs slots 1–8, 10. Only slot 9 (spread) is missing.
+- **The doc 03 tick order** (1-10) is the canonical reference. `simulation.ts` runs all 10 slots.
 - **Bug fixes first:** The 4 known bugs affect basic gameplay (amendments, energy, growth). Fix before building UI on top.

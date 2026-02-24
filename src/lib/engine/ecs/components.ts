@@ -133,6 +133,12 @@ export interface Entity {
   // Sun exposure (on plot entities)
   sunExposure?: { level: SunLevel };
 
+  // Weed marker — spawned by spread system, competes for resources
+  weed?: { severity: number };
+
+  // Self-seeded marker — flagged by spread system for meta-progression
+  selfSeeded?: boolean;
+
   // Dead marker
   dead?: boolean;
 }
