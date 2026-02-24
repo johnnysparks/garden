@@ -451,7 +451,6 @@ If these aren’t met, fallback strategies:
 
 ## Agent Visual Validation Loop ("Make It Look Like a Plant")
 
-When the goal is to match reference illustration quality (not just "render without errors"), use a tight screenshot + rubric loop.
 
 ### 1) Define Explicit Acceptance Checks Before Coding
 
