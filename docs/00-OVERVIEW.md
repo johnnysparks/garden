@@ -14,7 +14,10 @@ Roguelike simulation with meta-progression. Mobile-first browser game.
 
 ## Platform
 
-Web (mobile-first, responsive to desktop). PWA-capable for offline play.
+Two interfaces to the same engine:
+
+- **Web UI** — Mobile-first browser game (SvelteKit, parametric SVG, PWA-capable for offline play). The primary player-facing interface.
+- **CLI** — Thin Node.js wrapper that prints game state as structured text and accepts commands via stdin. Designed for automated playtesting by LLM agents (Claude Code), headless testing, and scripted scenarios. See [08-CLI-INTERFACE.md](./08-CLI-INTERFACE.md).
 
 ## Target Player
 
@@ -69,3 +72,4 @@ See [05-META-PROGRESSION.md](./05-META-PROGRESSION.md)
 | [05-META-PROGRESSION.md](./05-META-PROGRESSION.md) | Between-run systems, seed bank, journal, climate zones |
 | [06-VISUAL-SYSTEM.md](./06-VISUAL-SYSTEM.md) | Parametric SVG rendering, animation, color system |
 | [07-ARCHITECTURE.md](./07-ARCHITECTURE.md) | Technical stack, project structure, data flow |
+| [08-CLI-INTERFACE.md](./08-CLI-INTERFACE.md) | CLI wrapper design, command language, LLM agent playtesting |

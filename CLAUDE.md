@@ -2,21 +2,34 @@
 
 ## Project Overview
 
-**Perennial** is a roguelike gardening simulator where each run is a growing season, death comes by frost, and the player builds real horticultural knowledge through play. It is a mobile-first browser game built with SvelteKit, TypeScript, and parametric SVG rendering.
+**Perennial** is a roguelike gardening simulator where each run is a growing season, death comes by frost, and the player builds real horticultural knowledge through play.
 
-The game uses an Entity-Component-System (ECS) architecture via miniplex, event sourcing for state management, and Dexie (IndexedDB) for offline persistence. Every plant species is defined as a JSON file that encodes both simulation behavior and visual appearance — adding a new species requires no code changes.
+The game has two interfaces to the same engine:
+
+- **Web UI** — Mobile-first browser game built with SvelteKit, TypeScript, and parametric SVG rendering.
+- **CLI** — Thin Node.js wrapper that prints game state as structured text and accepts commands via stdin. Designed for automated playtesting by LLM agents, headless testing, and scripted scenarios.
+
+The engine uses an Entity-Component-System (ECS) architecture via miniplex, event sourcing for state management, and seeded PRNG for deterministic runs. Every plant species is defined as a JSON file that encodes both simulation behavior and visual appearance — adding a new species requires no code changes.
 
 ## Commands
 
 ```bash
+# Web UI
 npm run dev              # Start Vite dev server with HMR
 npm run build            # Validate species JSON + build static site
+npm run preview          # Preview production build locally
+
+# CLI
+npx perennial play       # Start interactive CLI game session
+npx perennial play --zone zone_8a --seed 42  # With options
+npx perennial load saves/my-run.json         # Resume from save
+
+# Shared
 npm run test             # Run full test suite (vitest)
 npm run test:watch       # Run tests in watch mode
 npm run check            # SvelteKit sync + svelte-check type checking
 npm run check:watch      # Type checking in watch mode
 npm run validate:species # Validate all species JSON against Zod schema
-npm run preview          # Preview production build locally
 ```
 
 Build runs `validate:species` before `vite build`. Both must pass for CI to succeed.
@@ -25,22 +38,43 @@ Build runs `validate:species` before `vite build`. Both must pass for CI to succ
 
 ### Tech Stack
 
+**Shared (Engine + Data)**
+
+| Layer       | Choice                    | Notes                                              |
+|-------------|---------------------------|----------------------------------------------------|
+| Language    | TypeScript (strict mode)  | All source is TypeScript                           |
+| ECS         | miniplex                  | Entity-component-system for game entities          |
+| State       | Event sourcing            | Append-only event log, replay for save/load        |
+| Validation  | Zod                       | Schema validation for species JSON at build time   |
+| Testing     | Vitest                    | 335 tests across engine, data, render, and state   |
+
+**Web UI**
+
 | Layer       | Choice                    | Notes                                              |
 |-------------|---------------------------|----------------------------------------------------|
 | Framework   | SvelteKit 2.x             | Static adapter, deployed to GitHub Pages at `/garden` |
-| Language    | TypeScript (strict mode)  | All source is TypeScript                           |
 | Rendering   | Parametric SVG            | Plants rendered from JSON params, not sprites      |
-| ECS         | miniplex                  | Entity-component-system for game entities          |
-| State       | Svelte stores + event sourcing | Append-only event log, replay for save/load   |
+| Reactivity  | Svelte stores             | Reactive UI derived from event log                 |
 | Persistence | Dexie.js (IndexedDB)      | Offline-first, meta-progression across runs        |
-| Validation  | Zod                       | Schema validation for species JSON at build time   |
-| Testing     | Vitest                    | 335 tests across engine, data, render, and state   |
 | Build       | Vite                      | SvelteKit default bundler                          |
+
+**CLI**
+
+| Layer       | Choice                    | Notes                                              |
+|-------------|---------------------------|----------------------------------------------------|
+| Runtime     | Node.js 20+              | Direct engine import, no browser needed             |
+| I/O         | readline (Node built-in)  | Interactive REPL + piped command support            |
+| Persistence | fs (JSON files)           | Serialize event log to disk                        |
 
 ### Directory Structure
 
 ```
 src/
+  cli/                      # CLI interface (no Svelte/browser dependencies)
+    index.ts                # Entry point, arg parsing, REPL loop
+    commands.ts             # Command parser + dispatcher
+    formatter.ts            # Text output formatters (grid, status, inspect)
+    session.ts              # CLI-specific GameSession wrapper
   lib/
     engine/                 # Simulation engine (no UI dependencies)
       ecs/
@@ -121,10 +155,11 @@ Systems not yet implemented: weather apply (1), pest check (7), harvest check (8
 ### Data Flow
 
 ```
-Player Input → GameEvent → Event Log (append-only)
-  → RunState (via reducer replay) → Svelte stores → UI
-  → Simulation Tick (on ADVANCE_WEEK) → Updated ECS entities
-  → Render pipeline (SVG) + UI updates
+Input (UI buttons / CLI commands) → GameEvent → Event Log (append-only)
+  → RunState (via reducer replay) → Simulation Tick (on DUSK phase)
+  → Updated ECS entities
+  → Web UI: Svelte stores → SVG render + animation
+  → CLI: Text formatter → stdout
 ```
 
 ### Key Patterns
@@ -195,5 +230,6 @@ The numbered markdown files in `docs/` are the game design documents:
 | `docs/05-META-PROGRESSION.md` | Seed bank, field journal, climate ladder, tool unlocks |
 | `docs/06-VISUAL-SYSTEM.md` | Parametric SVG rendering, animation, season palette |
 | `docs/07-ARCHITECTURE.md` | Technical stack, project structure, ECS, event sourcing, persistence |
+| `docs/08-CLI-INTERFACE.md` | CLI wrapper design, command language, LLM agent playtesting |
 
 These documents are the authoritative reference for game mechanics and should be consulted when implementing new features.
