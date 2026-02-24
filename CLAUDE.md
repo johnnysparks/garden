@@ -203,13 +203,19 @@ When writing new tests:
 - Use `createRng(42)` for deterministic seeded randomness
 - Build a `SimulationContext` with `makeDefaultWeather()` and `makeSpeciesLookup()`
 
+## Before Making Any Changes
+
+**Read `CONTRIBUTING.md` before starting work.** It defines the standards all contributions — including data-only additions — must meet. The key gate: `npm test`, `npm run check`, and `npm run build` must all pass before any PR can merge.
+
 ## Adding a New Plant Species
 
 1. Create a JSON file in `src/lib/data/species/` named `{species_id}.json`
 2. Follow the schema in `src/lib/data/types.ts` (or reference existing species files)
 3. The `id` field must match the filename (without `.json`)
 4. Run `npm run validate:species` to check against the Zod schema
-5. The species will auto-load via Vite glob import — no code changes needed
+5. Run `npm test` — species additions can affect render validation tests (e.g., `tests/render/plant-design-validation.test.ts`)
+6. Run `npm run check` — TypeScript and Svelte type checking must pass
+7. The species will auto-load via Vite glob import — no code changes needed
 
 ## CI/CD
 
