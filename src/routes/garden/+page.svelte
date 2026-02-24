@@ -7,7 +7,7 @@
 		SEASON_PALETTES,
 	} from '$lib/render/palette.js';
 	import { createWindState, updateWind, type WindState } from '$lib/render/animation.js';
-	import { getSpecies, getAllSpecies } from '$lib/data/index.js';
+	import { getSpecies, getAllSpecies, getAllAmendments, getAmendment } from '$lib/data/index.js';
 	import { createGameSession, type GameSession } from '$lib/engine/game-session.js';
 	import type { ClimateZone } from '$lib/engine/weather-gen.js';
 	import type { Entity } from '$lib/engine/ecs/components.js';
@@ -16,6 +16,7 @@
 	import EnergyBar from '$lib/ui/EnergyBar.svelte';
 	import ActionToolbar from '$lib/ui/ActionToolbar.svelte';
 	import SeedSelector from '$lib/ui/SeedSelector.svelte';
+	import AmendmentSelector from '$lib/ui/AmendmentSelector.svelte';
 	import { season, energy, turn, weather, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
 	import zone8aData from '$lib/data/zones/zone_8a.json';
 
@@ -273,6 +274,31 @@
 		selectedPlot = null;
 	}
 
+	// ── Amendment selector state ────────────────────────────────────────
+
+	let showAmendSelector = $state(false);
+
+	/** All amendments available for soil treatment. */
+	let availableAmendments = $derived(getAllAmendments());
+
+	function onSelectAmendment(amendmentId: string) {
+		if (!selectedPlot || !session) return;
+
+		const amendment = getAmendment(amendmentId);
+		if (!amendment) return;
+
+		// Use the session's validated action which handles energy, event log, and ECS
+		const result = session.amendAction(selectedPlot.row, selectedPlot.col, amendment);
+		if (!result.ok) return;
+
+		// If energy depleted, spendEnergy auto-transitions to DUSK.
+		// The $effect handles DUSK → ADVANCE → DAWN automatically.
+
+		ecsTick++;
+		showAmendSelector = false;
+		selectedPlot = null;
+	}
+
 	// ── Action dispatch ─────────────────────────────────────────────────
 
 	function onAction(actionId: string) {
@@ -281,6 +307,11 @@
 			case 'plant': {
 				if (!selectedPlot || selectedPlotHasPlant) return;
 				showSeedSelector = true;
+				break;
+			}
+			case 'amend': {
+				if (!selectedPlot) return;
+				showAmendSelector = true;
 				break;
 			}
 			case 'wait': {
@@ -337,6 +368,14 @@
 		species={availableSpecies}
 		onSelect={onSelectSeed}
 		onClose={() => (showSeedSelector = false)}
+	/>
+{/if}
+
+{#if showAmendSelector}
+	<AmendmentSelector
+		amendments={availableAmendments}
+		onSelect={onSelectAmendment}
+		onClose={() => (showAmendSelector = false)}
 	/>
 {/if}
 

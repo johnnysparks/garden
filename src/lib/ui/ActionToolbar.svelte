@@ -38,7 +38,7 @@
 			needsPlot: true,
 			needsEmpty: false,
 			needsPlant: false,
-			placeholder: true,
+			placeholder: false,
 		},
 		{
 			id: 'diagnose',
