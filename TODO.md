@@ -1,8 +1,8 @@
 # Perennial — Project Roadmap
 
-> Generated 2026-02-24 by comparing design docs (docs/00–08) against the implemented codebase.
-> All 514 tests pass. The engine core, rendering pipeline, and state management are solid.
-> What remains is completing the simulation loop, connecting the UI to all actions, building the CLI, and layering on meta-progression.
+> Last updated 2026-02-24 by comparing design docs (docs/00–08) against the implemented codebase.
+> All 607 tests pass. The full simulation loop (9 of 10 systems), scoring engine, CLI interface, and amendments data are complete.
+> What remains is the diagnosis system, visual overlays, Web UI action flows, meta-progression UI, additional content, and polish.
 
 ---
 
@@ -41,6 +41,14 @@
 | Svelte stores | done | Reactive gameState, derived stores (week, plants, harvests, etc.) |
 | Dexie persistence (web) | done | Save/load, lifetime stats, seed bank, journal, run history, zones, tools |
 | Meta-progression logic | done | processRunEnd integration, seed bank, journal, zone progress, tool unlocks |
+| Weather apply system | done | Hail damage + heavy rain compaction (tick slot #1) |
+| Pest system | done | Full pest check with counter-species, companion resistance (tick slot #7) |
+| Pest event pre-generation | done | 6-pest catalog, independent RNG stream, zone pest weights |
+| Harvest check system | done | Harvest windows, quality decay, continuous harvest (tick slot #8) |
+| Scoring engine | done | Four-category ScoreCard, zone multipliers, Three Sisters bonus |
+| Simulation orchestrator | done | All systems wired: slots 1–8, 10 (only spread #9 missing) |
+| Amendments data | done | 6 amendments: compost, lime, sulfur, fertilizer, mulch, inoculant |
+| CLI interface | done | Full REPL, all commands, piped mode, save/load, Node.js data loader |
 | Species data | done | 2 species: tomato_cherokee_purple, basil_genovese (validated by Zod schema) |
 | Zone data | done | 1 zone: zone_8a |
 | Game session | done | Session creation, tick integration, weather exposure, frost run-end |
@@ -52,16 +60,11 @@
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Weather apply system | todo | Placeholder file — weather doesn't modify soil temp/moisture |
-| Pest system | partial | pestCheckSystem implemented; pre-generation (pest-gen.ts) and visual overlays pending |
-| Harvest check system | todo | Placeholder file — plants never flagged harvestable by engine |
 | Spread check system | todo | Placeholder file — no invasive spreading, self-seeding, weeds |
-| Scoring engine | todo | Placeholder file — no end-of-run score calculation |
 | Diagnosis engine | todo | Placeholder file — no hypothesis generation or matching |
 | Disease overlays (visual) | todo | Placeholder file — no visual disease indicators |
+| Pest visual overlays | todo | No SVG overlays for pest infestations |
 | Audio system | todo | Both ambient.ts and sfx.ts are placeholder files |
-| CLI interface | todo | src/cli/ directory doesn't exist yet |
-| Amendments data | todo | amendments.json is empty `[]` |
 | Tools data | todo | tools.json is empty `[]` |
 | Additional species | todo | Only 2 of many planned species exist |
 | Additional zones | todo | Only zone_8a exists; climate ladder needs more |
@@ -126,36 +129,27 @@ The work divides into 7 workstreams. The dependency graph below shows which bloc
 
 ## WS1: Complete Simulation Loop
 
-The engine runs 6 of 10 planned systems. Four are placeholder files. The scoring engine is also a placeholder. These are prerequisites for almost everything else.
+The engine runs 9 of 10 planned systems. Only spread (slot #9) remains as a placeholder. The scoring engine is fully implemented.
 
-### WS1.1 — Weather Apply System
+### WS1.1 — Weather Apply System ✅
 - **File:** `src/lib/engine/ecs/systems/weather.ts`
-- **Status:** todo (placeholder)
-- **Spec:** doc 03 §1 — set soil temperature from air temp + mulch modifier, apply precipitation to moisture, apply humidity, apply special weather events (heatwave, drought, heavy_rain, hail damage)
-- **Depends on:** nothing (slot 1 in tick order, currently skipped)
-- **Blocks:** WS1.2 (pest events interact with weather), WS5 (meaningful weather-driven gameplay)
+- **Status:** done
+- Implements hail damage (scaled by plant stage) and heavy rain compaction effects. Wired into tick slot #1.
 
-### WS1.2 — Pest System
+### WS1.2 — Pest System ✅
 - **File:** `src/lib/engine/ecs/systems/pest.ts`
-- **Status:** partial (pestCheckSystem implemented; pre-generation pending)
-- **Spec:** doc 03 §7 — PestEvent interface, zone-level pest events pre-generated at season start, target_families filtering, severity, companion pest_resistance reduction, countered_by items, scoutable
-- **Depends on:** WS1.1 (pests interact with weather/conditions), WS3.1 (pest definitions in data)
-- **Blocks:** WS2 (pest diagnosis), WS5 (pest intervention UI)
+- **Status:** done
+- Full pestCheckSystem with companion pest_resistance modifiers, counter-species reduction, health/stress damage, pestInfestation component management. Wired into tick slot #7.
 
-#### WS1.2a — Pest Event Pre-Generation
-- **File:** `src/lib/engine/pest-gen.ts` (new)
-- **Status:** todo
-- **Spec:** Analogous to `weather-gen.ts` — generate `PestEvent[]` at season start from zone `pest_event_weights` map, seeded PRNG (independent stream from weather), built-in pest catalog (aphids, whitefly, thrips, hornworm, cabbage_moth, spider_mite), enforce min-gap between successive same-pest events. Wire into `createGameSession()` and expose as `seasonPests` on `GameSession`.
-- **New zone field:** `pest_event_weights: Record<string, number>` added to `ClimateZone` / `ClimateZoneSchema` (optional, default `{}`)
-- **Depends on:** seeded RNG (done), zone data (done)
-- **Blocks:** WS1.2 runtime (pestCheckSystem needs pre-generated events), WS5.2 (scout reveals upcoming pest arrivals)
+#### WS1.2a — Pest Event Pre-Generation ✅
+- **File:** `src/lib/engine/pest-gen.ts`
+- **Status:** done
+- Built-in PEST_CATALOG with 6 pest types (aphids, whitefly, thrips, tomato_hornworm, cabbage_moth, spider_mite). Independent RNG stream (PEST_SEED_MASK), zone-level pest_event_weights support, min-gap enforcement. Wired into createGameSession().
 
-### WS1.3 — Harvest Check System
+### WS1.3 — Harvest Check System ✅
 - **File:** `src/lib/engine/ecs/systems/harvest.ts`
-- **Status:** todo (placeholder)
-- **Spec:** doc 03 §8 — when growth_progress enters harvest window AND health > minimum: flag `harvestState.ripe = true`, degrade quality if not harvested within window, continuous harvest timer reset for multi-harvest species
-- **Depends on:** growth system (done)
-- **Blocks:** WS5 (harvest action UI), scoring (harvest counts)
+- **Status:** done
+- Harvest window detection, minimum health checks, quality decay per unharvested week, continuous harvest for multi-harvest species. Wired into tick slot #8.
 
 ### WS1.4 — Spread Check System
 - **File:** `src/lib/engine/ecs/systems/spread.ts`
@@ -164,17 +158,14 @@ The engine runs 6 of 10 planned systems. Four are placeholder files. The scoring
 - **Depends on:** growth system (done)
 - **Blocks:** nothing critical (can be deferred)
 
-### WS1.5 — Scoring Engine
+### WS1.5 — Scoring Engine ✅
 - **File:** `src/lib/engine/scoring.ts`
-- **Status:** todo (placeholder)
-- **Spec:** doc 05 §Scoring — harvest score (10/species + 5/family + 20/set + rare bonus), soil score (10×improvement + 5/improved plot + 10 N-fixer bonus), survival score (5/harvest + -2/death + 15/perennial), knowledge score (10/diagnosis + 5/companion + 5/new species + 3/journal), zone multiplier
-- **Depends on:** event log (done), harvest system (WS1.3)
-- **Blocks:** WS5 (run end screen), WS6 (zone unlock criteria)
+- **Status:** done
+- Four-category ScoreCard (harvest, soil, survival, knowledge). Zone-based difficulty multipliers. Three Sisters planting set bonus.
 
-### WS1.6 — Wire Weather Apply into Tick Orchestrator
+### WS1.6 — Wire Systems into Tick Orchestrator ✅
 - **File:** `src/lib/engine/simulation.ts`
-- **Status:** partial (skips slots 1, 7, 8, 9)
-- Add weather apply as slot 1, pest as slot 7, harvest as slot 8, spread as slot 9
+- **Status:** done (slots 1–8, 10 wired; only spread #9 missing)
 
 ---
 
@@ -210,12 +201,10 @@ The core educational mechanic. Engine + UI are both needed. This is the deepest 
 
 Species, amendments, tools, and zones are all JSON-driven. The pipeline works (Zod validation, glob import, auto-loading), so this is primarily content authoring.
 
-### WS3.1 — Amendments Data
+### WS3.1 — Amendments Data ✅
 - **File:** `src/lib/data/amendments.json`
-- **Status:** todo (empty array)
-- **Spec:** doc 01 §AMEND — compost, lime, sulfur, fertilizer, mulch, inoculant, each with effect delays (1-3 weeks) and soil deltas
-- **Depends on:** soil system (done — already processes `amendments_pending`)
-- **Blocks:** WS5 (amend action UI)
+- **Status:** done
+- 6 amendments defined: compost, lime, sulfur, fertilizer (synthetic), mulch, inoculant. Each with effect delays (1–3 weeks) and soil deltas.
 
 ### WS3.2 — Tools Data
 - **File:** `src/lib/data/tools.json`
@@ -252,34 +241,29 @@ Species, amendments, tools, and zones are all JSON-driven. The pipeline works (Z
 
 ---
 
-## WS4: CLI Interface
+## WS4: CLI Interface ✅
 
-The entire `src/cli/` directory is unimplemented. Doc 08 provides a complete spec.
+The CLI is fully implemented with interactive REPL, piped command support, and all documented commands.
 
-### WS4.1 — CLI Entry Point & REPL
-- **Files:** `src/cli/index.ts`
-- **Spec:** doc 08 §Invocation — `npx perennial play`, arg parsing (--zone, --seed), interactive readline REPL, piped/non-interactive mode
-- **Depends on:** game-session (done)
-- **Needs:** Node-compatible species loader (alternative to Vite import.meta.glob)
+### WS4.1 — CLI Entry Point & REPL ✅
+- **File:** `src/cli/index.ts` (244 lines)
+- Entry point with arg parsing (--zone, --seed), interactive readline REPL, piped/non-interactive mode.
 
-### WS4.2 — Command Parser & Dispatcher
-- **File:** `src/cli/commands.ts`
-- **Spec:** doc 08 §Command Language — session commands (new, load, save, quit), turn commands (advance, week), action commands (plant, amend, diagnose, intervene, scout, wait), query commands (status, grid, inspect, weather, plants, soil, species, amendments, log, score, help)
-- **Depends on:** WS4.1, game-session (done)
+### WS4.2 — Command Parser & Dispatcher ✅
+- **File:** `src/cli/commands.ts` (485 lines)
+- All commands: new, load, save, quit, advance, week, plant, amend, diagnose, intervene, scout, wait, status, grid, inspect, weather, plants, soil, species, amendments, log, score, help.
 
-### WS4.3 — Text Formatters
-- **File:** `src/cli/formatter.ts`
-- **Spec:** doc 08 §Output Format — status output (week/phase/energy/weather/frost), ASCII grid, inspect output (plant + soil details), tick summary (growth/stress/disease/frost per plant), advance summary, killing frost + final score
-- **Depends on:** WS4.2
+### WS4.3 — Text Formatters ✅
+- **File:** `src/cli/formatter.ts` (529 lines)
+- Status, ASCII grid, inspect, weather, plants, soil, species, logs, diagnostics output.
 
-### WS4.4 — CLI Session Wrapper
-- **File:** `src/cli/session.ts`
-- **Spec:** doc 08 §Session Wrapper — wrap GameSession without Svelte store dependencies, JSON file save/load via fs
-- **Depends on:** WS4.1
+### WS4.4 — CLI Session Wrapper ✅
+- **File:** `src/cli/session.ts` (496 lines)
+- Wraps GameSession without Svelte store dependencies, JSON file save/load via fs.
 
-### WS4.5 — CLI Error Handling
-- **Spec:** doc 08 §Error Handling — phase validation, unknown species, out of bounds, occupied plot, insufficient energy, all with clear error messages
-- **Depends on:** WS4.2
+### WS4.5 — CLI Data Loader ✅
+- **File:** `src/cli/data-loader.ts` (137 lines)
+- Node.js-compatible species/zone/amendment loading without Vite import.meta.glob.
 
 ---
 
@@ -414,56 +398,59 @@ Phase 1 targets a playable end-to-end loop. Phase 2 adds depth. Phase 3 adds bre
 
 ### Phase 1 — Minimum Playable Season
 > Goal: A player can start a run, plant, amend, harvest, see score, start another run.
+> **Engine work complete.** Web UI action flows and content remain.
 
-| # | Task | Workstream | Depends On |
-|---|------|------------|------------|
-| 1 | Weather apply system | WS1.1 | — |
-| 2 | Harvest check system | WS1.3 | — |
-| 3 | Scoring engine | WS1.5 | WS1.3 |
-| 4 | Wire weather + harvest into tick orchestrator | WS1.6 | WS1.1, WS1.3 |
-| 5 | Amendments data | WS3.1 | — |
-| 6 | Amend action UI | WS5.1 | WS3.1 |
-| 7 | Intervene/harvest action UI | WS5.3 | WS1.3 |
-| 8 | Run end screen | WS5.5 | WS1.5 |
-| 9 | Run start flow (zone/seed select) | WS5.6 | — |
-| 10 | 4-6 more species (pepper, beans, marigold, lettuce, rosemary, squash) | WS3.3 | — |
+| # | Task | Workstream | Status |
+|---|------|------------|--------|
+| 1 | ~~Weather apply system~~ | WS1.1 | ✅ done |
+| 2 | ~~Harvest check system~~ | WS1.3 | ✅ done |
+| 3 | ~~Scoring engine~~ | WS1.5 | ✅ done |
+| 4 | ~~Wire weather + harvest into tick orchestrator~~ | WS1.6 | ✅ done |
+| 5 | ~~Amendments data~~ | WS3.1 | ✅ done |
+| 6 | Amend action UI | WS5.1 | todo |
+| 7 | Intervene/harvest action UI | WS5.3 | todo |
+| 8 | Run end screen | WS5.5 | todo |
+| 9 | Run start flow (zone/seed select) | WS5.6 | todo |
+| 10 | 4-6 more species (pepper, beans, marigold, lettuce, rosemary, squash) | WS3.3 | todo |
 
 ### Phase 2 — Diagnosis & Strategic Depth
 > Goal: The core learning mechanic works. Players diagnose, treat, and learn.
+> **Pest engine work complete.** Diagnosis, visual overlays, and UI remain.
 
-| # | Task | Workstream | Depends On |
-|---|------|------------|------------|
-| 11 | Condition database (19+ conditions) | WS2.4 | — |
-| 12 | Disease overlay visuals | WS5.4 | — |
-| 13 | Stress/disease visual modifiers | WS7.7 | — |
-| 14 | Diagnosis engine | WS2.1 | WS2.4 |
-| 15 | Diagnosis UI flow | WS2.2 | WS2.1, WS5.4 |
-| 16 | Treatment feedback loop | WS2.3 | WS2.1 |
-| 17 | Pest event pre-generation (pest-gen.ts) | WS1.2a | — |
-| 18 | Pest system (wire pre-gen into tick) | WS1.2 | WS1.2a |
-| 19 | Pest visual overlays | WS5.9 | WS1.2a |
-| 20 | Scout action UI (pest scouting) | WS5.2 | WS1.2a |
-| 21 | Companion discovery cues | WS7.5 | — |
-| 22 | Zoom & detail views | WS5.7 | — |
+| # | Task | Workstream | Status |
+|---|------|------------|--------|
+| 11 | Condition database (19+ conditions) | WS2.4 | todo |
+| 12 | Disease overlay visuals | WS5.4 | todo |
+| 13 | Stress/disease visual modifiers | WS7.7 | todo |
+| 14 | Diagnosis engine | WS2.1 | todo |
+| 15 | Diagnosis UI flow | WS2.2 | todo |
+| 16 | Treatment feedback loop | WS2.3 | todo |
+| 17 | ~~Pest event pre-generation (pest-gen.ts)~~ | WS1.2a | ✅ done |
+| 18 | ~~Pest system (wire pre-gen into tick)~~ | WS1.2 | ✅ done |
+| 19 | Pest visual overlays | WS5.9 | todo |
+| 20 | Scout action UI (pest scouting) | WS5.2 | todo |
+| 21 | Companion discovery cues | WS7.5 | todo |
+| 22 | Zoom & detail views | WS5.7 | todo |
 
 ### Phase 3 — Meta-Progression & CLI
 > Goal: Between-run progression gives the game long-term pull. CLI enables automated playtesting.
+> **CLI is fully complete.** Meta-progression UI and content remain.
 
-| # | Task | Workstream | Depends On |
-|---|------|------------|------------|
-| 21 | Field journal UI | WS6.2 | — |
-| 22 | Seed bank browser | WS6.1 | — |
-| 23 | Tools data | WS3.2 | — |
-| 24 | Tool unlock screen | WS6.4 | WS3.2 |
-| 25 | Additional zones (2-3) | WS3.4 | — |
-| 26 | Climate ladder UI | WS6.3 | WS3.4, WS1.5 |
-| 27 | Between-run flow | WS6.6 | WS6.1, WS6.3 |
-| 28 | Lifetime stats screen | WS6.5 | — |
-| 29 | CLI entry point & REPL | WS4.1 | — |
-| 30 | CLI command parser | WS4.2 | WS4.1 |
-| 31 | CLI text formatters | WS4.3 | WS4.2 |
-| 32 | CLI session wrapper | WS4.4 | WS4.1 |
-| 33 | CLI error handling | WS4.5 | WS4.2 |
+| # | Task | Workstream | Status |
+|---|------|------------|--------|
+| 21 | Field journal UI | WS6.2 | todo |
+| 22 | Seed bank browser | WS6.1 | todo |
+| 23 | Tools data | WS3.2 | todo |
+| 24 | Tool unlock screen | WS6.4 | todo |
+| 25 | Additional zones (2-3) | WS3.4 | todo |
+| 26 | Climate ladder UI | WS6.3 | todo |
+| 27 | Between-run flow | WS6.6 | todo |
+| 28 | Lifetime stats screen | WS6.5 | todo |
+| 29 | ~~CLI entry point & REPL~~ | WS4.1 | ✅ done |
+| 30 | ~~CLI command parser~~ | WS4.2 | ✅ done |
+| 31 | ~~CLI text formatters~~ | WS4.3 | ✅ done |
+| 32 | ~~CLI session wrapper~~ | WS4.4 | ✅ done |
+| 33 | ~~CLI data loader~~ | WS4.5 | ✅ done |
 
 ### Phase 4 — Breadth & Polish
 > Goal: Content richness, audio, offline, performance.
@@ -491,37 +478,33 @@ Phase 1 — Minimum Playable Season
 ═══════════════════════════════════════════════════════════════════════
 
   [WS1.1 Weather Apply]──────┐
-                              ├──[WS1.6 Wire into Tick]──┐
+                              ├──[WS1.6 Wire into Tick]──┐      ALL ✅ DONE
   [WS1.3 Harvest Check]──────┘                           │
-                              ┌───────────────────────────┘
-                              v
-  [WS3.1 Amendments Data]──>[WS5.1 Amend UI]             │
-                                                          v
-  [WS1.3]─────────────────>[WS5.3 Intervene/Harvest UI]  │
-                                                          v
-  [WS1.5 Scoring]────────────────────────────────────>[WS5.5 Run End]
-                                                          │
-  [WS5.6 Run Start Flow]                                  │
-                                                          │
-  [WS3.3 More Species]                                    │
-                                                          v
-                                              ── PHASE 1 COMPLETE ──
+  [WS1.5 Scoring]─────────────────────────────┐          │
+  [WS3.1 Amendments Data]────────────────┐    │          │
+  ── engine complete ──                  │    │          │
+                                         v    v          v
+  Remaining UI work:            [WS5.1 Amend UI] [WS5.5 Run End]
+                                [WS5.3 Intervene/Harvest UI]
+                                [WS5.6 Run Start Flow]
+                                [WS3.3 More Species]
+                                              ── PHASE 1 UI REMAINING ──
 
 
 Phase 2 — Diagnosis & Strategic Depth
 ═══════════════════════════════════════════════════════════════════════
 
+  [WS1.2a Pest Pre-Gen] ✅ DONE
+  [WS1.2 Pest System]   ✅ DONE
+  ── pest engine complete ──
+
+  Remaining:
   [WS2.4 Condition DB]─────>[WS2.1 Diagnosis Engine]──>[WS2.2 Diagnosis UI]
                                                     └──>[WS2.3 Treatment Loop]
   [WS5.4 Disease Overlays]──────────────────────────┘
-
   [WS7.7 Stress Visuals]
-
-  [WS1.2a Pest Pre-Gen]──>[WS1.2 Pest System]──>[WS5.2 Scout UI]
-                       └──>[WS5.9 Pest Overlays]
-
+  [WS5.9 Pest Overlays]──>[WS5.2 Scout UI]
   [WS7.5 Companion Cues]
-
   [WS5.7 Zoom Views]
                                               ── PHASE 2 COMPLETE ──
 
@@ -529,6 +512,10 @@ Phase 2 — Diagnosis & Strategic Depth
 Phase 3 — Meta-Progression & CLI
 ═══════════════════════════════════════════════════════════════════════
 
+  [WS4 CLI] ✅ ALL DONE (entry, commands, formatters, session, data loader)
+  ── CLI complete ──
+
+  Remaining:
   [WS6.2 Journal UI]
   [WS6.1 Seed Bank UI]─────────────────────────────┐
   [WS3.2 Tools Data]──>[WS6.4 Tool Unlock Screen]  │
@@ -536,10 +523,6 @@ Phase 3 — Meta-Progression & CLI
   [WS6.5 Lifetime Stats]                           │
                                                     v
                                             [WS6.6 Between-Run Flow]
-
-  [WS4.1 CLI Entry]──>[WS4.2 Commands]──>[WS4.3 Formatters]
-                   └──>[WS4.4 Session] ──>[WS4.5 Error Handling]
-
                                               ── PHASE 3 COMPLETE ──
 
 
@@ -565,4 +548,4 @@ Phase 4 — Breadth & Polish
 - **Test convention:** Every new system should have a corresponding test file in `tests/` following existing patterns (fixtures, deterministic RNG, real system code with controlled inputs).
 - **Species are data:** Adding species requires only a JSON file + `npm run validate:species`. No code changes.
 - **CLI shares engine:** The CLI must not import from `src/lib/render/`, `src/lib/audio/`, `src/lib/state/stores.ts`, or `src/routes/`. It shares `engine/`, `data/`, `state/events.ts`, and `state/event-log.ts`.
-- **The doc 03 tick order** (1-10) is the canonical reference. `simulation.ts` currently runs slots 2,3,4,5,6,10. Slots 1,7,8,9 need to be added.
+- **The doc 03 tick order** (1-10) is the canonical reference. `simulation.ts` currently runs slots 1,2,3,4,5,6,7,8,10. Only slot 9 (spread) is not yet wired.

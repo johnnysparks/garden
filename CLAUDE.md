@@ -46,7 +46,7 @@ Build runs `validate:species` before `vite build`. Both must pass for CI to succ
 | ECS         | miniplex                  | Entity-component-system for game entities          |
 | State       | Event sourcing            | Append-only event log, replay for save/load        |
 | Validation  | Zod                       | Schema validation for species JSON at build time   |
-| Testing     | Vitest                    | 335 tests across engine, data, render, and state   |
+| Testing     | Vitest                    | 607 tests across engine, data, render, and state   |
 
 **Web UI**
 
@@ -75,6 +75,7 @@ src/
     commands.ts             # Command parser + dispatcher
     formatter.ts            # Text output formatters (grid, status, inspect)
     session.ts              # CLI-specific GameSession wrapper
+    data-loader.ts          # Node.js species/zone/amendment loader (no Vite)
   lib/
     engine/                 # Simulation engine (no UI dependencies)
       ecs/
@@ -93,6 +94,7 @@ src/
           stress.ts         # Stress accumulation from suboptimal conditions
       simulation.ts         # Tick orchestrator (runs systems in fixed order)
       weather-gen.ts        # Season weather pre-generation from zone profile
+      pest-gen.ts           # Pest event pre-generation from zone pest weights
       diagnosis.ts          # Player diagnosis hypothesis matching
       scoring.ts            # End-of-run score calculation
       rng.ts                # Seeded PRNG (xoshiro128**), deterministic runs
@@ -143,14 +145,17 @@ scripts/
 
 The simulation runs once per in-game week. System execution order matters for emergent behavior:
 
-1. `soilUpdateSystem` — amendments take effect, nutrients shift
-2. `companionEffectsSystem` — adjacency bonuses/penalties calculated
-3. `growthTickSystem` — plants advance growth based on conditions
-4. `stressAccumulateSystem` — stress from suboptimal conditions
-5. `diseaseCheckSystem` — stress + triggers may cause disease
-6. `frostCheckSystem` — late-season probability roll for killing frost
+1. `weatherApplySystem` — hail damage, heavy rain compaction
+2. `soilUpdateSystem` — amendments take effect, nutrients shift
+3. `companionEffectsSystem` — adjacency bonuses/penalties calculated
+4. `growthTickSystem` — plants advance growth based on conditions
+5. `stressAccumulateSystem` — stress from suboptimal conditions
+6. `diseaseCheckSystem` — stress + triggers may cause disease
+7. `pestCheckSystem` — pest events, counter-species, companion resistance
+8. `harvestCheckSystem` — harvest window detection, quality decay
+10. `frostCheckSystem` — late-season probability roll for killing frost
 
-Systems not yet implemented: weather apply (1), pest check (7), harvest check (8), spread check (9).
+System not yet implemented: spread check (9).
 
 ### Data Flow
 
