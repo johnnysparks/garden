@@ -67,6 +67,36 @@ function requireBounds(session: CliSession, row: number, col: number): string | 
   return null;
 }
 
+/**
+ * After spending energy, if the action exhausted energy and auto-transitioned
+ * to DUSK, format the dusk tick + advance results and auto-advance through
+ * non-interactive phases to DAWN. Returns empty string if still in ACT.
+ */
+function formatAutoAdvance(session: CliSession): string {
+  if (session.getPhase() !== TurnPhase.DUSK) return '';
+
+  const parts: string[] = [];
+  const duskResult = session.consumeLastDuskResult();
+  if (duskResult) {
+    parts.push(formatDuskTick(duskResult));
+  }
+
+  // Auto-advance through DUSK → ADVANCE → DAWN
+  let safety = 5;
+  while (safety-- > 0) {
+    if (session.isRunEnded()) break;
+    const result = session.advancePhase();
+    if (result.advance) {
+      parts.push(formatAdvance(result.advance, session.config.zone));
+    }
+    const phase = session.getPhase();
+    if (phase !== TurnPhase.DUSK && phase !== TurnPhase.ADVANCE) break;
+  }
+
+  parts.push(formatStatus(session));
+  return parts.join('\n\n');
+}
+
 // ── Command dispatcher ───────────────────────────────────────────────
 
 export function executeCommand(session: CliSession, input: string): CommandResult {
@@ -153,15 +183,26 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       if (session.isRunEnded()) {
         return { output: 'Error: Run has ended. Start a new game.' };
       }
-      const result = session.advancePhase();
       const outputParts: string[] = [];
 
-      if (result.dusk) {
-        outputParts.push(formatDuskTick(result.dusk));
-      }
-      if (result.advance) {
-        outputParts.push(formatAdvance(result.advance, session.config.zone));
-      }
+      // Advance at least once, then auto-continue through non-interactive
+      // phases (DUSK and ADVANCE) so the player lands on an interactive phase.
+      let safety = 5;
+      do {
+        const result = session.advancePhase();
+
+        if (result.dusk) {
+          outputParts.push(formatDuskTick(result.dusk));
+        }
+        if (result.advance) {
+          outputParts.push(formatAdvance(result.advance, session.config.zone));
+        }
+
+        const phase = session.getPhase();
+        // Stop at interactive phases (DAWN, PLAN, ACT) or if run ended
+        if (phase !== TurnPhase.DUSK && phase !== TurnPhase.ADVANCE) break;
+        if (session.isRunEnded()) break;
+      } while (safety-- > 0);
 
       outputParts.push(formatStatus(session));
       return { output: outputParts.join('\n\n') };
@@ -172,11 +213,11 @@ export function executeCommand(session: CliSession, input: string): CommandResul
         return { output: 'Error: Run has ended. Start a new game.' };
       }
       const outputParts: string[] = [];
+      const startWeek = session.getWeek();
 
-      // Advance through remaining phases until we reach the next PLAN
-      let safety = 10;
+      // Advance through all phases until we reach ACT in a new week.
+      let safety = 12;
       while (safety-- > 0) {
-        const phase = session.getPhase();
         if (session.isRunEnded()) break;
 
         const result = session.advancePhase();
@@ -188,8 +229,8 @@ export function executeCommand(session: CliSession, input: string): CommandResul
           outputParts.push(formatAdvance(result.advance, session.config.zone));
         }
 
-        // Stop when we've reached ACT (start of the action window)
-        if (result.phase === TurnPhase.ACT) break;
+        // Stop once we've advanced at least one week and reached ACT
+        if (session.getWeek() > startWeek && result.phase === TurnPhase.ACT) break;
       }
 
       outputParts.push(formatStatus(session));
@@ -249,9 +290,10 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       });
 
       const energy = session.getEnergy();
-      return {
-        output: `Planted ${species.common_name} (${speciesId}) at [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`,
-      };
+      let output = `Planted ${species.common_name} (${speciesId}) at [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`;
+      const autoAdv = formatAutoAdvance(session);
+      if (autoAdv) output += '\n\n' + autoAdv;
+      return { output };
     }
 
     case 'amend': {
@@ -292,9 +334,10 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       });
 
       const energy = session.getEnergy();
-      return {
-        output: `Applied ${amendmentDef.name} to [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`,
-      };
+      let output = `Applied ${amendmentDef.name} to [${rc.row}, ${rc.col}]. Energy: ${energy.current}/${energy.max}`;
+      const autoAdv = formatAutoAdvance(session);
+      if (autoAdv) output += '\n\n' + autoAdv;
+      return { output };
     }
 
     case 'diagnose': {
@@ -322,7 +365,10 @@ export function executeCommand(session: CliSession, input: string): CommandResul
         week: session.getWeek(),
       });
 
-      return { output: formatDiagnose(session, rc.row, rc.col) };
+      let output = formatDiagnose(session, rc.row, rc.col);
+      const autoAdv = formatAutoAdvance(session);
+      if (autoAdv) output += '\n\n' + autoAdv;
+      return { output };
     }
 
     case 'intervene': {
@@ -355,9 +401,10 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       });
 
       const energy = session.getEnergy();
-      return {
-        output: `Intervened on ${plant.speciesId} at [${rc.row}, ${rc.col}]: ${action}. Energy: ${energy.current}/${energy.max}`,
-      };
+      let output = `Intervened on ${plant.speciesId} at [${rc.row}, ${rc.col}]: ${action}. Energy: ${energy.current}/${energy.max}`;
+      const autoAdv = formatAutoAdvance(session);
+      if (autoAdv) output += '\n\n' + autoAdv;
+      return { output };
     }
 
     case 'scout': {
@@ -379,12 +426,16 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       });
 
       if (target === 'weather') {
-        return { output: formatWeather(session) };
+        let output = formatWeather(session);
+        const autoAdv = formatAutoAdvance(session);
+        if (autoAdv) output += '\n\n' + autoAdv;
+        return { output };
       }
       const energy = session.getEnergy();
-      return {
-        output: `Scouted: ${target}. Energy: ${energy.current}/${energy.max}`,
-      };
+      let output = `Scouted: ${target}. Energy: ${energy.current}/${energy.max}`;
+      const autoAdv = formatAutoAdvance(session);
+      if (autoAdv) output += '\n\n' + autoAdv;
+      return { output };
     }
 
     case 'wait': {
