@@ -1,12 +1,13 @@
 /**
- * Species data loader.
+ * Data loaders for species and amendments.
  *
  * Uses Vite's glob import to load all species JSON files at build time.
  * Each species is validated against the Zod schema on first access in dev mode.
+ * Amendments are loaded directly from the single JSON file.
  */
 
 import { PlantSpeciesSchema } from './schema.js';
-import type { PlantSpecies } from './types.js';
+import type { PlantSpecies, SoilAmendment } from './types.js';
 
 // Vite glob import — eagerly loads every JSON file under species/
 // With `import: 'default'`, the resolved type is the default export directly.
@@ -83,4 +84,24 @@ export function getAllSpeciesIds(): string[] {
  */
 export function getLoadErrors(): ReadonlyArray<{ file: string; errors: string[] }> {
   return loadErrors;
+}
+
+// ── Amendment loader ────────────────────────────────────────────────
+
+import amendmentsRaw from './amendments.json';
+
+const amendments: SoilAmendment[] = amendmentsRaw as unknown as SoilAmendment[];
+
+/**
+ * Get all soil amendments.
+ */
+export function getAllAmendments(): SoilAmendment[] {
+  return amendments;
+}
+
+/**
+ * Get a soil amendment by id. Returns undefined if not found.
+ */
+export function getAmendment(id: string): SoilAmendment | undefined {
+  return amendments.find((a) => a.id === id);
 }

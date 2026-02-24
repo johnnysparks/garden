@@ -6,4 +6,6 @@ export {
   getAllSpecies,
   getAllSpeciesIds,
   getLoadErrors,
+  getAllAmendments,
+  getAmendment,
 } from './loader.js';
