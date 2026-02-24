@@ -53,7 +53,7 @@
 | Area | Status | Notes |
 |------|--------|-------|
 | Weather apply system | todo | Placeholder file — weather doesn't modify soil temp/moisture |
-| Pest system | todo | Placeholder file — no pest events, no pest generation |
+| Pest system | partial | pestCheckSystem implemented; pre-generation (pest-gen.ts) and visual overlays pending |
 | Harvest check system | todo | Placeholder file — plants never flagged harvestable by engine |
 | Spread check system | todo | Placeholder file — no invasive spreading, self-seeding, weeds |
 | Scoring engine | todo | Placeholder file — no end-of-run score calculation |
@@ -137,11 +137,18 @@ The engine runs 6 of 10 planned systems. Four are placeholder files. The scoring
 
 ### WS1.2 — Pest System
 - **File:** `src/lib/engine/ecs/systems/pest.ts`
-- **Status:** todo (placeholder)
+- **Status:** partial (pestCheckSystem implemented; pre-generation pending)
 - **Spec:** doc 03 §7 — PestEvent interface, zone-level pest events pre-generated at season start, target_families filtering, severity, companion pest_resistance reduction, countered_by items, scoutable
 - **Depends on:** WS1.1 (pests interact with weather/conditions), WS3.1 (pest definitions in data)
 - **Blocks:** WS2 (pest diagnosis), WS5 (pest intervention UI)
-- **New types needed:** `PestEvent` on SimulationContext or zone config, pest schedule generation in weather-gen
+
+#### WS1.2a — Pest Event Pre-Generation
+- **File:** `src/lib/engine/pest-gen.ts` (new)
+- **Status:** todo
+- **Spec:** Analogous to `weather-gen.ts` — generate `PestEvent[]` at season start from zone `pest_event_weights` map, seeded PRNG (independent stream from weather), built-in pest catalog (aphids, whitefly, thrips, hornworm, cabbage_moth, spider_mite), enforce min-gap between successive same-pest events. Wire into `createGameSession()` and expose as `seasonPests` on `GameSession`.
+- **New zone field:** `pest_event_weights: Record<string, number>` added to `ClimateZone` / `ClimateZoneSchema` (optional, default `{}`)
+- **Depends on:** seeded RNG (done), zone data (done)
+- **Blocks:** WS1.2 runtime (pestCheckSystem needs pre-generated events), WS5.2 (scout reveals upcoming pest arrivals)
 
 ### WS1.3 — Harvest Check System
 - **File:** `src/lib/engine/ecs/systems/harvest.ts`
@@ -286,7 +293,8 @@ The garden page exists with grid rendering, plant action, and phase automation. 
 
 ### WS5.2 — Scout Action Flow
 - Wire "Scout" button → target selector (weather peek / pest forecast / soil survey) → reveal info overlay
-- **Depends on:** WS1.2 (pest data to scout)
+- **Pest scouting:** Allow the player to peek at upcoming `PestEvent` arrivals (arrival week, target families, severity tier) from the pre-generated `seasonPests` list. Costs 1 energy; reveals the next N weeks of pest pressure.
+- **Depends on:** WS1.2a (pre-generated pest events), WS1.2 (pest data to scout)
 
 ### WS5.3 — Intervene Action Flow
 - Wire "Intervene" button → action selector (prune, treat, harvest, pull) → dispatch INTERVENE/HARVEST event → ECS state update
@@ -298,6 +306,13 @@ The garden page exists with grid rendering, plant action, and phase automation. 
 - **Spec:** doc 06 §Disease Overlay Visuals — 11 overlay types (interveinal_yellowing, leaf_spots, concentric_rings, powdery_coating, wilting, fruit_base_rot, stem_lesions, insect_clusters, yellowing_uniform, purple_tint, brown_edges), each with intensity parameter
 - **Depends on:** disease system (done)
 - **Blocks:** WS2.2 (diagnosis needs visible symptoms)
+
+### WS5.9 — Pest Visual Overlays in SVG Renderer
+- **File:** `src/lib/render/shapes/overlays.ts` (extend alongside disease overlays)
+- **Status:** todo
+- **Spec:** When a plant entity has an active `pestInfestation` component, render pest-specific SVG overlays driven by the `visual` string from `PestDefinition`. Overlay types needed: `small_insects_on_leaves` (aphid clusters — small dot clusters on leaf surfaces), `tiny_white_insects` (whitefly — speckling on undersides), `stippled_leaves` (thrips — silvery streaks), `large_caterpillar` (hornworm — large green body on stem), `leaf_holes_caterpillar` (cabbage moth — ragged holes), `stippled_leaves_webbing` (spider mite — fine webbing + stippling). Each overlay takes a `severity` parameter (0–1) controlling density/opacity.
+- **Depends on:** WS1.2a (pest events that create `pestInfestation` component), WS5.4 (shares `overlays.ts`)
+- **Blocks:** WS5.2 visual feedback (scout reveals correspond to visible overlays)
 
 ### WS5.5 — Run End Screen
 - Currently frost just logs to console
@@ -424,10 +439,12 @@ Phase 1 targets a playable end-to-end loop. Phase 2 adds depth. Phase 3 adds bre
 | 14 | Diagnosis engine | WS2.1 | WS2.4 |
 | 15 | Diagnosis UI flow | WS2.2 | WS2.1, WS5.4 |
 | 16 | Treatment feedback loop | WS2.3 | WS2.1 |
-| 17 | Pest system | WS1.2 | WS1.1 |
-| 18 | Scout action UI | WS5.2 | WS1.2 |
-| 19 | Companion discovery cues | WS7.5 | — |
-| 20 | Zoom & detail views | WS5.7 | — |
+| 17 | Pest event pre-generation (pest-gen.ts) | WS1.2a | — |
+| 18 | Pest system (wire pre-gen into tick) | WS1.2 | WS1.2a |
+| 19 | Pest visual overlays | WS5.9 | WS1.2a |
+| 20 | Scout action UI (pest scouting) | WS5.2 | WS1.2a |
+| 21 | Companion discovery cues | WS7.5 | — |
+| 22 | Zoom & detail views | WS5.7 | — |
 
 ### Phase 3 — Meta-Progression & CLI
 > Goal: Between-run progression gives the game long-term pull. CLI enables automated playtesting.
@@ -500,7 +517,8 @@ Phase 2 — Diagnosis & Strategic Depth
 
   [WS7.7 Stress Visuals]
 
-  [WS1.1]──>[WS1.2 Pest System]──>[WS5.2 Scout UI]
+  [WS1.2a Pest Pre-Gen]──>[WS1.2 Pest System]──>[WS5.2 Scout UI]
+                       └──>[WS5.9 Pest Overlays]
 
   [WS7.5 Companion Cues]
 

@@ -18,5 +18,12 @@
     "hail": 0.015,
     "early_frost": 0.02,
     "indian_summer": 0.03
+  },
+  "pest_event_weights": {
+    "aphids": 0.04,
+    "whitefly": 0.02,
+    "thrips": 0.025,
+    "tomato_hornworm": 0.02,
+    "spider_mite": 0.025
   }
 }

@@ -53,6 +53,8 @@ export interface ClimateZone {
   first_frost_week_avg: number;
   humidity_baseline: number; // 0-1
   special_event_weights: Record<string, number>;
+  /** Per-week arrival probability for each pest type (e.g. 0.03 = 3% chance per week). */
+  pest_event_weights: Record<string, number>;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +71,7 @@ export const ClimateZoneSchema = z.object({
   first_frost_week_avg: z.number().int().nonnegative(),
   humidity_baseline: z.number().min(0).max(1),
   special_event_weights: z.record(z.string(), z.number().nonnegative()),
+  pest_event_weights: z.record(z.string(), z.number().nonnegative()).optional().default({}),
 });
 
 // ---------------------------------------------------------------------------
