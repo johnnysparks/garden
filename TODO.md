@@ -38,7 +38,7 @@
 | Scoring engine | done | Four-category ScoreCard, zone multipliers, Three Sisters bonus |
 | Simulation orchestrator | done | Slots 1–8, 10 wired (only spread #9 missing) |
 | Diagnosis engine | done | Hypothesis generation, confidence scoring, similar-condition red herrings |
-| Condition database | done | 17 conditions (7 fungal, 7 nutrient, 3 abiotic); pest conditions not yet added |
+| Condition database | done | 21 conditions (7 fungal, 7 nutrient, 4 pest, 3 abiotic) |
 | Amendments data | done | 6 amendments: compost, lime, sulfur, fertilizer, mulch, inoculant |
 | Tools data | done | 7 tools defined with unlock conditions and effects |
 | Species data | done | 4 species: tomato, basil, carrot, zucchini (validated by Zod schema) |
@@ -61,7 +61,7 @@
 | Area | Status | Notes |
 |------|--------|-------|
 | Spread check system | todo | Placeholder — no invasive spreading, self-seeding, weeds |
-| Pest conditions in diagnosis DB | todo | 4 pest-related conditions per doc 04 not yet in CONDITION_DATABASE |
+| Pest conditions in diagnosis DB | done | 4 pest conditions (aphid, whitefly, hornworm, spider mite) in CONDITION_DATABASE |
 | Disease overlays (visual) | todo | Placeholder — no SVG disease indicators |
 | Pest visual overlays | todo | No SVG overlays for pest infestations |
 | Audio system | todo | ambient.ts and sfx.ts are placeholders |
@@ -106,12 +106,13 @@ The diagnosis engine and condition database are implemented. Treatment feedback 
 
 **Done:**
 - WS2.1 — Diagnosis engine (`src/lib/engine/diagnosis.ts`): `generateHypotheses()` with confidence scoring, symptom tag matching, SIMILAR_CONDITIONS red herrings. Tested in `tests/engine/diagnosis.test.ts`.
-- WS2.4 — Condition database: 17 conditions (7 fungal, 7 nutrient, 3 abiotic) embedded in `diagnosis.ts` as `CONDITION_DATABASE`. Missing: 4 pest-related conditions from doc 04 (aphid_damage, whitefly_damage, hornworm_damage, spider_mite_damage).
+- WS2.4 — Condition database: 21 conditions (7 fungal, 7 nutrient, 4 pest, 3 abiotic) embedded in `diagnosis.ts` as `CONDITION_DATABASE`.
+- WS2.4a — Pest conditions: 4 pest-related conditions (aphid_damage, whitefly_damage, hornworm_damage, spider_mite_damage) with SIMILAR_CONDITIONS entries and OVERLAY_TO_TAGS mappings.
 
 **Remaining:**
 - **WS2.2 — Diagnosis UI Flow** (todo): Spec doc 04 §Inspection Flow — zoom-in, examine action, observation notes, hypothesis cards, select + confirm. Depends on disease overlays (WS5.4).
 - **WS2.3 — Treatment Feedback Loop** (todo): Spec doc 04 §Step 5 — correct/wrong treatment effects delayed 1-2 weeks. Depends on intervene action (WS5.3).
-- **WS2.4a — Pest Conditions** (todo): Add 4 pest-related conditions to CONDITION_DATABASE per doc 04.
+- WS2.4a — Pest Conditions (done): 4 pest conditions added to CONDITION_DATABASE with SIMILAR_CONDITIONS and overlay mappings.
 
 ### WS3: Data Content — Tools Done, Species In Progress
 
@@ -195,7 +196,7 @@ Data layer is complete and tested. All UI is missing.
 
 | # | Task | Status |
 |---|------|--------|
-| 7 | Add pest conditions to diagnosis DB (WS2.4a) | todo |
+| 7 | Add pest conditions to diagnosis DB (WS2.4a) | done |
 | 8 | Disease overlay visuals (WS5.4) | todo |
 | 9 | Pest visual overlays (WS5.9) | todo |
 | 10 | Stress/disease visual modifiers (WS7.7) | todo |

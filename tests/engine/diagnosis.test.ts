@@ -447,6 +447,128 @@ describe('generateHypotheses', () => {
   });
 });
 
+// ── Pest conditions in diagnosis ──────────────────────────────────────
+
+/**
+ * TOMATO_WITH_PESTS adds aphid_damage and hornworm_damage vulnerabilities
+ * for testing pest condition diagnosis alongside disease vulnerabilities.
+ */
+const TOMATO_WITH_PESTS: PlantSpecies = {
+  ...TOMATO,
+  vulnerabilities: [
+    ...TOMATO_FULL.vulnerabilities,
+    {
+      condition_id: 'aphid_damage',
+      susceptibility: 0.5,
+      triggers: [
+        { type: 'pest_vector', threshold: 0.3 },
+      ],
+      symptoms: {
+        stages: [
+          { week: 0, visual_overlay: 'small_insects_on_leaves', description: 'Small green insects clustering on stem tips and leaf undersides.', reversible: true },
+          { week: 2, visual_overlay: 'small_insects_on_leaves', description: 'Leaves curling, sticky honeydew visible. Sooty mold forming.', reversible: true },
+        ],
+        weeks_to_death: null,
+        spreads: true,
+        spread_radius: 2,
+      },
+    },
+    {
+      condition_id: 'hornworm_damage',
+      susceptibility: 0.4,
+      triggers: [
+        { type: 'pest_vector', threshold: 0.4 },
+      ],
+      symptoms: {
+        stages: [
+          { week: 0, visual_overlay: 'large_caterpillar', description: 'Large green caterpillar on upper leaves. Dark droppings on lower leaves.', reversible: true },
+          { week: 1, visual_overlay: 'large_caterpillar', description: 'Severe defoliation of upper canopy. Stems stripped bare.', reversible: false },
+        ],
+        weeks_to_death: null,
+        spreads: false,
+        spread_radius: 0,
+      },
+    },
+  ],
+};
+
+describe('pest conditions in diagnosis', () => {
+  it('CONDITION_DATABASE contains all 4 pest conditions', () => {
+    const pestIds = ['aphid_damage', 'whitefly_damage', 'hornworm_damage', 'spider_mite_damage'];
+    for (const id of pestIds) {
+      expect(CONDITION_DATABASE[id]).toBeDefined();
+      expect(CONDITION_DATABASE[id].category).toBe('pest');
+    }
+  });
+
+  it('pest conditions have distinct symptom tags', () => {
+    const aphid = CONDITION_DATABASE['aphid_damage'];
+    const spider = CONDITION_DATABASE['spider_mite_damage'];
+    // Aphids and spider mites have different key symptoms
+    expect(aphid.symptomTags).toContain('sticky_residue');
+    expect(spider.symptomTags).toContain('webbing');
+    expect(spider.symptomTags).not.toContain('sticky_residue');
+  });
+
+  it('SIMILAR_CONDITIONS has entries for all 4 pest conditions', () => {
+    const pestIds = ['aphid_damage', 'whitefly_damage', 'hornworm_damage', 'spider_mite_damage'];
+    for (const id of pestIds) {
+      expect(SIMILAR_CONDITIONS[id]).toBeDefined();
+      expect(SIMILAR_CONDITIONS[id].length).toBeGreaterThan(0);
+    }
+  });
+
+  describe('tomato with active aphid damage', () => {
+    const plant = makeTomatoEntity([
+      { conditionId: 'aphid_damage', onset_week: 8, current_stage: 0, severity: 0.2 },
+    ]);
+
+    it('includes aphid_damage as a hypothesis', () => {
+      const result = generateHypotheses(plant, TOMATO_WITH_PESTS, createRng(42));
+      const aphid = result.hypotheses.find((h) => h.conditionId === 'aphid_damage');
+      expect(aphid).toBeDefined();
+      expect(aphid!.fromSpeciesVuln).toBe(true);
+    });
+
+    it('provides pest-specific observations', () => {
+      const result = generateHypotheses(plant, TOMATO_WITH_PESTS, createRng(42));
+      expect(result.observations.length).toBeGreaterThanOrEqual(1);
+      expect(result.observations[0]).toContain('insects');
+    });
+
+    it('generates red herrings from SIMILAR_CONDITIONS for aphids', () => {
+      const result = generateHypotheses(plant, TOMATO_WITH_PESTS, createRng(42));
+      const externalIds = result.hypotheses
+        .filter((h) => !h.fromSpeciesVuln)
+        .map((h) => h.conditionId);
+      // aphid_damage similar: whitefly_damage, nitrogen_deficiency
+      const validRedHerrings = SIMILAR_CONDITIONS['aphid_damage'];
+      for (const id of externalIds) {
+        expect(validRedHerrings).toContain(id);
+      }
+    });
+  });
+
+  describe('tomato with active hornworm damage', () => {
+    const plant = makeTomatoEntity([
+      { conditionId: 'hornworm_damage', onset_week: 12, current_stage: 1, severity: 0.5 },
+    ]);
+
+    it('includes hornworm_damage with higher confidence at advanced stage', () => {
+      const result = generateHypotheses(plant, TOMATO_WITH_PESTS, createRng(42));
+      const hw = result.hypotheses.find((h) => h.conditionId === 'hornworm_damage');
+      expect(hw).toBeDefined();
+      // Stage 1 of 2 (index 1 of 0,1) = max stage → high confidence
+      expect(hw!.confidence).toBeGreaterThan(0.6);
+    });
+
+    it('observation describes defoliation', () => {
+      const result = generateHypotheses(plant, TOMATO_WITH_PESTS, createRng(42));
+      expect(result.observations[0]).toContain('defoliation');
+    });
+  });
+});
+
 // ── CONDITION_DATABASE integrity ─────────────────────────────────────
 
 describe('CONDITION_DATABASE', () => {
@@ -459,6 +581,15 @@ describe('CONDITION_DATABASE', () => {
       expect(info.symptomTags.length).toBeGreaterThan(0);
       expect(info.keyVisual.length).toBeGreaterThan(0);
     }
+  });
+
+  it('contains exactly 4 pest conditions', () => {
+    const pestConditions = Object.values(CONDITION_DATABASE).filter(
+      (c) => c.category === 'pest',
+    );
+    expect(pestConditions).toHaveLength(4);
+    const ids = pestConditions.map((c) => c.id).sort();
+    expect(ids).toEqual(['aphid_damage', 'hornworm_damage', 'spider_mite_damage', 'whitefly_damage']);
   });
 });
 

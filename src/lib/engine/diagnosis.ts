@@ -169,6 +169,40 @@ export const CONDITION_DATABASE: Record<string, ConditionInfo> = {
     keyVisual: 'Blossom end rot on fruit, curled new leaves',
   },
 
+  // ── Pest ────────────────────────────────────────────────────────
+  aphid_damage: {
+    id: 'aphid_damage',
+    name: 'Aphid Damage',
+    category: 'pest',
+    description: 'Clusters of small soft-bodied insects on stems and leaf undersides, producing sticky honeydew.',
+    symptomTags: ['small_insects', 'sticky_residue', 'leaf_curl', 'yellowing', 'stunting'],
+    keyVisual: 'Clusters of small insects on stems and leaf undersides, sticky residue',
+  },
+  whitefly_damage: {
+    id: 'whitefly_damage',
+    name: 'Whitefly Damage',
+    category: 'pest',
+    description: 'Tiny white flying insects on leaf undersides causing yellowing and sticky honeydew.',
+    symptomTags: ['small_insects', 'white_insects', 'sticky_residue', 'yellowing'],
+    keyVisual: 'Tiny white flying insects on leaf undersides, sticky honeydew',
+  },
+  hornworm_damage: {
+    id: 'hornworm_damage',
+    name: 'Tomato Hornworm Damage',
+    category: 'pest',
+    description: 'Large green caterpillar causing rapid defoliation of upper leaves and stem damage.',
+    symptomTags: ['defoliation', 'large_caterpillar', 'leaf_holes', 'stem_damage'],
+    keyVisual: 'Large green caterpillar, severe defoliation of upper leaves',
+  },
+  spider_mite_damage: {
+    id: 'spider_mite_damage',
+    name: 'Spider Mite Damage',
+    category: 'pest',
+    description: 'Tiny mites causing fine stippling on leaves with visible webbing between stems in dry conditions.',
+    symptomTags: ['stippling', 'webbing', 'leaf_browning', 'tiny_insects'],
+    keyVisual: 'Fine stippling on leaves, tiny webbing between stems',
+  },
+
   // ── Abiotic ──────────────────────────────────────────────────────
   sunscald: {
     id: 'sunscald',
@@ -219,6 +253,12 @@ export const SIMILAR_CONDITIONS: Record<string, string[]> = {
   blossom_end_rot: ['calcium_deficiency', 'botrytis'],
   calcium_deficiency: ['blossom_end_rot', 'phosphorus_deficiency'],
 
+  // Pest confusion pairs
+  aphid_damage: ['whitefly_damage', 'nitrogen_deficiency'],
+  whitefly_damage: ['aphid_damage', 'spider_mite_damage'],
+  hornworm_damage: ['aphid_damage'],
+  spider_mite_damage: ['whitefly_damage', 'iron_chlorosis'],
+
   // Abiotic confusion pairs
   sunscald: ['potassium_deficiency'],
   transplant_shock: ['fusarium_wilt', 'overwatering'],
@@ -258,6 +298,14 @@ const OVERLAY_TO_TAGS: Record<string, string[]> = {
   // Late blight overlays
   water_soaked_patches: ['water_soaked', 'leaf_spots'],
   white_mold: ['white_mold', 'stem_lesions'],
+
+  // Pest overlays (visual field from PEST_CATALOG)
+  small_insects_on_leaves: ['small_insects', 'sticky_residue', 'leaf_curl'],
+  tiny_white_insects: ['small_insects', 'white_insects', 'sticky_residue'],
+  large_caterpillar: ['defoliation', 'large_caterpillar', 'leaf_holes'],
+  stippled_leaves_webbing: ['stippling', 'webbing', 'leaf_browning'],
+  stippled_leaves: ['stippling', 'leaf_browning'],
+  leaf_holes_caterpillar: ['leaf_holes', 'defoliation'],
 
   // Generic overlays
   yellowing: ['yellowing'],
