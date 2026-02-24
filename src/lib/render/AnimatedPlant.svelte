@@ -56,7 +56,7 @@
 
 <script lang="ts">
 	import { Spring } from 'svelte/motion';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import PlantRenderer from './PlantRenderer.svelte';
 	import {
 		calculateSway,
@@ -85,12 +85,12 @@
 	// Smooth transitions when game-tick values jump between frames.
 	// Initial prop capture is intentional; $effect blocks below track changes.
 
-	const growthSpring = new Spring(growthProgress, {
-		stiffness: params.animation.growth_spring_tension,
+	const growthSpring = new Spring(untrack(() => growthProgress), {
+		stiffness: untrack(() => params.animation.growth_spring_tension),
 		damping: 0.7,
 	});
 
-	const stressSpring = new Spring(stress, {
+	const stressSpring = new Spring(untrack(() => stress), {
 		stiffness: 0.05,
 		damping: 0.7,
 	});
