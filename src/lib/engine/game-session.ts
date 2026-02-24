@@ -89,7 +89,7 @@ export interface PlantInfo {
   stress: number;
   dead: boolean;
   conditions: Array<{ conditionId: string; severity: number; stage: number }>;
-  companionBuffs: Array<{ source: string }>;
+  companionBuffs: Array<{ source: string; effects: Array<{ type: string; modifier: number }> }>;
   harvestReady: boolean;
 }
 
@@ -248,6 +248,7 @@ export function toPlantInfo(
     })) ?? [],
     companionBuffs: entity.companionBuffs?.buffs.map((b) => ({
       source: b.source,
+      effects: b.effects.map((e) => ({ type: e.type, modifier: e.modifier })),
     })) ?? [],
     harvestReady: !!entity.harvestState?.ripe,
   };
