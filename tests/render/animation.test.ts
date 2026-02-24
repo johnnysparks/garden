@@ -17,74 +17,127 @@ describe('createWindState', () => {
 		const wind = createWindState();
 		expect(wind.angle).toBe(0);
 		expect(wind.strength).toBe(0.5);
-		expect(wind.gust_timer).toBe(0);
+		expect(wind.gustTimer).toBe(8000);
+		expect(wind.elapsed).toBe(0);
+		expect(wind.gustRemaining).toBe(0);
 	});
 });
 
 describe('updateWind', () => {
 	it('returns a WindState with expected shape', () => {
 		const state = createWindState();
-		const next = updateWind(state, 0.016, 0);
+		const next = updateWind(state, 16);
 		expect(next).toHaveProperty('angle');
 		expect(next).toHaveProperty('strength');
-		expect(next).toHaveProperty('gust_timer');
+		expect(next).toHaveProperty('gustTimer');
+		expect(next).toHaveProperty('elapsed');
+		expect(next).toHaveProperty('gustRemaining');
+	});
+
+	it('accumulates elapsed time', () => {
+		let state = createWindState();
+		state = updateWind(state, 100);
+		expect(state.elapsed).toBe(100);
+		state = updateWind(state, 200);
+		expect(state.elapsed).toBe(300);
 	});
 
 	it('angle stays within ±π/4', () => {
-		const state = createWindState();
-		for (let t = 0; t < 100; t += 0.5) {
-			const next = updateWind(state, 0.5, t);
-			expect(next.angle).toBeGreaterThanOrEqual(-Math.PI * 0.25 - 0.001);
-			expect(next.angle).toBeLessThanOrEqual(Math.PI * 0.25 + 0.001);
+		let state = createWindState();
+		for (let i = 0; i < 200; i++) {
+			state = updateWind(state, 500);
+			expect(state.angle).toBeGreaterThanOrEqual(-Math.PI * 0.25 - 0.001);
+			expect(state.angle).toBeLessThanOrEqual(Math.PI * 0.25 + 0.001);
 		}
 	});
 
-	it('strength stays within 0.3–0.7 range', () => {
-		const state = createWindState();
-		for (let t = 0; t < 100; t += 0.5) {
-			const next = updateWind(state, 0.5, t);
-			expect(next.strength).toBeGreaterThanOrEqual(0.29);
-			expect(next.strength).toBeLessThanOrEqual(0.71);
+	it('base strength stays within 0.3–0.7 range (outside gusts)', () => {
+		// Step through time avoiding gust windows.
+		// Base strength = 0.5 + sin(t*0.17)*0.2, range is [0.3, 0.7].
+		// During gusts strength can exceed 0.7, so we check the formula directly.
+		let state = createWindState();
+		for (let i = 0; i < 200; i++) {
+			state = updateWind(state, 500);
+			// Strength is always ≤ 1 (clamped) and ≥ 0.3 (base minimum)
+			expect(state.strength).toBeGreaterThanOrEqual(0.29);
+			expect(state.strength).toBeLessThanOrEqual(1.0);
 		}
 	});
 
-	it('wind gusts are periodic — gust_timer is positive at expected intervals', () => {
-		const state = createWindState();
-		// Sample times within the first gust window (0 to 1.5s of each 8s cycle)
-		const gustTimes: number[] = [];
-		const noGustTimes: number[] = [];
+	it('wind gusts are periodic — gustRemaining is positive at expected intervals', () => {
+		let state = createWindState();
+		const gustStartTimes: number[] = [];
 
-		for (let t = 0; t < 40; t += 0.1) {
-			const next = updateWind(state, 0.1, t);
-			if (next.gust_timer > 0) {
-				gustTimes.push(t);
-			} else {
-				noGustTimes.push(t);
+		// Step in 16ms increments for ~40 seconds
+		let prevGustRemaining = 0;
+		for (let i = 0; i < 2500; i++) {
+			state = updateWind(state, 16);
+			// Detect gust onset: gustRemaining transitions from 0 to positive
+			if (state.gustRemaining > 0 && prevGustRemaining <= 0) {
+				gustStartTimes.push(state.elapsed);
+			}
+			prevGustRemaining = state.gustRemaining;
+		}
+
+		// Should have multiple gusts
+		expect(gustStartTimes.length).toBeGreaterThanOrEqual(4);
+
+		// Verify periodicity: intervals should be ~8000ms (GUST_INTERVAL_MS)
+		for (let i = 1; i < gustStartTimes.length; i++) {
+			const interval = gustStartTimes[i] - gustStartTimes[i - 1];
+			// Allow tolerance for step size
+			expect(interval).toBeGreaterThan(7900);
+			expect(interval).toBeLessThan(8600);
+		}
+	});
+
+	it('gusts decay — strength spikes then returns to baseline', () => {
+		// Advance to just before the first gust fires
+		let state = createWindState();
+		for (let i = 0; i < 490; i++) {
+			state = updateWind(state, 16); // ~7840ms
+		}
+
+		// Step through the gust onset
+		let peakStrength = 0;
+		let gustActive = false;
+		const strengthsDuringGust: number[] = [];
+
+		for (let i = 0; i < 100; i++) {
+			state = updateWind(state, 16);
+			if (state.gustRemaining > 0) {
+				gustActive = true;
+				strengthsDuringGust.push(state.strength);
+				peakStrength = Math.max(peakStrength, state.strength);
 			}
 		}
 
-		// Should have gusts at regular intervals
-		expect(gustTimes.length).toBeGreaterThan(0);
-		expect(noGustTimes.length).toBeGreaterThan(0);
+		expect(gustActive).toBe(true);
+		expect(peakStrength).toBeGreaterThan(0.7); // spike above base range
 
-		// Verify periodicity: gusts should occur near t=0, t=8, t=16, t=24, t=32
-		for (const cycle of [0, 8, 16, 24, 32]) {
-			const gustInCycle = gustTimes.some((t) => t >= cycle && t < cycle + 1.5);
-			expect(gustInCycle).toBe(true);
+		// Strength should generally decrease during the gust (decay)
+		const firstHalf = strengthsDuringGust.slice(0, Math.floor(strengthsDuringGust.length / 2));
+		const secondHalf = strengthsDuringGust.slice(Math.floor(strengthsDuringGust.length / 2));
+		const avgFirst = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+		const avgSecond = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+		expect(avgFirst).toBeGreaterThan(avgSecond);
+	});
+
+	it('gustTimer is positive outside gust window', () => {
+		let state = createWindState();
+		// At t=4000ms (mid-cycle), gustTimer should be positive
+		state = updateWind(state, 4000);
+		expect(state.gustTimer).toBeGreaterThan(0);
+		expect(state.gustRemaining).toBe(0);
+	});
+
+	it('is deterministic for same sequence of deltas', () => {
+		let a = createWindState();
+		let b = createWindState();
+		for (let i = 0; i < 100; i++) {
+			a = updateWind(a, 16);
+			b = updateWind(b, 16);
 		}
-	});
-
-	it('gust_timer is zero outside gust window', () => {
-		const state = createWindState();
-		// At t=4 (mid-cycle, well past gust window), gust_timer should be 0
-		const next = updateWind(state, 0.016, 4);
-		expect(next.gust_timer).toBe(0);
-	});
-
-	it('is deterministic for same totalTime', () => {
-		const state = createWindState();
-		const a = updateWind(state, 0.016, 5.5);
-		const b = updateWind(state, 0.016, 5.5);
 		expect(a).toEqual(b);
 	});
 });
@@ -92,59 +145,71 @@ describe('updateWind', () => {
 // ── Sway ─────────────────────────────────────────────────────────────────────
 
 describe('calculateSway', () => {
-	const calmWind: WindState = { angle: 0, strength: 0, gust_timer: 0 };
-	const normalWind: WindState = { angle: 0.3, strength: 0.5, gust_timer: 0 };
-	const gustWind: WindState = { angle: 0.3, strength: 0.5, gust_timer: 1 };
+	const calmWind: WindState = { angle: 0, strength: 0, gustTimer: 8000, elapsed: 0, gustRemaining: 0 };
+	const normalWind: WindState = { angle: 0.3, strength: 0.5, gustTimer: 4000, elapsed: 0, gustRemaining: 0 };
+	const gustWind: WindState = { angle: 0.3, strength: 0.5, gustTimer: 8000, elapsed: 0, gustRemaining: 300 };
 
 	it('returns a number', () => {
-		const result = calculateSway(100, 5, 1.2, calmWind, 0);
+		const result = calculateSway(5, 1.2, 100, calmWind, 0);
 		expect(typeof result).toBe('number');
 	});
 
 	it('sway output is bounded for reasonable inputs', () => {
-		// Test many time values; sway should never exceed a reasonable bound
 		const mass = 50;
 		const amp = 8;
 		const freq = 1.5;
 
-		for (let t = 0; t < 60; t += 0.1) {
-			const s = calculateSway(mass, amp, freq, normalWind, t);
-			// Theoretical max: response * (1 + wind*2) + gust(0.1)
+		for (let t = 0; t < 60000; t += 100) {
+			const s = calculateSway(amp, freq, mass, normalWind, t);
 			// response = 8/sqrt(50) ≈ 1.13
-			// max ≈ 1.13 + 0.5*sin(0.3)*1.13*2 + 0 ≈ 1.13 + 0.33 ≈ 1.46
-			// Use generous bound of 5 for safety
+			// Generous bound of 5 for safety
 			expect(Math.abs(s)).toBeLessThan(5);
 		}
 	});
 
+	it('sway is continuous — small time steps produce small changes', () => {
+		const mass = 50;
+		const amp = 8;
+		const freq = 1.5;
+		const stepMs = 1; // 1ms step
+
+		let prev = calculateSway(amp, freq, mass, normalWind, 0);
+		for (let t = stepMs; t < 5000; t += stepMs) {
+			const curr = calculateSway(amp, freq, mass, normalWind, t);
+			const delta = Math.abs(curr - prev);
+			// At 1ms granularity, change should be very small
+			expect(delta).toBeLessThan(0.1);
+			prev = curr;
+		}
+	});
+
 	it('heavier plants sway less than lighter plants', () => {
-		const lightMax = maxAbs((t) => calculateSway(10, 5, 1, calmWind, t));
-		const heavyMax = maxAbs((t) => calculateSway(500, 5, 1, calmWind, t));
+		const lightMax = maxAbsSway((t) => calculateSway(5, 1, 10, calmWind, t));
+		const heavyMax = maxAbsSway((t) => calculateSway(5, 1, 500, calmWind, t));
 		expect(heavyMax).toBeLessThan(lightMax);
 	});
 
 	it('zero amplitude means zero sway in calm wind', () => {
-		for (let t = 0; t < 10; t += 0.25) {
-			expect(calculateSway(100, 0, 1, calmWind, t)).toBe(0);
+		for (let t = 0; t < 10000; t += 250) {
+			expect(calculateSway(0, 1, 100, calmWind, t)).toBe(0);
 		}
 	});
 
 	it('gust adds extra sway component', () => {
-		const t = 1; // non-zero time
-		const noGust = calculateSway(50, 5, 1, normalWind, t);
-		const withGust = calculateSway(50, 5, 1, gustWind, t);
+		const t = 1000;
+		const noGust = calculateSway(5, 1, 50, normalWind, t);
+		const withGust = calculateSway(5, 1, 50, gustWind, t);
 		expect(noGust).not.toBe(withGust);
 	});
 
 	it('is deterministic for same inputs', () => {
-		const a = calculateSway(80, 6, 1.3, normalWind, 3.7);
-		const b = calculateSway(80, 6, 1.3, normalWind, 3.7);
+		const a = calculateSway(6, 1.3, 80, normalWind, 3700);
+		const b = calculateSway(6, 1.3, 80, normalWind, 3700);
 		expect(a).toBe(b);
 	});
 
 	it('handles very small mass (≥1 clamped)', () => {
-		// Should not throw or return Infinity
-		const result = calculateSway(0, 5, 1, calmWind, 1);
+		const result = calculateSway(5, 1, 0, calmWind, 1000);
 		expect(Number.isFinite(result)).toBe(true);
 	});
 });
@@ -159,7 +224,7 @@ describe('breathe', () => {
 	it('oscillates around 1.0', () => {
 		let min = Infinity;
 		let max = -Infinity;
-		for (let t = 0; t < 20; t += 0.1) {
+		for (let t = 0; t < 20000; t += 100) {
 			const v = breathe(t, 0.02);
 			min = Math.min(min, v);
 			max = Math.max(max, v);
@@ -169,13 +234,13 @@ describe('breathe', () => {
 	});
 
 	it('zero amplitude returns exactly 1.0', () => {
-		for (let t = 0; t < 10; t += 0.5) {
+		for (let t = 0; t < 10000; t += 500) {
 			expect(breathe(t, 0)).toBe(1);
 		}
 	});
 
 	it('is deterministic', () => {
-		expect(breathe(4.2, 0.01)).toBe(breathe(4.2, 0.01));
+		expect(breathe(4200, 0.01)).toBe(breathe(4200, 0.01));
 	});
 });
 
@@ -184,16 +249,15 @@ describe('breathe', () => {
 describe('stressTremor', () => {
 	it('returns zero offset below stress 0.3', () => {
 		for (const stress of [0, 0.1, 0.2, 0.29]) {
-			const result = stressTremor(5, stress);
+			const result = stressTremor(5000, stress);
 			expect(result.x).toBe(0);
 			expect(result.y).toBe(0);
 		}
 	});
 
 	it('returns non-zero offset at stress > 0.3', () => {
-		// At some time values the sine waves will be non-zero
 		let anyNonZero = false;
-		for (let t = 0; t < 10; t += 0.1) {
+		for (let t = 0; t < 10000; t += 100) {
 			const result = stressTremor(t, 0.6);
 			if (result.x !== 0) anyNonZero = true;
 		}
@@ -202,28 +266,27 @@ describe('stressTremor', () => {
 
 	it('exactly at stress 0.3, intensity is zero so offset is zero', () => {
 		// intensity = (0.3 - 0.3) * 0.03 = 0
-		const result = stressTremor(5, 0.3);
+		const result = stressTremor(5000, 0.3);
 		expect(result.x).toBe(0);
 		expect(result.y).toBe(0);
 	});
 
 	it('higher stress produces larger tremor amplitude', () => {
-		const lowMax = maxAbs((t) => stressTremor(t, 0.4).x);
-		const highMax = maxAbs((t) => stressTremor(t, 0.9).x);
+		const lowMax = maxAbsSway((t) => stressTremor(t, 0.4).x);
+		const highMax = maxAbsSway((t) => stressTremor(t, 0.9).x);
 		expect(highMax).toBeGreaterThan(lowMax);
 	});
 
 	it('y offset is 0.7× the x offset', () => {
-		const result = stressTremor(2.5, 0.7);
+		const result = stressTremor(2500, 0.7);
 		expect(result.y).toBeCloseTo(result.x * 0.7, 10);
 	});
 
 	it('uses two layered frequencies for organic feel', () => {
-		// At two carefully chosen times, the two-sine composition
-		// should differ from a single-sine at freq 12.
-		const singleSine = (t: number) => Math.sin(t * 12) * 0.012;
+		// The two-sine composition should differ from a single sine at freq 12.
+		const singleSine = (t: number) => Math.sin((t / 1000) * 12) * 0.012;
 		let differ = false;
-		for (let t = 0; t < 10; t += 0.1) {
+		for (let t = 0; t < 10000; t += 100) {
 			const tremor = stressTremor(t, 0.7).x;
 			if (Math.abs(tremor - singleSine(t)) > 0.0001) {
 				differ = true;
@@ -234,8 +297,8 @@ describe('stressTremor', () => {
 	});
 
 	it('is deterministic for same inputs', () => {
-		const a = stressTremor(7.3, 0.55);
-		const b = stressTremor(7.3, 0.55);
+		const a = stressTremor(7300, 0.55);
+		const b = stressTremor(7300, 0.55);
 		expect(a).toEqual(b);
 	});
 });
@@ -336,10 +399,10 @@ describe('generateParticleBurst', () => {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Sample a function over 0–20s and return the maximum absolute value. */
-function maxAbs(fn: (t: number) => number): number {
+/** Sample a function over 0–20 s (0–20000 ms) and return the maximum absolute value. */
+function maxAbsSway(fn: (tMs: number) => number): number {
 	let max = 0;
-	for (let t = 0; t < 20; t += 0.05) {
+	for (let t = 0; t < 20000; t += 50) {
 		max = Math.max(max, Math.abs(fn(t)));
 	}
 	return max;

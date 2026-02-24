@@ -9,25 +9,23 @@
 		type WindState,
 	} from './animation.js';
 
-	type FrameCallback = (wind: WindState, time: number, deltaTime: number) => void;
+	type FrameCallback = (wind: WindState, timeMs: number, deltaMs: number) => void;
 
 	const callbacks = new Set<FrameCallback>();
 	let windState: WindState = createWindState();
-	let totalTime = 0;
 	let lastTimestamp = 0;
 	let rafId: number | null = null;
 
 	function tick(timestamp: number) {
 		if (lastTimestamp === 0) lastTimestamp = timestamp;
-		const deltaTime = Math.min((timestamp - lastTimestamp) / 1000, 0.1); // cap at 100 ms
+		const deltaMs = Math.min(timestamp - lastTimestamp, 100); // cap at 100 ms
 		lastTimestamp = timestamp;
-		totalTime += deltaTime;
 
 		// Global wind — computed once, shared by every plant.
-		windState = updateWind(windState, deltaTime, totalTime);
+		windState = updateWind(windState, deltaMs);
 
 		for (const cb of callbacks) {
-			cb(windState, totalTime, deltaTime);
+			cb(windState, windState.elapsed, deltaMs);
 		}
 
 		if (callbacks.size > 0) {
@@ -119,7 +117,7 @@
 
 	// ── Harvest animation ────────────────────────────────────────────────────────
 
-	const HARVEST_DURATION = 0.6; // seconds
+	const HARVEST_DURATION = 600; // ms
 
 	let harvesting = $state(false);
 	let harvestStartTime = 0; // plain var — only rAF + triggerHarvest touch it
@@ -127,26 +125,26 @@
 
 	// ── rAF callback ─────────────────────────────────────────────────────────────
 
-	function onFrame(wind: WindStateAlias, time: number, _dt: number) {
+	function onFrame(wind: WindStateAlias, timeMs: number, _dt: number) {
 		const currentStress = stressSpring.current;
 
 		// Sway
 		const swayX = calculateSway(
-			plantMass,
 			params.animation.sway_amplitude,
 			params.animation.sway_frequency,
+			plantMass,
 			wind,
-			time,
+			timeMs,
 		);
 
 		// Breathing
-		const breatheScale = breathe(time, params.animation.idle_breathing);
+		const breatheScale = breathe(timeMs, params.animation.idle_breathing);
 
 		// Stress tremor
-		const tremor = stressTremor(time, currentStress);
+		const tremor = stressTremor(timeMs, currentStress);
 
 		if (harvesting) {
-			const progress = Math.min(1, (time - harvestStartTime) / HARVEST_DURATION);
+			const progress = Math.min(1, (timeMs - harvestStartTime) / HARVEST_DURATION);
 			const pop = harvestPop(progress);
 
 			particles = generateParticleBurst(5, progress);
@@ -188,7 +186,7 @@
 	export function triggerHarvest() {
 		if (harvesting) return;
 		harvesting = true;
-		harvestStartTime = totalTime;
+		harvestStartTime = windState.elapsed;
 	}
 </script>
 
