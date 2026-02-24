@@ -1,1 +1,60 @@
-[]
+[
+  {
+    "id": "compost",
+    "name": "Compost",
+    "effects": {
+      "organic_matter": 0.15,
+      "nitrogen": 0.05,
+      "phosphorus": 0.03,
+      "potassium": 0.03,
+      "biology": 0.1
+    },
+    "delay_weeks": 2
+  },
+  {
+    "id": "lime",
+    "name": "Lime",
+    "effects": {
+      "ph": 0.5
+    },
+    "delay_weeks": 3
+  },
+  {
+    "id": "sulfur",
+    "name": "Sulfur",
+    "effects": {
+      "ph": -0.5
+    },
+    "delay_weeks": 3
+  },
+  {
+    "id": "fertilizer",
+    "name": "Fertilizer (Synthetic)",
+    "effects": {
+      "nitrogen": 0.2,
+      "phosphorus": 0.15,
+      "potassium": 0.15,
+      "biology": -0.1
+    },
+    "delay_weeks": 1
+  },
+  {
+    "id": "mulch",
+    "name": "Mulch",
+    "effects": {
+      "moisture": 0.1,
+      "organic_matter": 0.05,
+      "compaction": -0.05
+    },
+    "delay_weeks": 1
+  },
+  {
+    "id": "inoculant",
+    "name": "Inoculant",
+    "effects": {
+      "biology": 0.2,
+      "nitrogen": 0.08
+    },
+    "delay_weeks": 2
+  }
+]
