@@ -1,1 +1,104 @@
-[]
+[
+  {
+    "id": "soil_test_kit",
+    "name": "Soil Test Kit",
+    "description": "A simple chemical test kit that reveals exact soil pH and nutrient levels. Knowledge is power — but now you're expected to act on it.",
+    "unlock_condition": {
+      "type": "runs_completed",
+      "threshold": 5,
+      "description": "Complete 5 runs"
+    },
+    "effect": {
+      "type": "reveal_soil_data",
+      "description": "See soil pH and nutrient levels directly (previously hidden/inferred)"
+    }
+  },
+  {
+    "id": "weather_almanac",
+    "name": "Weather Almanac",
+    "description": "A dog-eared regional almanac with historical weather patterns. Lets you plan two weeks ahead instead of reacting week by week.",
+    "unlock_condition": {
+      "type": "scout_count",
+      "threshold": 20,
+      "description": "Scout 20 times"
+    },
+    "effect": {
+      "type": "forecast_weeks",
+      "value": 2,
+      "description": "See 2 weeks ahead instead of 1"
+    }
+  },
+  {
+    "id": "hand_lens",
+    "name": "Hand Lens",
+    "description": "A 10× magnifying loupe for inspecting leaf surfaces, soil texture, and tiny insects. Makes diagnosis observations more precise.",
+    "unlock_condition": {
+      "type": "diagnoses_made",
+      "threshold": 10,
+      "description": "Diagnose 10 conditions"
+    },
+    "effect": {
+      "type": "diagnosis_accuracy",
+      "value": 1,
+      "description": "+1 confidence accuracy in diagnosis"
+    }
+  },
+  {
+    "id": "drip_irrigation",
+    "name": "Drip Irrigation",
+    "description": "A simple gravity-fed drip system that waters plots automatically. Saves time, but set the moisture level wrong and you'll overwater.",
+    "unlock_condition": {
+      "type": "successful_water_runs",
+      "threshold": 3,
+      "description": "Successful water management across 3 runs"
+    },
+    "effect": {
+      "type": "auto_water",
+      "actions_saved": 1,
+      "description": "Auto-water at set moisture level (saves 1 action/week)"
+    }
+  },
+  {
+    "id": "cold_frame",
+    "name": "Cold Frame",
+    "description": "A low glass-topped box that traps warmth and shields tender plants from light frost. Won't help in a hard freeze.",
+    "unlock_condition": {
+      "type": "frost_survived",
+      "threshold": 1,
+      "description": "Survive a frost event"
+    },
+    "effect": {
+      "type": "frost_protection",
+      "plots_protected": 2,
+      "description": "Protect 2 plots from light frost"
+    }
+  },
+  {
+    "id": "compost_bin",
+    "name": "Compost Bin",
+    "description": "A three-bay composting system that improves over time. The longer you maintain it, the richer the finished compost becomes.",
+    "unlock_condition": {
+      "type": "compost_used",
+      "threshold": 15,
+      "description": "Use compost 15 times"
+    },
+    "effect": {
+      "type": "compost_quality",
+      "description": "Compost quality improves over runs (better organic matter boost)"
+    }
+  },
+  {
+    "id": "seed_library",
+    "name": "Seed Library",
+    "description": "A shared community seed catalog connecting you with other growers. More cultivars in your collection means more trading opportunities.",
+    "unlock_condition": {
+      "type": "cultivars_saved",
+      "threshold": 10,
+      "description": "Save 10 cultivars"
+    },
+    "effect": {
+      "type": "seed_swap_frequency",
+      "description": "Seed swap events become more frequent"
+    }
+  }
+]
