@@ -95,6 +95,7 @@ export interface GameSession {
   readonly soilStates$: Readable<With<Entity, 'plotSlot' | 'soil'>[]>;
   readonly currentWeather$: Readable<WeekWeather>;
   readonly tickResult$: Readable<DuskTickResult | null>;
+  readonly advanceResult$: Readable<AdvanceResult | null>;
 
   /** Dispatch a game event to the event log. */
   dispatch(event: GameEvent): void;
@@ -173,6 +174,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
 
   // ── Reactive stores ───────────────────────────────────────────────
   const tickResultStore = writable<DuskTickResult | null>(null);
+  const advanceResultStore = writable<AdvanceResult | null>(null);
   const weatherIndex = writable<number>(0);
 
   const currentWeather$: Readable<WeekWeather> = derived(
@@ -323,6 +325,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
     }
 
     lastAdvanceResult = result;
+    advanceResultStore.set(result);
     worldVersion.update((v) => v + 1);
     return result;
   }
@@ -377,6 +380,7 @@ export function createGameSession(config: GameSessionConfig): GameSession {
     soilStates$,
     currentWeather$,
     tickResult$: { subscribe: tickResultStore.subscribe },
+    advanceResult$: { subscribe: advanceResultStore.subscribe },
 
     dispatch(event: GameEvent) {
       eventLog.append(event);
