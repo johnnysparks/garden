@@ -117,6 +117,15 @@ Unlockable tools that expand capabilities (not power — information and efficie
 
 Tools don’t make the game easier — they shift the skill ceiling. Soil test kit means you now have information you’re expected to act on. Drip irrigation frees an action but you need to set it correctly or it overwaters.
 
+### 6. Garden Expansion
+
+The garden grid starts at 3×3 (9 plots) and can expand through meta-progression:
+
+- **4×4 grid** — Unlocked after completing 5 runs (any zone)
+- **5×5 grid** — Unlocked after completing 10 runs with a minimum score threshold
+
+Larger grids increase strategic options (more companion planting combinations, crop rotation space) but also increase management complexity — more actions needed per week to maintain everything. The energy budget does not scale with grid size, so the player must triage more aggressively.
+
 ## Scoring
 
 ### Per-Run Score

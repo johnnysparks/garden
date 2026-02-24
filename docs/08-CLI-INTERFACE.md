@@ -37,21 +37,20 @@ The CLI does **not** depend on Svelte, the render pipeline, the audio system, or
 ### Invocation
 
 ```bash
-# Start a new run
-npx perennial new --zone zone_8a --seed 12345
+# Start a new interactive REPL session
+npx perennial play --zone zone_8a --seed 12345
 
 # Resume from a saved event log
 npx perennial load saves/my-run.json
 
-# Run a single command against an active session
+# Run a single command against a new session (non-interactive)
 npx perennial cmd "plant tomato_cherokee_purple 1 1"
+
+# Show help
+npx perennial help
 ```
 
-Or as an interactive REPL:
-
-```bash
-npx perennial play --zone zone_8a --seed 12345
-```
+The `play` subcommand starts a new run and enters an interactive REPL. If `--zone` or `--seed` are omitted, defaults are `zone_8a` and a random seed.
 
 ### Command Language
 
@@ -61,7 +60,6 @@ Commands are short, typed strings. One command per line in interactive mode, or 
 
 | Command | Description |
 |---|---|
-| `new [--zone ZONE] [--seed N]` | Start a new run. Defaults: zone_8a, random seed. |
 | `load PATH` | Load an event log JSON and replay to restore state. |
 | `save [PATH]` | Save current event log to JSON file. |
 | `quit` | End the session. Prompts to save if unsaved. |

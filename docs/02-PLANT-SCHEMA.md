@@ -104,14 +104,15 @@ interface CompanionEntry {
   species_id: string;                // "basil"
   effects: InteractionEffect[];
   lore: string;                      // "Basil's volatile oils confuse tomato hornworm moths"
-  discovered: boolean;               // toggled at runtime, not in species def
+  // NOTE: `discovered` is a runtime-only field tracked by the game session.
+  // Do NOT include it in species JSON files.
 }
 
 interface AntagonistEntry {
   species_id: string;                // "fennel"
   effects: InteractionEffect[];
   lore: string;
-  discovered: boolean;
+  // NOTE: `discovered` is runtime-only, same as CompanionEntry.
 }
 
 interface InteractionEffect {
@@ -382,7 +383,7 @@ Target: 15-20 species for first playable build.
 | Tomato (Cherokee Purple) | Annual | Intermediate | Flagship. Rich interaction set. |
 | Basil (Genovese) | Annual | Beginner | Classic companion. Fast feedback loop. |
 | Lettuce (Butterhead) | Annual | Beginner | Quick harvest. Bolt mechanic intro. |
-| Carrot (Nantes) | Annual | Beginner | Root crop mechanic. Slow reveal. |
+| Carrot (Nantes) | Biennial | Beginner | Root crop mechanic. Slow reveal. |
 | Zucchini | Annual | Beginner | Aggressive growth. Space management. |
 | Pepper (Jalapeño) | Annual | Intermediate | Heat/stress interaction. Solanaceae family. |
 | Bean (Provider) | Annual | Beginner | Nitrogen fixer. Companion powerhouse. |

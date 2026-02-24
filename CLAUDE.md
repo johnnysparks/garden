@@ -236,5 +236,7 @@ The numbered markdown files in `docs/` are the game design documents:
 | `docs/06-VISUAL-SYSTEM.md` | Parametric SVG rendering, animation, season palette |
 | `docs/07-ARCHITECTURE.md` | Technical stack, project structure, ECS, event sourcing, persistence |
 | `docs/08-CLI-INTERFACE.md` | CLI wrapper design, command language, LLM agent playtesting |
+| `docs/09-GAMEPLAY-TESTING.md` | CLI playtesting guide and test scenarios for LLM agents |
+| `docs/PLANT-SPECIES-TEMPLATE.md` | Agent prompt template for creating new plant species |
 
 These documents are the authoritative reference for game mechanics and should be consulted when implementing new features.

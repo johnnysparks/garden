@@ -40,11 +40,10 @@ Each week the player has a limited **energy budget** (actions).
 
 There is no binary win/loss. Each run is scored on:
 
-- **Harvest diversity** — number of distinct species successfully harvested
+- **Harvest diversity** — number of distinct species successfully harvested, family variety, crop set bonuses
 - **Soil health delta** — did you leave the soil better or worse?
-- **Survival rate** — % of plantings that reached harvest
-- **Journal entries** — new diagnoses made (correct or not)
-- **Perennials established** — long-term investments that persist
+- **Survival rate** — % of plantings that reached harvest, plus perennials established
+- **Knowledge** — new diagnoses made (correct or not), companion discoveries, species grown
 
 ### Run End
 
@@ -68,8 +67,10 @@ See [05-META-PROGRESSION.md](./05-META-PROGRESSION.md)
 | [01-ACTIONS-AND-TURN.md](./01-ACTIONS-AND-TURN.md) | Weekly turn structure, action types, energy system |
 | [02-PLANT-SCHEMA.md](./02-PLANT-SCHEMA.md) | Plant data model — mechanical and visual parameters |
 | [03-SIMULATION.md](./03-SIMULATION.md) | Week-tick engine, growth, disease, weather, interactions |
-| [04-DIAGNOSIS.md](./04-DIAGNOSIS.md) | Diagnosis interaction design — the core learning mechanic |
+| [04-DIAGNOSES.md](./04-DIAGNOSES.md) | Diagnosis interaction design — the core learning mechanic |
 | [05-META-PROGRESSION.md](./05-META-PROGRESSION.md) | Between-run systems, seed bank, journal, climate zones |
 | [06-VISUAL-SYSTEM.md](./06-VISUAL-SYSTEM.md) | Parametric SVG rendering, animation, color system |
 | [07-ARCHITECTURE.md](./07-ARCHITECTURE.md) | Technical stack, project structure, data flow |
 | [08-CLI-INTERFACE.md](./08-CLI-INTERFACE.md) | CLI wrapper design, command language, LLM agent playtesting |
+| [09-GAMEPLAY-TESTING.md](./09-GAMEPLAY-TESTING.md) | CLI playtesting guide and test scenarios for LLM agents |
+| [PLANT-SPECIES-TEMPLATE.md](./PLANT-SPECIES-TEMPLATE.md) | Agent prompt template for creating new plant species |

@@ -33,7 +33,7 @@ Perennial has two interfaces to the same engine core. See [08-CLI-INTERFACE.md](
 |Rendering  |SVG (DOM-native)              |—      |Parametric plants, Svelte component integration                |
 |Animation  |svelte/motion + rAF loop      |—      |Spring physics for growth, manual loop for continuous animation|
 |Reactivity |Svelte stores                 |—      |Reactive UI derived from event log                             |
-|Audio      |Tone.js                       |latest |Procedural ambient sound                                       |
+|Audio      |Tone.js (planned)             |—      |Procedural ambient sound (not yet installed)                    |
 |Persistence|Dexie.js (IndexedDB)          |latest |Offline-first local storage                                    |
 |Gestures   |use-gesture (or Hammer.js)    |latest |Pinch/zoom/drag on mobile                                      |
 |Build      |Vite                          |latest |SvelteKit default bundler                                      |
@@ -56,7 +56,8 @@ perennial/
 │   │   ├── index.ts               # Entry point, arg parsing, REPL loop
 │   │   ├── commands.ts            # Command parser + dispatcher
 │   │   ├── formatter.ts           # Text output formatters (grid, status, inspect)
-│   │   └── session.ts             # CLI-specific GameSession wrapper
+│   │   ├── session.ts             # CLI-specific GameSession wrapper
+│   │   └── data-loader.ts         # Node.js species/zone/amendment loader (no Vite)
 │   ├── lib/
 │   │   ├── engine/                # Game simulation (no UI dependencies)
 │   │   │   ├── ecs/
@@ -71,9 +72,11 @@ perennial/
 │   │   │   │       ├── companion.ts
 │   │   │   │       ├── harvest.ts
 │   │   │   │       ├── spread.ts
-│   │   │   │       └── frost.ts
+│   │   │   │       ├── frost.ts
+│   │   │   │       └── stress.ts
 │   │   │   ├── simulation.ts      # Tick orchestrator (runs systems in order)
 │   │   │   ├── weather-gen.ts     # Season weather generation
+│   │   │   ├── pest-gen.ts        # Pest event pre-generation from zone weights
 │   │   │   ├── diagnosis.ts       # Hypothesis generation, matching
 │   │   │   ├── scoring.ts         # Run scoring calculations
 │   │   │   └── rng.ts             # Seeded PRNG
@@ -83,11 +86,7 @@ perennial/
 │   │   │   │   ├── tomato_cherokee_purple.json
 │   │   │   │   ├── basil_genovese.json
 │   │   │   │   └── ...
-│   │   │   ├── conditions/        # Disease/pest/abiotic conditions
-│   │   │   │   ├── early_blight.json
-│   │   │   │   ├── powdery_mildew.json
-│   │   │   │   └── ...
-│   │   │   ├── climate_zones/     # Zone definitions
+│   │   │   ├── zones/             # Climate zone definitions
 │   │   │   │   ├── zone_8a.json
 │   │   │   │   └── ...
 │   │   │   ├── amendments.json    # Soil amendment definitions
@@ -101,7 +100,8 @@ perennial/
 │   │   │   └── meta.ts            # Meta-progression state (seed bank, journal, etc.)
 │   │   │
 │   │   ├── render/                # Visual system
-│   │   │   ├── PlantRenderer.svelte    # Parametric SVG plant from params
+│   │   │   ├── PlantRenderer.svelte    # Parametric SVG plant component
+│   │   │   ├── AnimatedPlant.svelte    # Animated wrapper
 │   │   │   ├── shapes/
 │   │   │   │   ├── leaves.ts           # Leaf shape path generators
 │   │   │   │   ├── stems.ts            # Stem bezier generators
@@ -126,16 +126,13 @@ perennial/
 │   │
 │   ├── routes/                    # SvelteKit pages
 │   │   ├── +page.svelte           # Title screen / main menu
+│   │   ├── +layout.svelte         # Root layout
+│   │   ├── +layout.ts             # SPA prerendering config
 │   │   ├── garden/
 │   │   │   └── +page.svelte       # Main gameplay view
-│   │   ├── journal/
-│   │   │   └── +page.svelte       # Field journal browser
-│   │   ├── seeds/
-│   │   │   └── +page.svelte       # Seed bank management
-│   │   ├── diagnosis/
-│   │   │   └── +page.svelte       # Diagnosis mode (overlay on garden)
-│   │   └── summary/
-│   │       └── +page.svelte       # End-of-run summary screen
+│   │   └── dev/
+│   │       ├── plant-lab/         # Dev tool: preview plant rendering
+│   │       └── animation-lab/     # Dev tool: preview animations
 │   │
 │   ├── app.html
 │   └── app.css                    # Global styles, CSS custom properties
@@ -406,6 +403,6 @@ Target: 16ms frame budget (60fps)
 
 - **Dev:** `npm run dev` — Vite dev server with HMR
 - **Build:** `npm run build` — SvelteKit static adapter (no server needed)
-- **Deploy:** Static hosting (Vercel, Netlify, Cloudflare Pages)
+- **Deploy:** GitHub Pages at `/garden` (via GitHub Actions on push to main)
 - **PWA:** Service worker for offline play, installable on mobile home screen
 - **CI:** GitHub Actions — lint, typecheck, test, build on PR
