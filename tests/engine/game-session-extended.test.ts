@@ -33,6 +33,7 @@ const TEST_ZONE: ClimateZone = {
 	first_frost_week_avg: 28,
 	humidity_baseline: 0.5,
 	special_event_weights: {},
+	pest_event_weights: {},
 };
 
 const speciesLookup = makeSpeciesLookup([TOMATO, BASIL, FENNEL, ROSEMARY]);
