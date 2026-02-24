@@ -1,0 +1,203 @@
+{
+  "id": "tomato_cherokee_purple",
+  "common_name": "Cherokee Purple Tomato",
+  "botanical_name": "Solanum lycopersicum 'Cherokee Purple'",
+  "family": "Solanaceae",
+  "type": "annual",
+  "growth": {
+    "habit": "indeterminate_vine",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [1, 2],
+        "description": "A small flat seed, tan with fine hairs."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 1],
+        "description": "First root emerges, pushing the seed coat upward."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [2, 3],
+        "description": "Cotyledons open. First true leaves are deeply lobed."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [4, 6],
+        "description": "Rapid vine growth. Stems thicken and develop characteristic tomato smell when brushed."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [2, 3],
+        "description": "Small yellow star-shaped flowers in clusters. Each flower can become a fruit."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [4, 6],
+        "description": "Green fruits swell, then ripen to deep dusky purple-pink with green shoulders."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [2, 4],
+        "description": "Vine yellows from base up. Last fruits ripen as plant declines."
+      }
+    ],
+    "days_to_maturity": [12, 16],
+    "max_height_cm": 180,
+    "max_spread_cm": 60,
+    "growth_rate": "fast"
+  },
+  "needs": {
+    "sun": "full",
+    "water": "moderate",
+    "soil_ph": [6.0, 6.8],
+    "nutrients": { "N": "moderate", "P": "high", "K": "high" },
+    "soil_temp_min_c": 15,
+    "frost_tolerance": "none"
+  },
+  "season": {
+    "sow_window": [4, 8],
+    "transplant_window": [6, 10],
+    "harvest_window": [12, 22],
+    "bolt_trigger": null
+  },
+  "companions": [
+    {
+      "species_id": "basil_genovese",
+      "effects": [{ "type": "pest_resistance", "modifier": 0.3, "radius": 1 }],
+      "lore": "Basil's aromatic oils mask tomato scent from hornworm moths."
+    },
+    {
+      "species_id": "carrot_nantes",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Carrots loosen soil around tomato roots, improving drainage."
+    }
+  ],
+  "antagonists": [
+    {
+      "species_id": "fennel",
+      "effects": [{ "type": "allelopathy", "modifier": -0.4, "radius": 2 }],
+      "lore": "Fennel exudes substances that inhibit tomato growth. Keep them far apart."
+    },
+    {
+      "species_id": "brassica_cabbage",
+      "effects": [{ "type": "growth_rate", "modifier": -0.2, "radius": 1 }],
+      "lore": "Heavy feeders competing for the same nutrients."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "condition_id": "early_blight",
+      "susceptibility": 0.6,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.7 },
+        { "type": "crowding", "threshold": 0.8 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "lower_leaf_spots",
+            "description": "Dark concentric rings appearing on lowest leaves.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "spreading_spots_yellowing",
+            "description": "Spots spread upward. Affected leaves yellow and drop.",
+            "reversible": true
+          },
+          {
+            "week": 4,
+            "visual_overlay": "stem_lesions",
+            "description": "Dark lesions on stems. Fruit may show leathery dark patches.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 8,
+        "spreads": true,
+        "spread_radius": 1
+      }
+    },
+    {
+      "condition_id": "blossom_end_rot",
+      "susceptibility": 0.4,
+      "triggers": [
+        { "type": "nutrient_deficiency", "threshold": 0.5 },
+        { "type": "overwater", "threshold": 0.7 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "fruit_base_discolor",
+            "description": "Small water-soaked spot at blossom end of green fruit.",
+            "reversible": true
+          },
+          {
+            "week": 1,
+            "visual_overlay": "fruit_base_rot",
+            "description": "Spot enlarges to dark, leathery, sunken area. Calcium uptake issue, often from inconsistent watering.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 7,
+    "seed_saving": true,
+    "harvest_type": "fruit",
+    "continuous_harvest": true
+  },
+  "visual": {
+    "stem": {
+      "height": [3, 55],
+      "thickness": [0.5, 2.5],
+      "color": "#558b2f",
+      "curve": 0.35,
+      "branch_frequency": 0.4,
+      "branch_angle": 45
+    },
+    "leaves": {
+      "shape": "pinnate_compound",
+      "count": [2, 22],
+      "size": [2, 8],
+      "color": "#4caf50",
+      "droop": [5, 25],
+      "distribution": "alternate",
+      "opacity": [0.7, 1.0]
+    },
+    "flowers": {
+      "shape": "simple",
+      "petal_count": 5,
+      "color": "#fdd835",
+      "size": 1.5,
+      "bloom_density": 0.3
+    },
+    "fruit": {
+      "shape": "oblate",
+      "size": [0.5, 4],
+      "color_unripe": "#66bb6a",
+      "color_ripe": "#7b3f61",
+      "cluster_count": 3,
+      "hang_angle": 30
+    },
+    "animation": {
+      "sway_amplitude": 0.06,
+      "sway_frequency": 0.7,
+      "growth_spring_tension": 0.4,
+      "idle_breathing": 0.01
+    }
+  },
+  "lore": {
+    "description": "A Tennessee heirloom with complex, smoky-sweet flavor and striking purple-pink skin.",
+    "origin": "Cherokee Nation, Tennessee, pre-1890",
+    "fun_fact": "The dusky color comes from both red and green pigments expressed simultaneously — green chlorophyll persists in the shoulders even when ripe.",
+    "difficulty": "intermediate"
+  }
+}

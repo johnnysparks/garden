@@ -1,0 +1,191 @@
+{
+  "id": "basil_genovese",
+  "common_name": "Genovese Basil",
+  "botanical_name": "Ocimum basilicum 'Genovese'",
+  "family": "Lamiaceae",
+  "type": "annual",
+  "growth": {
+    "habit": "bush",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [1, 1],
+        "description": "Tiny black seeds that develop a gelatinous coating when wet."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 1],
+        "description": "Radicle emerges quickly in warm soil. Basil is eager to grow."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [1, 2],
+        "description": "Cotyledons are rounded. First true leaves show the classic oval shape with a bright green sheen."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [3, 5],
+        "description": "Rapid bushy growth. Leaves are intensely aromatic — the essential oils are at their peak before flowering."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [2, 3],
+        "description": "White flower spikes emerge from stem tips. Leaf production slows as energy shifts to seeds."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [2, 3],
+        "description": "Small nutlets develop inside spent flower calyxes. Leaves become bitter."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [1, 2],
+        "description": "Stems become woody. Leaves yellow and drop at the first hint of cold."
+      }
+    ],
+    "days_to_maturity": [8, 10],
+    "max_height_cm": 60,
+    "max_spread_cm": 30,
+    "growth_rate": "fast"
+  },
+  "needs": {
+    "sun": "full",
+    "water": "moderate",
+    "soil_ph": [6.0, 7.0],
+    "nutrients": { "N": "moderate", "P": "low", "K": "low" },
+    "soil_temp_min_c": 18,
+    "frost_tolerance": "none"
+  },
+  "season": {
+    "sow_window": [6, 10],
+    "transplant_window": [8, 12],
+    "harvest_window": [9, 20],
+    "bolt_trigger": "heat"
+  },
+  "companions": [
+    {
+      "species_id": "tomato_cherokee_purple",
+      "effects": [{ "type": "pest_resistance", "modifier": 0.3, "radius": 1 }],
+      "lore": "Basil's volatile oils confuse tomato hornworm moths, reducing pest pressure on neighboring tomatoes."
+    },
+    {
+      "species_id": "pepper_jalapeno",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Basil and peppers are Solanaceae-adjacent companions — basil repels aphids and spider mites that target peppers."
+    }
+  ],
+  "antagonists": [
+    {
+      "species_id": "sage",
+      "effects": [{ "type": "allelopathy", "modifier": -0.2, "radius": 1 }],
+      "lore": "Sage and basil both produce strong volatile oils that can inhibit each other's growth when planted too close."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "condition_id": "downy_mildew",
+      "susceptibility": 0.7,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.8 },
+        { "type": "temp_low", "threshold": 0.4 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "interveinal_yellowing",
+            "description": "Yellowing between leaf veins on upper surface. Faint fuzzy gray growth underneath.",
+            "reversible": true
+          },
+          {
+            "week": 1,
+            "visual_overlay": "leaf_browning",
+            "description": "Yellow patches turn brown and necrotic. Leaves curl and drop. Distinctive fuzzy spore mass visible on leaf undersides.",
+            "reversible": false
+          },
+          {
+            "week": 3,
+            "visual_overlay": "stem_blackening",
+            "description": "Stems darken. Plant collapses as vascular tissue is compromised.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 5,
+        "spreads": true,
+        "spread_radius": 2
+      }
+    },
+    {
+      "condition_id": "fusarium_wilt",
+      "susceptibility": 0.3,
+      "triggers": [
+        { "type": "temp_high", "threshold": 0.7 },
+        { "type": "overwater", "threshold": 0.6 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "asymmetric_wilt",
+            "description": "One side of the plant wilts while the other looks fine. Stems may show brown streaking when cut.",
+            "reversible": false
+          },
+          {
+            "week": 2,
+            "visual_overlay": "total_wilt",
+            "description": "Entire plant wilts despite adequate water. Leaves yellow from the base upward. Soil-borne fungus has blocked the vascular system.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 4,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 6,
+    "seed_saving": true,
+    "harvest_type": "leaf",
+    "continuous_harvest": true
+  },
+  "visual": {
+    "stem": {
+      "height": [2, 20],
+      "thickness": [0.3, 1.5],
+      "color": "#558b2f",
+      "curve": 0.1,
+      "branch_frequency": 0.6,
+      "branch_angle": 55
+    },
+    "leaves": {
+      "shape": "simple_oval",
+      "count": [2, 30],
+      "size": [1.5, 5],
+      "color": "#2e7d32",
+      "droop": [0, 10],
+      "distribution": "opposite",
+      "opacity": [0.75, 1.0]
+    },
+    "flowers": {
+      "shape": "spike",
+      "petal_count": 4,
+      "color": "#f5f5f5",
+      "size": 0.8,
+      "bloom_density": 0.5
+    },
+    "fruit": null,
+    "animation": {
+      "sway_amplitude": 0.08,
+      "sway_frequency": 0.9,
+      "growth_spring_tension": 0.5,
+      "idle_breathing": 0.015
+    }
+  },
+  "lore": {
+    "description": "The classic Italian basil — large, glossy, deeply aromatic leaves that are the soul of pesto.",
+    "origin": "Genoa, Italy (cultivar); species native to tropical Asia and Africa",
+    "fun_fact": "Genovese basil leaves are cupped like tiny spoons, which helps them hold morning dew — a trait Italian gardeners call 'catching the rain.'",
+    "difficulty": "beginner"
+  }
+}
