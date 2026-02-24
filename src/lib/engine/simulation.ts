@@ -5,6 +5,7 @@
  * System execution order matters for emergent behavior.
  *
  * Tick order (subset implemented):
+ *   1. WEATHER_APPLY
  *   2. SOIL_UPDATE
  *   3. COMPANION_EFFECTS
  *   4. GROWTH_TICK
@@ -17,6 +18,7 @@ import type { SimulationContext, WeekWeather, SpeciesLookup } from './ecs/compon
 import type { GameWorld } from './ecs/world.js';
 import type { SeededRng } from './rng.js';
 
+import { weatherApplySystem } from './ecs/systems/weather.js';
 import { soilUpdateSystem } from './ecs/systems/soil.js';
 import { companionEffectsSystem } from './ecs/systems/companion.js';
 import { growthTickSystem } from './ecs/systems/growth.js';
@@ -53,6 +55,9 @@ export function runTick(
     speciesLookup: config.speciesLookup,
     firstFrostWeekAvg: config.firstFrostWeekAvg,
   };
+
+  // 1. Weather apply
+  weatherApplySystem(ctx);
 
   // 2. Soil update
   soilUpdateSystem(ctx);
