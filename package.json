@@ -3,6 +3,9 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"bin": {
+		"perennial": "./src/cli/index.ts"
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "npm run validate:species && vite build",
@@ -12,7 +15,9 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"validate:species": "tsx scripts/validate-species.ts"
+		"validate:species": "tsx scripts/validate-species.ts",
+		"play": "tsx src/cli/index.ts play",
+		"cli": "tsx src/cli/index.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^3.0.10",
