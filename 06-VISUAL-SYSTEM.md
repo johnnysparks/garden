@@ -448,3 +448,40 @@ If these aren’t met, fallback strategies:
 1. Disable individual leaf animation at overview zoom (sway entire plant group instead)
 1. Simplify overlays to color shifts only
 1. Reduce breathing/idle animation to CSS-only transforms
+
+## Agent Visual Validation Loop ("Make It Look Like a Plant")
+
+When the goal is to match reference illustration quality (not just "render without errors"), use a tight screenshot + rubric loop.
+
+### 1) Define Explicit Acceptance Checks Before Coding
+
+For each species/stage combo in `dev/plant-lab`, write down:
+
+- **Silhouette test:** Recognizable plant outline at first glance (stem, branch hierarchy, crown width).
+- **Anatomy test:** Correct organ placement (leaf clusters on nodes, flowers near tips, fruit hangs from plausible pedicels).
+- **Density test:** Enough leaf mass to avoid a "stick with decals" look.
+- **Palette test:** Cohesive greens with value separation between stem/leaves/fruit.
+- **Stage readability test:** Seedling vs vegetative vs flowering vs fruiting must read instantly.
+
+If a generated frame fails any check, it is not "done" even if the code compiles.
+
+### 2) Lock Deterministic Scenarios
+
+Use fixed seeds and fixed control values so comparisons are meaningful:
+
+- 3 canonical seeds per species (small / medium / large phenotype)
+- `stage` = `'seedling'`, `'vegetative'`, `'flowering'`, `'fruiting'`
+- `stress` = `0.0`, `0.4`, `0.8`
+- `season` = `'spring'`, `'summer'`, `'autumn'`
+
+### 3) Score Every Frame with a Small Rubric
+
+Use a 1–5 scale for each category:
+
+- Silhouette resemblance
+- Branch structure plausibility
+- Leaf shape / readability
+- Fruit / flower placement realism
+- Color / style fidelity to art direction
+
+Require a minimum threshold (for example average >= 4.0) before merging.
