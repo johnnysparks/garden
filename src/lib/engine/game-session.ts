@@ -39,7 +39,7 @@ import type { SoilAmendment } from '../data/types.js';
 // ── Public types ─────────────────────────────────────────────────────
 
 /** Result of a game action that may fail with a validation error. */
-export type ActionResult<T = Record<string, never>> =
+export type ActionResult<T = Record<never, never>> =
   | ({ ok: true } & T)
   | { ok: false; error: string };
 
