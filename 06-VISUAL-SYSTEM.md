@@ -454,7 +454,7 @@ If these aren’t met, fallback strategies:
 
 ### 1) Define Explicit Acceptance Checks Before Coding
 
-For each species/stage combo in `dev/plant-lab`, write down:
+For each species/stage combo, write down:
 
 - **Silhouette test:** Recognizable plant outline at first glance (stem, branch hierarchy, crown width).
 - **Anatomy test:** Correct organ placement (leaf clusters on nodes, flowers near tips, fruit hangs from plausible pedicels).
