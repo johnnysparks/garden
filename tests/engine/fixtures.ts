@@ -83,6 +83,24 @@ export const TOMATO: PlantSpecies = {
         spread_radius: 1,
       },
     },
+    {
+      condition_id: 'blossom_end_rot',
+      susceptibility: 0.4,
+      min_stage: 'fruiting',
+      triggers: [
+        { type: 'nutrient_deficiency', threshold: 0.5 },
+        { type: 'overwater', threshold: 0.7 },
+      ],
+      symptoms: {
+        stages: [
+          { week: 0, visual_overlay: 'fruit_base_discolor', description: 'Spot at blossom end.', reversible: true },
+          { week: 1, visual_overlay: 'fruit_base_rot', description: 'Dark sunken patch.', reversible: false },
+        ],
+        weeks_to_death: null,
+        spreads: false,
+        spread_radius: 0,
+      },
+    },
   ],
   harvest: {
     yield_potential: 7,
