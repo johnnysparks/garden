@@ -91,10 +91,10 @@ export const TOMATO: PlantSpecies = {
     continuous_harvest: true,
   },
   visual: {
-    stem: { height: [3, 55], thickness: [0.5, 2.5], color: '#558b2f', curve: 0.35, branch_frequency: 0.4, branch_angle: 45 },
-    leaves: { shape: 'pinnate_compound', count: [2, 22], size: [2, 8], color: '#4caf50', droop: [5, 25], distribution: 'alternate', opacity: [0.7, 1.0] },
-    flowers: { shape: 'simple', petal_count: 5, color: '#fdd835', size: 1.5, bloom_density: 0.3 },
-    fruit: { shape: 'oblate', size: [0.5, 4], color_unripe: '#66bb6a', color_ripe: '#7b3f61', cluster_count: 3, hang_angle: 30 },
+    stem: { height: [3, 55], thickness: [0.8, 3.0], color: '#6a8a3c', curve: 0.35, branch_frequency: 0.55, branch_angle: 45 },
+    leaves: { shape: 'pinnate_compound', count: [2, 20], size: [3, 12], color: '#3d8b37', droop: [5, 30], distribution: 'alternate', opacity: [0.75, 1.0] },
+    flowers: { shape: 'simple', petal_count: 5, color: '#fdd835', size: 1.8, bloom_density: 0.35 },
+    fruit: { shape: 'oblate', size: [1, 5.5], color_unripe: '#66bb6a', color_ripe: '#7b3f61', cluster_count: 3, hang_angle: 35 },
     animation: { sway_amplitude: 0.06, sway_frequency: 0.7, growth_spring_tension: 0.4, idle_breathing: 0.01 },
   },
   lore: {
@@ -159,9 +159,9 @@ export const BASIL: PlantSpecies = {
     continuous_harvest: true,
   },
   visual: {
-    stem: { height: [2, 20], thickness: [0.3, 1.2], color: '#558b2f', curve: 0.2, branch_frequency: 0.6, branch_angle: 35 },
-    leaves: { shape: 'simple_oval', count: [4, 30], size: [1, 5], color: '#43a047', droop: [0, 10], distribution: 'opposite', opacity: [0.8, 1.0] },
-    flowers: { shape: 'spike', petal_count: 4, color: '#ffffff', size: 0.8, bloom_density: 0.5 },
+    stem: { height: [2, 18], thickness: [0.5, 2.0], color: '#7cb342', curve: 0.05, branch_frequency: 0.85, branch_angle: 50 },
+    leaves: { shape: 'simple_oval', count: [4, 36], size: [2, 7], color: '#43a047', droop: [0, 15], distribution: 'opposite', opacity: [0.8, 1.0] },
+    flowers: { shape: 'spike', petal_count: 4, color: '#f5f5f5', size: 1.0, bloom_density: 0.6 },
     fruit: null,
     animation: { sway_amplitude: 0.08, sway_frequency: 0.9, growth_spring_tension: 0.5, idle_breathing: 0.015 },
   },

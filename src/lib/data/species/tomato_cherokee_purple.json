@@ -157,35 +157,35 @@
   "visual": {
     "stem": {
       "height": [3, 55],
-      "thickness": [0.5, 2.5],
-      "color": "#558b2f",
+      "thickness": [0.8, 3.0],
+      "color": "#6a8a3c",
       "curve": 0.35,
-      "branch_frequency": 0.4,
+      "branch_frequency": 0.55,
       "branch_angle": 45
     },
     "leaves": {
       "shape": "pinnate_compound",
-      "count": [2, 22],
-      "size": [2, 8],
-      "color": "#4caf50",
-      "droop": [5, 25],
+      "count": [2, 20],
+      "size": [3, 12],
+      "color": "#3d8b37",
+      "droop": [5, 30],
       "distribution": "alternate",
-      "opacity": [0.7, 1.0]
+      "opacity": [0.75, 1.0]
     },
     "flowers": {
       "shape": "simple",
       "petal_count": 5,
       "color": "#fdd835",
-      "size": 1.5,
-      "bloom_density": 0.3
+      "size": 1.8,
+      "bloom_density": 0.35
     },
     "fruit": {
       "shape": "oblate",
-      "size": [0.5, 4],
+      "size": [1, 5.5],
       "color_unripe": "#66bb6a",
       "color_ripe": "#7b3f61",
       "cluster_count": 3,
-      "hang_angle": 30
+      "hang_angle": 35
     },
     "animation": {
       "sway_amplitude": 0.06,

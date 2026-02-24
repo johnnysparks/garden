@@ -170,35 +170,44 @@
 		const dist = indiv.leaves.distribution;
 		const droop = final.leafDroop;
 		const out: Placement[] = [];
+		const endpoints = stemResult.branchEndpoints;
 
+		// Reserve a portion of leaves for branch tips (2 per branch endpoint).
+		const branchLeafCount = Math.min(
+			endpoints.length * 2,
+			Math.floor(count * 0.4),
+		);
+		const stemLeafCount = count - branchLeafCount;
+
+		// --- Main stem leaves ---
 		if (dist === 'basal') {
-			for (let i = 0; i < count; i++) {
-				const t = 0.05 + (0.15 * i) / Math.max(count - 1, 1);
+			for (let i = 0; i < stemLeafCount; i++) {
+				const t = 0.05 + (0.15 * i) / Math.max(stemLeafCount - 1, 1);
 				const pt = sampleStem(t);
 				const ta = stemAngle(t);
 				const side = i % 2 === 0 ? 1 : -1;
 				out.push({ x: pt.x, y: pt.y, angle: ta + side * (90 - droop) });
 			}
 		} else if (dist === 'opposite') {
-			const nodes = Math.ceil(count / 2);
+			const nodes = Math.ceil(stemLeafCount / 2);
 			for (let i = 0; i < nodes; i++) {
 				const t = 0.15 + (0.7 * (i + 0.5)) / nodes;
 				const pt = sampleStem(t);
 				const ta = stemAngle(t);
 				out.push({ x: pt.x, y: pt.y, angle: ta + (90 - droop) });
-				if (out.length < count) {
+				if (out.length < stemLeafCount) {
 					out.push({ x: pt.x, y: pt.y, angle: ta - (90 - droop) });
 				}
 			}
 		} else if (dist === 'whorled') {
 			const perWhorl = 3;
-			const whorls = Math.ceil(count / perWhorl);
+			const whorls = Math.ceil(stemLeafCount / perWhorl);
 			let placed = 0;
-			for (let w = 0; w < whorls && placed < count; w++) {
+			for (let w = 0; w < whorls && placed < stemLeafCount; w++) {
 				const t = 0.15 + (0.7 * (w + 0.5)) / whorls;
 				const pt = sampleStem(t);
 				const ta = stemAngle(t);
-				const n = Math.min(perWhorl, count - placed);
+				const n = Math.min(perWhorl, stemLeafCount - placed);
 				for (let j = 0; j < n; j++) {
 					const offset = ((j / n) - 0.5) * 180;
 					out.push({ x: pt.x, y: pt.y, angle: ta + offset });
@@ -207,14 +216,26 @@
 			}
 		} else {
 			// alternate (default)
-			for (let i = 0; i < count; i++) {
-				const t = 0.15 + (0.7 * (i + 0.5)) / count;
+			for (let i = 0; i < stemLeafCount; i++) {
+				const t = 0.15 + (0.7 * (i + 0.5)) / stemLeafCount;
 				const pt = sampleStem(t);
 				const ta = stemAngle(t);
 				const side = i % 2 === 0 ? 1 : -1;
 				out.push({ x: pt.x, y: pt.y, angle: ta + side * (90 - droop) });
 			}
 		}
+
+		// --- Branch-tip leaves ---
+		// Place leaves at branch endpoints so branches aren't bare sticks.
+		for (let b = 0; b < endpoints.length && out.length < count; b++) {
+			const ep = endpoints[b];
+			// Two leaves at each branch tip, fanning out from the branch angle.
+			out.push({ x: ep.x, y: ep.y, angle: ep.angle + (90 - droop) });
+			if (out.length < count) {
+				out.push({ x: ep.x, y: ep.y, angle: ep.angle - (90 - droop) });
+			}
+		}
+
 		return out;
 	});
 

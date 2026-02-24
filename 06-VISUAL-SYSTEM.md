@@ -449,38 +449,128 @@ If these aren’t met, fallback strategies:
 1. Simplify overlays to color shifts only
 1. Reduce breathing/idle animation to CSS-only transforms
 
-## Agent Visual Validation Loop ("Make It Look Like a Plant")
+## Plant Design Validation
 
+Every species must pass five visual checks before it ships. These checks are enforced at three levels: automated unit tests, parameter guidelines baked into this document, and human review in the Plant Lab dev tool.
 
-### 1) Define Explicit Acceptance Checks Before Coding
+### The Five Checks
 
-For each species/stage combo, write down:
+#### 1. Silhouette Test
 
-- **Silhouette test:** Recognizable plant outline at first glance (stem, branch hierarchy, crown width).
-- **Anatomy test:** Correct organ placement (leaf clusters on nodes, flowers near tips, fruit hangs from plausible pedicels).
-- **Density test:** Enough leaf mass to avoid a "stick with decals" look.
-- **Palette test:** Cohesive greens with value separation between stem/leaves/fruit.
-- **Stage readability test:** Seedling vs vegetative vs flowering vs fruiting must read instantly.
+**Question:** Is the plant outline recognizable at a glance?
 
-If a generated frame fails any check, it is not "done" even if the code compiles.
+**Automated (unit test assertions):**
+- Mature plant crown width (from branch endpoints) ≥ 15% of stem height for vines, ≥ 20% for bushes.
+- Branch count ≥ 3 at maturity for any species with `branch_frequency > 0.3`.
+- Seedling height < 20% of mature height at `progress = 0.1`.
 
-### 2) Lock Deterministic Scenarios
+**Parameter guidelines:**
+- `branch_frequency` for `bush` habit: 0.7–1.0. Bushes need many branches.
+- `branch_frequency` for `indeterminate_vine`: 0.4–0.7. Vines branch moderately.
+- `branch_frequency` for `upright`: 0.1–0.4. Upright plants are columnar.
+- `branch_angle` controls crown shape: 30–50° for compact, 50–70° for spreading.
 
-Use fixed seeds and fixed control values so comparisons are meaningful:
+#### 2. Anatomy Test
 
-- 3 canonical seeds per species (small / medium / large phenotype)
-- `stage` = `'seedling'`, `'vegetative'`, `'flowering'`, `'fruiting'`
-- `stress` = `0.0`, `0.4`, `0.8`
-- `season` = `'spring'`, `'summer'`, `'autumn'`
+**Question:** Are organs attached to plausible points on the plant?
 
-### 3) Score Every Frame with a Small Rubric
+**Automated:**
+- Branch endpoints span ≥ 25% of stem height (not all clustered at one level).
+- Branches alternate left/right (endpoints have both positive and negative X values).
+- Leaves appear on both the main stem and branch tips (the renderer distributes up to 40% of leaves onto branch endpoints).
 
-Use a 1–5 scale for each category:
+**Parameter guidelines:**
+- Leaf `distribution` must match the plant family: `opposite` for Lamiaceae (basil, mint), `alternate` for Solanaceae (tomato, pepper), `whorled` for Rubiaceae.
+- Flower `bloom_density` controls how many flowers appear: 0.2–0.4 for sparse bloomers, 0.5–0.8 for profuse bloomers.
+- Fruit `hang_angle` should reflect weight: 15–25° for small fruit, 30–45° for heavy fruit.
 
-- Silhouette resemblance
-- Branch structure plausibility
-- Leaf shape / readability
-- Fruit / flower placement realism
-- Color / style fidelity to art direction
+#### 3. Density Test
 
-Require a minimum threshold (for example average >= 4.0) before merging.
+**Question:** Does the plant have enough leaf mass to look alive?
+
+**Automated:**
+- Mature leaf count ≥ 15 for most species.
+- For `pinnate_compound` leaves: leaflet size (`max_size × 0.22`) > 1.5 SVG units.
+- Leaf coverage ratio: `(count × size² × shape_factor) / (height × width)` > 0.3.
+- For `bush` habit: max leaf count ≥ 25.
+
+**Parameter guidelines by leaf shape:**
+
+| Leaf Shape | Shape Factor | Min Count (mature) | Min Size (mature) |
+|---|---|---|---|
+| `simple_oval` | 0.5 | 20 | 5 |
+| `pinnate_compound` | 0.3 | 12 | 10 |
+| `palmate` | 0.6 | 8 | 8 |
+| `linear` | 0.1 | 40 | 3 |
+| `needle` | 0.05 | 60 | 1.5 |
+| `lobed` | 0.4 | 12 | 7 |
+| `heart` | 0.5 | 15 | 6 |
+| `simple_pointed` | 0.4 | 15 | 5 |
+
+#### 4. Palette Test
+
+**Question:** Are colors cohesive with clear value separation?
+
+**Automated:**
+- RGB distance between stem and leaf colors ≥ 25 (readable contrast).
+- All four organ colors (stem, leaf, flower, fruit) pairwise distance ≥ 30.
+- Cross-species: stem colors differ between species (distance ≥ 20).
+- Leaf green channel is dominant (G > R and G > B) for healthy foliage.
+
+**Parameter guidelines:**
+- Choose stem color from the plant's actual botany, not a generic green. Tomato stems are gray-green (#6a8a3c), basil stems are bright yellow-green (#7cb342), woody herbs are brown (#6d4c2f).
+- Leaf color encodes species identity. Dark green for heavy feeders (tomato), bright green for herbs (basil), gray-green for Mediterranean plants (rosemary).
+- Never reuse the exact same stem color between different species.
+
+#### 5. Stage Readability Test
+
+**Question:** Can a player instantly tell what growth stage a plant is in?
+
+**Automated:**
+- Each successive stage (seedling → vegetative → flowering → fruiting) is taller.
+- Each successive stage has more leaves.
+- Fruit at `progress = 0.9` is wider than stem thickness (visible against the stem).
+- Seedling has < 10 leaves; mature has > 15.
+
+**Parameter guidelines:**
+- `height` range should span at least 5:1 (min to max) for clear size progression.
+- `leaf count` range should span at least 4:1.
+- `leaf size` range should span at least 2:1 (young leaves are smaller).
+- Flower `size` should be at least 1.0 SVG units to be visible against foliage.
+
+### Validation Layers
+
+**Layer 1: Unit tests** (`tests/render/plant-design-validation.test.ts`)
+
+Automated tests encode the five checks as numeric assertions on the rendering pipeline output. They run against species visual params directly — no browser or screenshot needed. Every species gets its own test suite covering all five checks, plus a cross-species distinctiveness suite.
+
+Run: `npm test -- tests/render/plant-design-validation.test.ts`
+
+**Layer 2: Build-time schema validation** (`npm run validate:species`)
+
+The Zod schema validates structural correctness of species JSON at build time. It catches type errors, missing fields, and out-of-range values, but does not encode visual quality checks. Those are in the unit tests.
+
+**Layer 3: Plant Lab visual review** (`/dev/plant-lab`)
+
+The dev tool renders individual species at configurable growth progress, stress, and season values. Use it for subjective quality review (does this "look like" the real plant?) alongside a real photo reference. The unit tests catch structural failures; the Plant Lab catches aesthetic ones.
+
+### Reference Descriptions for Species Authors
+
+When writing SVG parameters for a new species, start from a real-world botanical description — not from tweaking numbers until something looks okay. Include a mental model of the plant's architecture:
+
+**Example — Cherokee Purple Tomato:**
+> Indeterminate vine, 150–180 cm tall. Single main stem with lateral suckers (branches) at every leaf node. Large pinnately compound leaves (20–30 cm) with 5–9 toothed leaflets, dark green, slightly drooping under their own weight. Small yellow star-shaped flowers in clusters. Heavy oblate fruit (200–400g) ripening to dusky purple-pink with persistent green shoulders. Stems are medium green, hairy, with a distinctive tomato smell.
+
+**Example — Genovese Basil:**
+> Compact bushy annual, 30–60 cm tall. Square stems branching profusely from every node (especially if pinched). Large, glossy, cupped oval leaves (5–8 cm), bright vivid green, arranged in opposite pairs. White flower spikes emerge from stem tips when plant bolts. Stems are bright yellow-green when young, becoming slightly woody with age.
+
+These descriptions directly inform parameter choices: the tomato description tells you `branch_frequency: 0.55`, `leaves.shape: 'pinnate_compound'`, `leaves.size: [3, 12]`, `fruit.shape: 'oblate'`. The basil description tells you `branch_frequency: 0.85`, `leaves.shape: 'simple_oval'`, `stem.color: '#7cb342'`.
+
+### Deterministic Test Scenarios
+
+For reproducible comparisons when tuning or reviewing, use these canonical configurations:
+
+- **Seeds:** 42 (small phenotype), 123 (medium), 999 (large)
+- **Stages:** `'seedling'` (progress=0.15), `'vegetative'` (0.45), `'flowering'` (0.7), `'fruiting'` (0.9)
+- **Stress levels:** 0.0 (healthy), 0.4 (moderate), 0.8 (severe)
+- **Seasons:** `'late_spring'`, `'summer'`, `'early_fall'`

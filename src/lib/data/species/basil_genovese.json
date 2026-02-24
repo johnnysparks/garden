@@ -151,28 +151,28 @@
   },
   "visual": {
     "stem": {
-      "height": [2, 20],
-      "thickness": [0.3, 1.5],
-      "color": "#558b2f",
-      "curve": 0.1,
-      "branch_frequency": 0.6,
-      "branch_angle": 55
+      "height": [2, 18],
+      "thickness": [0.5, 2.0],
+      "color": "#7cb342",
+      "curve": 0.05,
+      "branch_frequency": 0.85,
+      "branch_angle": 50
     },
     "leaves": {
       "shape": "simple_oval",
-      "count": [2, 30],
-      "size": [1.5, 5],
-      "color": "#2e7d32",
-      "droop": [0, 10],
+      "count": [4, 36],
+      "size": [2, 7],
+      "color": "#43a047",
+      "droop": [0, 15],
       "distribution": "opposite",
-      "opacity": [0.75, 1.0]
+      "opacity": [0.8, 1.0]
     },
     "flowers": {
       "shape": "spike",
       "petal_count": 4,
       "color": "#f5f5f5",
-      "size": 0.8,
-      "bloom_density": 0.5
+      "size": 1.0,
+      "bloom_density": 0.6
     },
     "fruit": null,
     "animation": {

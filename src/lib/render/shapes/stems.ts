@@ -15,11 +15,22 @@ export interface StemParams {
 	branch_angle: number; // degrees from stem
 }
 
+export interface BranchEndpoint {
+	/** X coordinate of the branch tip. */
+	x: number;
+	/** Y coordinate of the branch tip. */
+	y: number;
+	/** Angle of the branch at its tip (degrees), for orienting leaves. */
+	angle: number;
+}
+
 export interface StemResult {
 	/** The main stem as an SVG <path> `d` attribute. */
 	main: string;
 	/** Branch paths, each an SVG <path> `d` attribute. */
 	branches: string[];
+	/** Endpoint positions of each branch, for placing leaves/flowers. */
+	branchEndpoints: BranchEndpoint[];
 }
 
 /**
@@ -49,10 +60,14 @@ export function generateStemBezier(params: StemParams): StemResult {
 
 	// --- branches ---
 	const branches: string[] = [];
+	const branchEndpoints: BranchEndpoint[] = [];
 
 	if (branch_frequency > 0 && height > 0) {
-		// Number of branches scales with height and frequency
-		const count = Math.max(1, Math.round(branch_frequency * (height / 10)));
+		// Branch count scales with both height and frequency, with a frequency-
+		// based minimum so short bushy plants still get adequate branching.
+		const heightBased = branch_frequency * (height / 8);
+		const freqMinimum = branch_frequency * 4;
+		const count = Math.max(1, Math.round(Math.max(heightBased, freqMinimum)));
 
 		for (let i = 0; i < count; i++) {
 			// Parameter t along the stem (avoid very bottom and very top)
@@ -81,10 +96,14 @@ export function generateStemBezier(params: StemParams): StemResult {
 			const bcy = pt.y + Math.sin(angle) * branchLen * 0.6 - branchLen * 0.1;
 
 			branches.push(`M${r(pt.x)},${r(pt.y)} Q${r(bcx)},${r(bcy)} ${r(bx)},${r(by)}`);
+
+			// Store branch tip position and angle for leaf/flower placement
+			const branchAngleDeg = angle * (180 / Math.PI);
+			branchEndpoints.push({ x: bx, y: by, angle: branchAngleDeg });
 		}
 	}
 
-	return { main, branches };
+	return { main, branches, branchEndpoints };
 }
 
 // ---- helpers ----
