@@ -3,7 +3,7 @@ import { createWorld } from '../../src/lib/engine/ecs/world.js';
 import type { GameWorld } from '../../src/lib/engine/ecs/world.js';
 import { runTick } from '../../src/lib/engine/simulation.js';
 import type { SimulationConfig } from '../../src/lib/engine/simulation.js';
-import { SeededRNG } from '../../src/lib/engine/rng.js';
+import { createRng } from '../../src/lib/engine/rng.js';
 import type { WeekWeather } from '../../src/lib/engine/ecs/components.js';
 import {
   makeDefaultWeather,
@@ -15,7 +15,7 @@ import {
 function makeConfig(world: GameWorld): SimulationConfig {
   return {
     world,
-    rng: new SeededRNG(42),
+    rng: createRng(42),
     speciesLookup: makeSpeciesLookup(),
     firstFrostWeekAvg: 30,
   };
@@ -124,7 +124,7 @@ describe('simulation tick orchestrator', () => {
       const w = createWorld();
       setupSinglePlot(w, 0, 0);
       const p = plantSpecies(w, 'tomato_cherokee_purple', 0, 0);
-      const cfg = { ...makeConfig(w), rng: new SeededRNG(seed) };
+      const cfg = { ...makeConfig(w), rng: createRng(seed) };
 
       for (let week = 1; week <= 10; week++) {
         runTick(cfg, makeDefaultWeather({ week }), week);
@@ -153,7 +153,7 @@ describe('simulation tick orchestrator', () => {
       setupSinglePlot(w, 0, 0);
       const p = plantSpecies(w, 'tomato_cherokee_purple', 0, 0);
       p.health!.stress = 0.7; // high stress for disease chance
-      const cfg = { ...makeConfig(w), rng: new SeededRNG(seed) };
+      const cfg = { ...makeConfig(w), rng: createRng(seed) };
 
       for (let week = 1; week <= 20; week++) {
         runTick(

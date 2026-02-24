@@ -15,7 +15,7 @@
 
 import type { SimulationContext, WeekWeather, SpeciesLookup } from './ecs/components.js';
 import type { GameWorld } from './ecs/world.js';
-import type { SeededRNG } from './rng.js';
+import type { SeededRng } from './rng.js';
 
 import { soilUpdateSystem } from './ecs/systems/soil.js';
 import { companionEffectsSystem } from './ecs/systems/companion.js';
@@ -32,7 +32,7 @@ export interface TickResult {
 
 export interface SimulationConfig {
   world: GameWorld;
-  rng: SeededRNG;
+  rng: SeededRng;
   speciesLookup: SpeciesLookup;
   firstFrostWeekAvg: number;
 }

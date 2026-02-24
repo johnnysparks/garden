@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createWorld } from '../../src/lib/engine/ecs/world.js';
 import type { GameWorld } from '../../src/lib/engine/ecs/world.js';
 import { diseaseCheckSystem } from '../../src/lib/engine/ecs/systems/disease.js';
-import { SeededRNG } from '../../src/lib/engine/rng.js';
+import { createRng } from '../../src/lib/engine/rng.js';
 import type { SimulationContext, ActiveCondition } from '../../src/lib/engine/ecs/components.js';
 import {
   makeDefaultWeather,
@@ -16,7 +16,7 @@ function makeCtx(world: GameWorld, overrides: Partial<SimulationContext> = {}): 
     world,
     weather: makeDefaultWeather(),
     currentWeek: 10,
-    rng: new SeededRNG(42),
+    rng: createRng(42),
     speciesLookup: makeSpeciesLookup(),
     firstFrostWeekAvg: 30,
     ...overrides,
@@ -58,7 +58,7 @@ describe('diseaseCheckSystem', () => {
     // Run many ticks with fresh RNG each time to find one that triggers
     let diseaseStarted = false;
     for (let i = 0; i < 100; i++) {
-      const rng = new SeededRNG(i);
+      const rng = createRng(i);
       diseaseCheckSystem({ ...ctx, rng });
       if (plant.activeConditions!.conditions.length > 0) {
         diseaseStarted = true;
@@ -122,7 +122,7 @@ describe('diseaseCheckSystem', () => {
 
     // Run multiple times
     for (let i = 0; i < 20; i++) {
-      diseaseCheckSystem({ ...ctx, rng: new SeededRNG(i) });
+      diseaseCheckSystem({ ...ctx, rng: createRng(i) });
     }
 
     // Should still only have one early_blight entry
@@ -149,7 +149,7 @@ describe('diseaseCheckSystem', () => {
       p1.health!.stress = 0.9;
       diseaseCheckSystem({
         ...makeCtx(w1, { weather: makeDefaultWeather({ humidity: 0.9 }) }),
-        rng: new SeededRNG(seed),
+        rng: createRng(seed),
       });
       if (p1.activeConditions!.conditions.length > 0) stressedOnsets++;
 
@@ -160,7 +160,7 @@ describe('diseaseCheckSystem', () => {
       p2.health!.stress = 0;
       diseaseCheckSystem({
         ...makeCtx(w2, { weather: makeDefaultWeather({ humidity: 0.9 }) }),
-        rng: new SeededRNG(seed),
+        rng: createRng(seed),
       });
       if (p2.activeConditions!.conditions.length > 0) calmOnsets++;
     }
@@ -178,7 +178,7 @@ describe('diseaseCheckSystem', () => {
     });
 
     for (let i = 0; i < 50; i++) {
-      diseaseCheckSystem({ ...ctx, rng: new SeededRNG(i) });
+      diseaseCheckSystem({ ...ctx, rng: createRng(i) });
     }
 
     expect(plant.activeConditions!.conditions.length).toBe(0);
@@ -194,7 +194,7 @@ describe('diseaseCheckSystem', () => {
     });
 
     for (let i = 0; i < 50; i++) {
-      diseaseCheckSystem({ ...ctx, rng: new SeededRNG(i) });
+      diseaseCheckSystem({ ...ctx, rng: createRng(i) });
     }
 
     expect(plant.activeConditions!.conditions.length).toBe(0);

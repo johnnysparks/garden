@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createWorld } from '../../src/lib/engine/ecs/world.js';
 import type { GameWorld } from '../../src/lib/engine/ecs/world.js';
 import { frostCheckSystem } from '../../src/lib/engine/ecs/systems/frost.js';
-import { SeededRNG } from '../../src/lib/engine/rng.js';
+import { createRng } from '../../src/lib/engine/rng.js';
 import type { SimulationContext } from '../../src/lib/engine/ecs/components.js';
 import {
   makeDefaultWeather,
@@ -16,7 +16,7 @@ function makeCtx(world: GameWorld, overrides: Partial<SimulationContext> = {}): 
     world,
     weather: makeDefaultWeather(),
     currentWeek: 10,
-    rng: new SeededRNG(42),
+    rng: createRng(42),
     speciesLookup: makeSpeciesLookup(),
     firstFrostWeekAvg: 30,
     ...overrides,
@@ -57,7 +57,7 @@ describe('frostCheckSystem', () => {
         makeCtx(w, {
           currentWeek: 30, // exactly at avg
           firstFrostWeekAvg: 30,
-          rng: new SeededRNG(seed),
+          rng: createRng(seed),
         }),
       );
 
@@ -88,7 +88,7 @@ describe('frostCheckSystem', () => {
       if ((tomato as { dead?: boolean }).dead) {
         world.removeComponent(tomato, 'dead');
       }
-      result = frostCheckSystem({ ...ctx, rng: new SeededRNG(i) });
+      result = frostCheckSystem({ ...ctx, rng: createRng(i) });
       if (result.killingFrost) break;
     }
 
@@ -109,7 +109,7 @@ describe('frostCheckSystem', () => {
         makeCtx(world, {
           currentWeek: 40,
           firstFrostWeekAvg: 30,
-          rng: new SeededRNG(i),
+          rng: createRng(i),
         }),
       );
       if (result.killingFrost) break;
@@ -160,7 +160,7 @@ describe('frostCheckSystem', () => {
         makeCtx(world, {
           currentWeek: 40,
           firstFrostWeekAvg: 30,
-          rng: new SeededRNG(i),
+          rng: createRng(i),
           speciesLookup: customLookup,
         }),
       );
@@ -188,7 +188,7 @@ describe('frostCheckSystem', () => {
         makeCtx(w, {
           currentWeek: 40, // 10 weeks past avg
           firstFrostWeekAvg: 30,
-          rng: new SeededRNG(seed),
+          rng: createRng(seed),
         }),
       );
 
@@ -210,7 +210,7 @@ describe('frostCheckSystem', () => {
         makeCtx(world, {
           currentWeek: 40,
           firstFrostWeekAvg: 30,
-          rng: new SeededRNG(i),
+          rng: createRng(i),
         }),
       );
       if (result.killingFrost) break;

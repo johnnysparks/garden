@@ -118,7 +118,7 @@ export interface Entity {
 
 // ── Simulation context passed to every system ────────────────────────
 
-import type { SeededRNG } from '../rng.js';
+import type { SeededRng } from '../rng.js';
 import type { World } from 'miniplex';
 
 export type GameWorld = World<Entity>;
@@ -128,7 +128,7 @@ export interface SimulationContext {
   world: GameWorld;
   weather: WeekWeather;
   currentWeek: number;
-  rng: SeededRNG;
+  rng: SeededRng;
   speciesLookup: SpeciesLookup;
   firstFrostWeekAvg: number;
 }

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createWorld } from '../../src/lib/engine/ecs/world.js';
 import type { GameWorld } from '../../src/lib/engine/ecs/world.js';
 import { growthTickSystem, gaussianFit, totalExpectedWeeks, determineStage } from '../../src/lib/engine/ecs/systems/growth.js';
-import { SeededRNG } from '../../src/lib/engine/rng.js';
+import { createRng } from '../../src/lib/engine/rng.js';
 import type { SimulationContext } from '../../src/lib/engine/ecs/components.js';
 import {
   TOMATO,
@@ -18,7 +18,7 @@ function makeCtx(world: GameWorld, overrides: Partial<SimulationContext> = {}): 
     world,
     weather: makeDefaultWeather(),
     currentWeek: 10,
-    rng: new SeededRNG(42),
+    rng: createRng(42),
     speciesLookup: makeSpeciesLookup(),
     firstFrostWeekAvg: 30,
     ...overrides,
