@@ -398,10 +398,6 @@ export function formatSpeciesDetail(species: PlantSpecies): string {
 
 // ── Tick summary ─────────────────────────────────────────────────────
 
-// TODO: DUSK tick summary doesn't report active companion effects.
-// Players have no indication that companion bonuses are firing unless they
-// manually inspect each plant. Consider adding a "Companions:" section
-// listing active buffs/debuffs applied this tick.
 export function formatDuskTick(result: DuskTickResult): string {
   const lines: string[] = [];
   lines.push(`=== DUSK — Simulation Tick (Week ${result.week}) ===`);
@@ -432,6 +428,19 @@ export function formatDuskTick(result: DuskTickResult): string {
     lines.push('Disease:');
     for (const d of result.diseaseOnsets) {
       lines.push(`  ${d.speciesId} [${d.row},${d.col}]: ${d.conditionId} onset`);
+    }
+  }
+
+  if (result.companionEffects.length > 0) {
+    lines.push('Companions:');
+    for (const c of result.companionEffects) {
+      const effectDescs = c.buffs.map((b) => {
+        const fx = b.effects
+          .map((e) => `${e.type} ${e.modifier >= 0 ? '+' : ''}${fixed(e.modifier)}`)
+          .join(', ');
+        return `${b.source} (${fx})`;
+      });
+      lines.push(`  ${c.speciesId} [${c.row},${c.col}]: ${effectDescs.join('; ')}`);
     }
   }
 
