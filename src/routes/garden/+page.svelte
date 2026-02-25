@@ -10,13 +10,15 @@
 	import { getSpecies, getAllSpecies, getAllAmendments, getAmendment } from '$lib/data/index.js';
 	import { createGameSession, type GameSession } from '$lib/engine/game-session.js';
 	import type { ClimateZone } from '$lib/engine/weather-gen.js';
-	import type { Entity } from '$lib/engine/ecs/components.js';
+	import type { Entity, WeekWeather, PestEvent, SoilState } from '$lib/engine/ecs/components.js';
 	import SeasonBar from '$lib/ui/SeasonBar.svelte';
 	import WeatherRibbon from '$lib/ui/WeatherRibbon.svelte';
 	import EnergyBar from '$lib/ui/EnergyBar.svelte';
 	import ActionToolbar from '$lib/ui/ActionToolbar.svelte';
 	import SeedSelector from '$lib/ui/SeedSelector.svelte';
 	import AmendmentSelector from '$lib/ui/AmendmentSelector.svelte';
+	import ScoutPicker from '$lib/ui/ScoutPicker.svelte';
+	import ScoutResultPanel from '$lib/ui/ScoutResultPanel.svelte';
 	import { season, energy, turn, weather, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
 	import zone8aData from '$lib/data/zones/zone_8a.json';
 
@@ -304,6 +306,48 @@
 		selectedPlot = null;
 	}
 
+	// ── Scout picker state ─────────────────────────────────────────────
+
+	let showScoutPicker = $state(false);
+
+	// ── Scout result panel state ───────────────────────────────────────
+
+	let scoutResult = $state<{
+		target: 'weather' | 'pests' | 'soil';
+		weatherData?: WeekWeather[];
+		pestData?: PestEvent[];
+		soilData?: SoilState;
+	} | null>(null);
+
+	function onSelectScout(target: 'weather' | 'pests' | 'soil') {
+		if (!session) return;
+
+		const result = session.scoutAction(target);
+		if (!result.ok) return;
+
+		ecsTick++;
+		showScoutPicker = false;
+
+		// Populate result data based on target
+		const currentWeek = session.getWeek();
+		if (target === 'weather') {
+			const startIdx = Math.min(currentWeek, session.seasonWeather.length - 1);
+			const weatherData = session.seasonWeather.slice(startIdx, startIdx + 3);
+			scoutResult = { target, weatherData };
+		} else if (target === 'pests') {
+			const pestData = session.seasonPests.filter(
+				(p) => p.arrival_week >= currentWeek,
+			);
+			scoutResult = { target, pestData };
+		} else if (target === 'soil') {
+			// Use the selected plot if available, otherwise default to (0, 0)
+			const row = selectedPlot?.row ?? 0;
+			const col = selectedPlot?.col ?? 0;
+			const soilData = session.getSoil(row, col);
+			scoutResult = { target, soilData };
+		}
+	}
+
 	// ── Action dispatch ─────────────────────────────────────────────────
 
 	function onAction(actionId: string) {
@@ -317,6 +361,10 @@
 			case 'amend': {
 				if (!selectedPlot) return;
 				showAmendSelector = true;
+				break;
+			}
+			case 'scout': {
+				showScoutPicker = true;
 				break;
 			}
 			case 'wait': {
@@ -381,6 +429,23 @@
 		amendments={availableAmendments}
 		onSelect={onSelectAmendment}
 		onClose={() => (showAmendSelector = false)}
+	/>
+{/if}
+
+{#if showScoutPicker}
+	<ScoutPicker
+		onSelect={onSelectScout}
+		onClose={() => (showScoutPicker = false)}
+	/>
+{/if}
+
+{#if scoutResult}
+	<ScoutResultPanel
+		target={scoutResult.target}
+		weatherData={scoutResult.weatherData}
+		pestData={scoutResult.pestData}
+		soilData={scoutResult.soilData}
+		onClose={() => (scoutResult = null)}
 	/>
 {/if}
 
