@@ -86,6 +86,36 @@ export function getLoadErrors(): ReadonlyArray<{ file: string; errors: string[] 
   return loadErrors;
 }
 
+// ── Zone loader ─────────────────────────────────────────────────────
+
+import type { ClimateZone } from '../engine/weather-gen.js';
+
+const zoneModules = import.meta.glob<ClimateZone>(
+  './zones/*.json',
+  { eager: true, import: 'default' },
+);
+
+/** All loaded zones, keyed by zone id. */
+const zoneMap = new Map<string, ClimateZone>();
+
+for (const [, data] of Object.entries(zoneModules)) {
+  zoneMap.set(data.id, data);
+}
+
+/**
+ * Get all climate zones as an array, sorted by id.
+ */
+export function getAllZones(): ClimateZone[] {
+  return Array.from(zoneMap.values()).sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/**
+ * Get a climate zone by id. Returns undefined if not found.
+ */
+export function getZone(id: string): ClimateZone | undefined {
+  return zoneMap.get(id);
+}
+
 // ── Amendment loader ────────────────────────────────────────────────
 
 import amendmentsRaw from './amendments.json';
