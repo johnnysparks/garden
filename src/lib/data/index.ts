@@ -8,4 +8,6 @@ export {
   getLoadErrors,
   getAllAmendments,
   getAmendment,
+  getAllZones,
+  getZone,
 } from './loader.js';

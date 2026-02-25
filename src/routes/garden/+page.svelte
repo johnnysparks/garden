@@ -8,7 +8,7 @@
 		SEASON_PALETTES,
 	} from '$lib/render/palette.js';
 	import { createWindState, updateWind, type WindState } from '$lib/render/animation.js';
-	import { getSpecies, getAllSpecies, getAllAmendments, getAmendment } from '$lib/data/index.js';
+	import { getSpecies, getAllSpecies, getAllAmendments, getAmendment, getZone } from '$lib/data/index.js';
 	import { createGameSession, type GameSession } from '$lib/engine/game-session.js';
 	import { calculateScore, type ScoreCard } from '$lib/engine/scoring.js';
 	import { processRunEnd } from '$lib/state/meta.js';
@@ -26,6 +26,38 @@
 	import RunEndScreen from '$lib/ui/RunEndScreen.svelte';
 	import { season, energy, turn, weather, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
 	import zone8aData from '$lib/data/zones/zone_8a.json';
+
+	// ── URL param helpers ──────────────────────────────────────────────
+	// Read zone and seed from query string, falling back to defaults.
+
+	function getUrlParams(): { zone: ClimateZone; seed: number } {
+		const params = new URLSearchParams(window.location.search);
+
+		// Zone: look up by id, fall back to zone_8a
+		const zoneId = params.get('zone') ?? 'zone_8a';
+		const zone = getZone(zoneId) ?? (zone8aData as unknown as ClimateZone);
+
+		// Seed: parse as integer, or generate random
+		const seedStr = params.get('seed');
+		let seed: number;
+		if (seedStr !== null && seedStr !== '') {
+			// Allow numeric seeds directly, or hash a string seed
+			const parsed = Number(seedStr);
+			if (Number.isFinite(parsed) && Number.isInteger(parsed)) {
+				seed = parsed >>> 0; // ensure unsigned 32-bit
+			} else {
+				// Simple string hash for non-numeric seeds
+				seed = 0;
+				for (let i = 0; i < seedStr.length; i++) {
+					seed = ((seed << 5) - seed + seedStr.charCodeAt(i)) >>> 0;
+				}
+			}
+		} else {
+			seed = Math.floor(Math.random() * 2 ** 32);
+		}
+
+		return { zone, seed };
+	}
 
 	// ── Constants ───────────────────────────────────────────────────────
 
@@ -66,7 +98,11 @@
 	} | null>(null);
 
 	function handleNewRun() {
-		window.location.reload();
+		// Start a new run in the same zone with a fresh random seed
+		const params = new URLSearchParams(window.location.search);
+		params.delete('seed'); // new random seed
+		const qs = params.toString();
+		window.location.href = `${base}/garden${qs ? '?' + qs : ''}`;
 	}
 
 	function handleMainMenu() {
@@ -160,8 +196,7 @@
 	});
 
 	onMount(() => {
-		const seed = Math.floor(Math.random() * 2 ** 32);
-		const zone = zone8aData as unknown as ClimateZone;
+		const { zone, seed } = getUrlParams();
 
 		const s = createGameSession({
 			seed,

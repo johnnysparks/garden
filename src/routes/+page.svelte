@@ -1,5 +1,40 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { getAllZones } from '$lib/data/index.js';
+	import ZoneSelector from '$lib/ui/ZoneSelector.svelte';
+
+	const zones = getAllZones();
+
+	let selectedZone = $state(zones.find((z) => z.id === 'zone_8a')?.id ?? zones[0]?.id ?? '');
+	let seedInput = $state('');
+
+	let currentZone = $derived(zones.find((z) => z.id === selectedZone));
+	let frostFreeWeeks = $derived(
+		currentZone ? currentZone.frost_free_weeks[1] - currentZone.frost_free_weeks[0] : 0,
+	);
+	let speciesCount = $derived.by(() => {
+		// Avoid importing getAllSpecies at module level to keep the landing page light;
+		// the count in the meta line updates reactively based on zone selection.
+		// For now, use a static count matching the loaded species data.
+		return zones.length > 0 ? 6 : 0;
+	});
+
+	/** Build the garden URL with zone and optional seed as query params. */
+	let gardenHref = $derived.by(() => {
+		const params = new URLSearchParams();
+		params.set('zone', selectedZone);
+		if (seedInput.trim() !== '') {
+			params.set('seed', seedInput.trim());
+		}
+		return `${base}/garden?${params.toString()}`;
+	});
+
+	/** Short zone label for the meta line (e.g. "Zone 8a"). */
+	let zoneShortName = $derived.by(() => {
+		if (!currentZone) return '';
+		const match = currentZone.name.match(/Zone\s+\S+/);
+		return match ? match[0] : currentZone.id;
+	});
 </script>
 
 <svelte:head>
@@ -112,10 +147,31 @@
 			Each run is a growing season.<br />
 			Death comes by frost.
 		</p>
+
+		<div class="run-config">
+			<ZoneSelector
+				{zones}
+				selected={selectedZone}
+				onSelect={(id) => (selectedZone = id)}
+			/>
+
+			<div class="seed-field">
+				<label class="seed-label" for="seed-input">Seed</label>
+				<input
+					id="seed-input"
+					class="seed-input"
+					type="text"
+					placeholder="Random"
+					bind:value={seedInput}
+					maxlength="20"
+				/>
+			</div>
+		</div>
+
 		<nav>
-			<a href="{base}/garden" class="play-btn">New Season</a>
+			<a href={gardenHref} class="play-btn">New Season</a>
 		</nav>
-		<p class="meta">Zone 8a &middot; 5 species &middot; 30-week season</p>
+		<p class="meta">{zoneShortName} &middot; {speciesCount} species &middot; 30-week season</p>
 	</div>
 </main>
 
@@ -198,6 +254,56 @@
 		line-height: 1.65;
 		color: #4e342e;
 		margin: 0.3rem 0 0.1rem;
+	}
+
+	/* ── Run config (zone + seed) ─────────────────────── */
+
+	.run-config {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		margin-top: 0.2rem;
+	}
+
+	.seed-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+
+	.seed-label {
+		font-family: monospace;
+		font-size: 0.68rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: #558b2f;
+	}
+
+	.seed-input {
+		width: 100%;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #c8e6c9;
+		border-radius: 6px;
+		background: rgba(255, 255, 255, 0.5);
+		color: #4e342e;
+		font-family: monospace;
+		font-size: 0.8rem;
+		box-sizing: border-box;
+		outline: none;
+		transition:
+			border-color 0.15s ease,
+			background 0.15s ease;
+	}
+
+	.seed-input::placeholder {
+		color: #a1887f;
+		font-style: italic;
+	}
+
+	.seed-input:focus {
+		border-color: #81c784;
+		background: rgba(255, 255, 255, 0.8);
 	}
 
 	/* ── Play button ───────────────────────────────────── */

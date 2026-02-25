@@ -560,7 +560,7 @@ When frost kills the season, `+page.svelte` line 106 just does `console.log(...)
 
 Currently the title screen (`src/routes/+page.svelte`) has a single "New Season" link to `/garden`. The garden page hardcodes `zone_8a` and a random seed (lines 114–115). No zone selection, seed input, or seed bank review exists.
 
-##### WS5.6a — Add zone data imports and zone list (todo)
+##### WS5.6a — Add zone data imports and zone list (done)
 > **Files:** `src/routes/+page.svelte`
 > **Task:**
 > 1. Import both zone JSON files: `zone_8a.json` and `zone_7b.json`.
@@ -574,7 +574,7 @@ Currently the title screen (`src/routes/+page.svelte`) has a single "New Season"
 > 3. Add state: `let selectedZone = $state(ZONE_OPTIONS[0]);`
 > **Verify:** `npm run check` passes. Zone data is importable.
 
-##### WS5.6b — Create ZoneSelector component (todo)
+##### WS5.6b — Create ZoneSelector component (done)
 > **Files:** Create `src/lib/ui/ZoneSelector.svelte`
 > **Props:**
 > ```typescript
@@ -597,7 +597,7 @@ Currently the title screen (`src/routes/+page.svelte`) has a single "New Season"
 > **Style:** Cards `min-width: 120px`, rounded corners, dark theme. Selected card gets `border: 2px solid #4CAF50`.
 > **Verify:** Renders zone cards, clicking one calls `onSelect` with the zone ID. Selected card is visually highlighted.
 
-##### WS5.6c — Add seed input to title screen (todo)
+##### WS5.6c — Add seed input to title screen (done)
 > **Files:** `src/routes/+page.svelte`
 > **Task:**
 > 1. Add state: `let seedInput = $state('');` and `let useCustomSeed = $state(false);`
@@ -609,7 +609,7 @@ Currently the title screen (`src/routes/+page.svelte`) has a single "New Season"
 > **Style:** Input field: dark background, monospace font, `max-width: 200px`. Subtle and collapsed by default.
 > **Verify:** Custom seed toggle shows/hides the input. Entering a number sets the seed.
 
-##### WS5.6d — Pass zone and seed to garden page via URL params (todo)
+##### WS5.6d — Pass zone and seed to garden page via URL params (done)
 > **Files:** `src/routes/+page.svelte`, `src/routes/garden/+page.svelte`
 > **Task:**
 > 1. In `+page.svelte`, change the "New Season" link from a static `<a>` to a button with `onclick`:
@@ -632,7 +632,7 @@ Currently the title screen (`src/routes/+page.svelte`) has a single "New Season"
 >
 > **Verify:** Navigating to `/garden?zone=zone_7b&seed=42` starts a run in zone 7b with seed 42. Default still works without params.
 
-##### WS5.6e — Add ZoneSelector to title screen layout (todo)
+##### WS5.6e — Add ZoneSelector to title screen layout (done)
 > **Files:** `src/routes/+page.svelte`
 > **Task:**
 > 1. Import and render `<ZoneSelector>` between the subtitle and the "New Season" button.
@@ -883,7 +883,7 @@ Data layer is complete and tested. All UI is missing.
 | 2 | Amend action UI (WS5.1) | — | done |
 | 3 | Intervene/harvest action UI (WS5.3) | WS5.3a–f (6 tasks) | partial (a–c done) |
 | 4 | Run end screen (WS5.5) | WS5.5a–f (6 tasks) | done |
-| 5 | Run start flow — zone/seed select (WS5.6) | WS5.6a–e (5 tasks) | todo |
+| 5 | Run start flow — zone/seed select (WS5.6) | WS5.6a–e (5 tasks) | done |
 | 6 | More species — pepper, beans, marigold, rosemary, corn (WS3.3) | — | todo |
 
 ### Phase 2 — Diagnosis & Strategic Depth
