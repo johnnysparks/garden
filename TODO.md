@@ -1,6 +1,6 @@
 # Perennial — Project Roadmap
 
-> Last updated 2026-02-25. All engine systems implemented and tested. All 4 gameplay bugs fixed. CLI complete. Web UI has garden grid with plant/wait/amend/scout/intervene actions. WS5.2 (Scout), WS5.3a–c (Intervene), and WS5.4a (overlay types) complete. WS5 broken into 39 granular subtasks across 9 work streams.
+> Last updated 2026-02-25. All engine systems implemented and tested. All 4 gameplay bugs fixed. CLI complete. Web UI has garden grid with plant/wait/amend/scout/intervene actions. WS5.2 (Scout), WS5.3a–c (Intervene), WS5.4a (overlay types), and WS5.5 (Run End Screen) complete. WS5 broken into 39 granular subtasks across 9 work streams.
 
 ---
 
@@ -452,7 +452,7 @@ The rendering pipeline needs: overlay generator functions → a DiseaseOverlay c
 
 When frost kills the season, `+page.svelte` line 106 just does `console.log(...)`. The scoring engine (`scoring.ts`) has a complete `calculateScore()` function returning a `ScoreCard` with four categories. Meta-progression (`meta.ts`) has `processRunEnd()` to update seed bank, journal, and stats. Neither is called from the web UI.
 
-##### WS5.5a — Create ScoreBreakdown component (todo)
+##### WS5.5a — Create ScoreBreakdown component (done)
 > **Files:** Create `src/lib/ui/ScoreBreakdown.svelte`
 > **Task:** A purely presentational component that displays a `ScoreCard`:
 > **Props:**
@@ -475,7 +475,7 @@ When frost kills the season, `+page.svelte` line 106 just does `console.log(...)
 > **Style:** Dark theme card (`background: #2a2a2a`), monospace numbers, green accent for positive scores, red for penalties (deaths). Max-width 400px, centered.
 > **Verify:** `npm run check` passes. Component renders a mock ScoreCard correctly.
 
-##### WS5.5b — Create RunEndScreen component (todo)
+##### WS5.5b — Create RunEndScreen component (done)
 > **Files:** Create `src/lib/ui/RunEndScreen.svelte`
 > **Template:** Full-screen overlay (like AmendmentSelector but takes the whole viewport).
 > **Props:**
@@ -500,7 +500,7 @@ When frost kills the season, `+page.svelte` line 106 just does `console.log(...)
 > **Style:** Fixed overlay, scrollable content, buttons at bottom with `position: sticky`.
 > **Verify:** `npm run check` passes. Renders all sections with mock data.
 
-##### WS5.5c — Calculate score when run ends (todo)
+##### WS5.5c — Calculate score when run ends (done)
 > **Files:** `src/routes/garden/+page.svelte`
 > **Task:**
 > 1. Import `calculateScore` from `$lib/engine/scoring.js`.
@@ -518,7 +518,7 @@ When frost kills the season, `+page.svelte` line 106 just does `console.log(...)
 >    ```
 > **Verify:** `runEndData` is populated when frost occurs. No visual change yet (console.log can stay temporarily).
 
-##### WS5.5d — Call processRunEnd for meta-progression (todo)
+##### WS5.5d — Call processRunEnd for meta-progression (done)
 > **Files:** `src/routes/garden/+page.svelte`
 > **Task:** After calculating the score in WS5.5c:
 > 1. Import `processRunEnd` from `$lib/state/meta.js`.
@@ -527,7 +527,7 @@ When frost kills the season, `+page.svelte` line 106 just does `console.log(...)
 > **Note:** `processRunEnd` is async (uses Dexie). Use an immediately-invoked async block or handle the promise.
 > **Verify:** After a run ends, the Dexie database has a new entry in `runHistory`. Check via browser DevTools IndexedDB inspector.
 
-##### WS5.5e — Render RunEndScreen when run ends (todo)
+##### WS5.5e — Render RunEndScreen when run ends (done)
 > **Files:** `src/routes/garden/+page.svelte`
 > **Task:**
 > 1. Import `RunEndScreen`.
@@ -549,7 +549,7 @@ When frost kills the season, `+page.svelte` line 106 just does `console.log(...)
 > 4. Add `handleMainMenu()`: navigate to home (`window.location.href = base + '/'`).
 > **Verify:** When frost kills the season, the end screen overlay appears with the score breakdown. "New Season" reloads. "Main Menu" navigates home.
 
-##### WS5.5f — Remove console.log, clean up run-end flow (todo)
+##### WS5.5f — Remove console.log, clean up run-end flow (done)
 > **Files:** `src/routes/garden/+page.svelte`
 > **Task:** Remove the `console.log('Killing frost! ...')` at line 106. The RunEndScreen now handles this. Ensure the ADVANCE phase effect does NOT call `s.turnManager.advancePhase()` when `runEnded` is true (already the case — the `else` branch handles it). Verify the game loop stops cleanly when the end screen is shown.
 > **Verify:** No console.log on frost. End screen appears. Game loop stops.
@@ -882,7 +882,7 @@ Data layer is complete and tested. All UI is missing.
 | 1 | Fix remaining gameplay bugs (soil temp init, warm-season growth) | — | done |
 | 2 | Amend action UI (WS5.1) | — | done |
 | 3 | Intervene/harvest action UI (WS5.3) | WS5.3a–f (6 tasks) | partial (a–c done) |
-| 4 | Run end screen (WS5.5) | WS5.5a–f (6 tasks) | todo |
+| 4 | Run end screen (WS5.5) | WS5.5a–f (6 tasks) | done |
 | 5 | Run start flow — zone/seed select (WS5.6) | WS5.6a–e (5 tasks) | todo |
 | 6 | More species — pepper, beans, marigold, rosemary, corn (WS3.3) | — | todo |
 
