@@ -58,7 +58,7 @@
 			needsPlot: false,
 			needsEmpty: false,
 			needsPlant: false,
-			placeholder: true,
+			placeholder: false,
 		},
 		{
 			id: 'wait',
