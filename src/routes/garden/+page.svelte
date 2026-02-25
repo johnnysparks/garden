@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount, untrack } from 'svelte';
 	import { get } from 'svelte/store';
 	import { fly } from 'svelte/transition';
@@ -9,6 +10,8 @@
 	import { createWindState, updateWind, type WindState } from '$lib/render/animation.js';
 	import { getSpecies, getAllSpecies, getAllAmendments, getAmendment } from '$lib/data/index.js';
 	import { createGameSession, type GameSession } from '$lib/engine/game-session.js';
+	import { calculateScore, type ScoreCard } from '$lib/engine/scoring.js';
+	import { processRunEnd } from '$lib/state/meta.js';
 	import type { ClimateZone } from '$lib/engine/weather-gen.js';
 	import type { Entity, WeekWeather, PestEvent, SoilState } from '$lib/engine/ecs/components.js';
 	import SeasonBar from '$lib/ui/SeasonBar.svelte';
@@ -20,6 +23,7 @@
 	import ScoutPicker from '$lib/ui/ScoutPicker.svelte';
 	import ScoutResultPanel from '$lib/ui/ScoutResultPanel.svelte';
 	import InterveneMenu from '$lib/ui/InterveneMenu.svelte';
+	import RunEndScreen from '$lib/ui/RunEndScreen.svelte';
 	import { season, energy, turn, weather, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
 	import zone8aData from '$lib/data/zones/zone_8a.json';
 
@@ -51,6 +55,23 @@
 
 	let session = $state<GameSession | null>(null);
 	let ecsTick = $state(0);
+
+	// ── Run end state ──────────────────────────────────────────────────
+
+	let runEndData = $state<{
+		score: ScoreCard;
+		weeksSurvived: number;
+		reason: 'frost' | 'abandon' | 'catastrophe';
+		newSeeds: string[];
+	} | null>(null);
+
+	function handleNewRun() {
+		window.location.reload();
+	}
+
+	function handleMainMenu() {
+		window.location.href = base + '/';
+	}
 
 	/** Transition PLAN → ACT with the current week's energy budget. */
 	function handleBeginWork() {
@@ -106,7 +127,32 @@
 			untrack(() => ecsTick++);
 			const advResult = get(s.advanceResult$);
 			if (advResult?.runEnded) {
-				console.log('Killing frost! The growing season has ended.', advResult);
+				const score = calculateScore({
+					runState: s.eventLog.state,
+					world: s.world,
+					speciesLookup: s.speciesLookup,
+				});
+				runEndData = {
+					score,
+					weeksSurvived: s.getWeek(),
+					reason: 'frost',
+					newSeeds: [],
+				};
+				// Update meta-progression asynchronously
+				void processRunEnd(s.eventLog.state, score.total).then(() => {
+					// Populate newSeeds from harvested species in the run
+					const harvested = new Set(
+						s.eventLog.state.harvests.map((h) => {
+							const plant = s.eventLog.state.plants.find(
+								(p) => h.plant_id === `${p.species_id}@${p.plot[0]},${p.plot[1]}`,
+							);
+							return plant?.species_id ?? '';
+						}).filter(Boolean),
+					);
+					if (harvested.size > 0 && runEndData) {
+						runEndData = { ...runEndData, newSeeds: [...harvested] };
+					}
+				});
 			} else {
 				s.turnManager.advancePhase(); // ADVANCE → DAWN (increments week)
 			}
@@ -522,6 +568,18 @@
 		plantInfo={selectedPlantInfo}
 		onSelect={onIntervene}
 		onClose={() => (showInterveneMenu = false)}
+	/>
+{/if}
+
+{#if runEndData && session}
+	<RunEndScreen
+		score={runEndData.score}
+		zone={session.config.zone.id}
+		weeksSurvived={runEndData.weeksSurvived}
+		endReason={runEndData.reason}
+		newSeeds={runEndData.newSeeds}
+		onNewRun={handleNewRun}
+		onMainMenu={handleMainMenu}
 	/>
 {/if}
 
