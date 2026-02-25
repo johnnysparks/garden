@@ -1,0 +1,241 @@
+{
+  "id": "bean_provider",
+  "common_name": "Provider Bush Bean",
+  "botanical_name": "Phaseolus vulgaris 'Provider'",
+  "family": "Fabaceae",
+  "type": "annual",
+  "growth": {
+    "habit": "bush",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [1, 1],
+        "description": "A large kidney-shaped seed with a smooth white coat. Satisfyingly chunky — even children can handle and plant them."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 1],
+        "description": "The hypocotyl arch pushes through the soil, hauling the fat cotyledons into daylight. Provider germinates in cooler soil than most beans dare."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [1, 2],
+        "description": "Thick pale cotyledons unfold like two fleshy wings. The first true leaves are simple and heart-shaped — the trifoliates come next."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [3, 4],
+        "description": "Rapid bushy growth. Trifoliate leaves crowd together on short petioles, forming a dense rounded canopy. Root nodules are already fixing atmospheric nitrogen."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [1, 2],
+        "description": "Small white papilionaceous flowers emerge at leaf axils, each a perfect miniature of the sweet pea. Self-pollinating — every flower can become a pod."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [3, 4],
+        "description": "Slender round pods elongate rapidly beneath the foliage, hanging in clusters of two or three. Pick them young and tender — wait too long and they turn fibrous."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [1, 2],
+        "description": "Leaves yellow and drop. Remaining pods dry to papery shells rattling with next year's seed. The root nodules leave a gift of nitrogen in the soil."
+      }
+    ],
+    "days_to_maturity": [7, 9],
+    "max_height_cm": 50,
+    "max_spread_cm": 30,
+    "growth_rate": "fast"
+  },
+  "needs": {
+    "sun": "full",
+    "water": "moderate",
+    "soil_ph": [6.0, 7.0],
+    "nutrients": { "N": "low", "P": "moderate", "K": "moderate" },
+    "soil_temp_min_c": 15,
+    "frost_tolerance": "none"
+  },
+  "season": {
+    "sow_window": [6, 14],
+    "transplant_window": [7, 14],
+    "harvest_window": [13, 23],
+    "bolt_trigger": null
+  },
+  "companions": [
+    {
+      "species_id": "corn_golden_bantam",
+      "effects": [{ "type": "nutrient_sharing", "modifier": 0.3, "radius": 1 }],
+      "lore": "The original Three Sisters — beans fix atmospheric nitrogen into the soil, feeding the hungry corn. In return, tall corn stalks can shelter low bean bushes from wind."
+    },
+    {
+      "species_id": "squash_butternut",
+      "effects": [{ "type": "growth_rate", "modifier": 0.15, "radius": 1 }],
+      "lore": "The third Sister. Squash sprawls beneath bean bushes, its broad leaves shading the soil to retain moisture and suppress weeds for both crops."
+    },
+    {
+      "species_id": "carrot_nantes",
+      "effects": [{ "type": "nutrient_sharing", "modifier": 0.2, "radius": 1 }],
+      "lore": "Bean root nodules release nitrogen that feeds the carrot's taproot. Carrots loosen deep soil that beans' shallow roots can't reach."
+    }
+  ],
+  "antagonists": [
+    {
+      "species_id": "fennel",
+      "effects": [{ "type": "allelopathy", "modifier": -0.3, "radius": 2 }],
+      "lore": "Fennel's root exudates are toxic to most legumes, stunting bean growth and interfering with nitrogen fixation."
+    },
+    {
+      "species_id": "garlic_softneck",
+      "effects": [{ "type": "allelopathy", "modifier": -0.2, "radius": 1 }],
+      "lore": "Alliums release sulfurous compounds that inhibit Rhizobium bacteria in bean root nodules, crippling their ability to fix nitrogen."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "condition_id": "rust",
+      "susceptibility": 0.5,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.7 },
+        { "type": "temp_high", "threshold": 0.6 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "leaf_spots",
+            "description": "Small reddish-brown pustules erupt on leaf undersides — each one a volcano of rust spores. Upper leaf surface shows faint yellow halos.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "spreading_spots_yellowing",
+            "description": "Pustules multiply across the foliage. Leaves yellow and drop prematurely, thinning the canopy. Pod production slows as the plant loses photosynthetic capacity.",
+            "reversible": true
+          },
+          {
+            "week": 4,
+            "visual_overlay": "yellowing_uniform",
+            "description": "Severe defoliation. The plant is a skeleton of bare stems with a few yellow leaves clinging on. Any remaining pods are stunted.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 8,
+        "spreads": true,
+        "spread_radius": 1
+      }
+    },
+    {
+      "condition_id": "root_rot",
+      "susceptibility": 0.4,
+      "triggers": [
+        { "type": "overwater", "threshold": 0.7 },
+        { "type": "temp_low", "threshold": 0.5 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "yellowing_uniform",
+            "description": "Lower leaves yellow for no obvious reason. Growth slows. Underground, Pythium or Rhizoctonia fungi are consuming the roots.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "wilting",
+            "description": "Plant wilts in midday heat even though soil is moist. Roots are brown and mushy — they can no longer absorb water. The nitrogen-fixing nodules are destroyed.",
+            "reversible": false
+          },
+          {
+            "week": 3,
+            "visual_overlay": "total_wilt",
+            "description": "Complete collapse. Pull the plant and the roots will be dark, slimy, and foul-smelling. Waterlogged soil was the death sentence.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 5,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    },
+    {
+      "condition_id": "anthracnose",
+      "susceptibility": 0.35,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.8 },
+        { "type": "overwater", "threshold": 0.6 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "leaf_spots",
+            "description": "Small dark sunken lesions appear on pods and stems, often along the veins. Spread by rain splash from infected soil.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "stem_lesions",
+            "description": "Lesions enlarge with salmon-pink spore masses visible in wet weather. Pod quality is ruined — dark streaks penetrate to the seeds inside.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": true,
+        "spread_radius": 1
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 7,
+    "seed_saving": true,
+    "harvest_type": "fruit",
+    "continuous_harvest": true
+  },
+  "visual": {
+    "stem": {
+      "height": [2, 22],
+      "thickness": [0.6, 2.5],
+      "color": "#588c52",
+      "curve": 0.08,
+      "branch_frequency": 0.75,
+      "branch_angle": 45
+    },
+    "leaves": {
+      "shape": "heart",
+      "count": [3, 24],
+      "size": [2, 7],
+      "color": "#3a9142",
+      "droop": [5, 20],
+      "distribution": "alternate",
+      "opacity": [0.75, 1.0]
+    },
+    "flowers": {
+      "shape": "simple",
+      "petal_count": 5,
+      "color": "#f0eef5",
+      "size": 1.2,
+      "bloom_density": 0.4
+    },
+    "fruit": {
+      "shape": "elongated",
+      "size": [0.5, 4.0],
+      "color_unripe": "#b5cc6e",
+      "color_ripe": "#569c2e",
+      "cluster_count": 2,
+      "hang_angle": 20
+    },
+    "animation": {
+      "sway_amplitude": 0.06,
+      "sway_frequency": 0.8,
+      "growth_spring_tension": 0.45,
+      "idle_breathing": 0.012
+    }
+  },
+  "lore": {
+    "description": "A dependable bush bean bred for cold tolerance and early production — 'Provider' earned its name by providing when other varieties fail.",
+    "origin": "United States, developed by the USDA in the 1960s for reliable performance in cool, wet spring conditions",
+    "fun_fact": "Provider beans can germinate in soil as cool as 15°C, while most beans refuse to sprout below 18°C — making them the go-to variety for impatient spring planters.",
+    "difficulty": "beginner"
+  }
+}

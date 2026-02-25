@@ -77,6 +77,11 @@
       "species_id": "lettuce_butterhead",
       "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
       "lore": "Shallow-rooted lettuce occupies the top soil layer without competing with the deep carrot taproot, and its leaf canopy shades the soil to retain moisture."
+    },
+    {
+      "species_id": "bean_provider",
+      "effects": [{ "type": "nutrient_sharing", "modifier": 0.2, "radius": 1 }],
+      "lore": "Bean root nodules fix atmospheric nitrogen into the soil, providing a slow-release fertility boost that feeds the carrot's developing taproot."
     }
   ],
   "antagonists": [
