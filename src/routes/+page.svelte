@@ -186,11 +186,13 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		min-height: 100vh;
+		height: 100%;
 		background: #e8f5e9;
 		padding: 2rem 1.5rem 2.5rem;
 		box-sizing: border-box;
 		gap: 0;
+		overflow-y: auto;
+		overscroll-behavior: none;
 	}
 
 	/* ── Illustration ──────────────────────────────────── */

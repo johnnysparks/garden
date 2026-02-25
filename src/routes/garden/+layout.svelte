@@ -10,7 +10,10 @@
 	.garden-layout {
 		display: flex;
 		flex-direction: column;
-		height: 100vh;
+		position: fixed;
+		inset: 0;
 		overflow: hidden;
+		touch-action: none;
+		overscroll-behavior: none;
 	}
 </style>
