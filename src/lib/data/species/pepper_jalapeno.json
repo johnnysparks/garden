@@ -1,0 +1,232 @@
+{
+  "id": "pepper_jalapeno",
+  "common_name": "Jalapeño Pepper",
+  "botanical_name": "Capsicum annuum 'Early Jalapeño'",
+  "family": "Solanaceae",
+  "type": "annual",
+  "growth": {
+    "habit": "bush",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [1, 2],
+        "description": "A small, flat, cream-colored seed with a slight curve."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 2],
+        "description": "Slow to wake in cool soil. The radicle pushes down while the hypocotyl arches upward, still wearing the seed coat like a helmet."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [2, 3],
+        "description": "Narrow cotyledons give way to the first true leaves — small, smooth, and pointed. The stem is already sturdy for its size."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [4, 6],
+        "description": "The plant forks into a compact Y-shape, then branches again and again. Dark green foliage fills out into a dense, bushy canopy."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [2, 3],
+        "description": "Small white star-shaped flowers appear at branch nodes, hanging face-down. Each successful pollination will become a pepper."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [4, 6],
+        "description": "Green peppers swell with thick walls and a blunt tip. Left on the vine, they ripen to deep red with characteristic corking lines."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [2, 3],
+        "description": "Leaves yellow and drop as temperatures cool. Last peppers ripen red on bare branches."
+      }
+    ],
+    "days_to_maturity": [10, 14],
+    "max_height_cm": 75,
+    "max_spread_cm": 45,
+    "growth_rate": "moderate"
+  },
+  "needs": {
+    "sun": "full",
+    "water": "moderate",
+    "soil_ph": [6.0, 6.8],
+    "nutrients": { "N": "moderate", "P": "moderate", "K": "moderate" },
+    "soil_temp_min_c": 18,
+    "frost_tolerance": "none"
+  },
+  "season": {
+    "sow_window": [4, 8],
+    "transplant_window": [8, 12],
+    "harvest_window": [14, 22],
+    "bolt_trigger": null
+  },
+  "companions": [
+    {
+      "species_id": "basil_genovese",
+      "effects": [{ "type": "pest_resistance", "modifier": 0.25, "radius": 1 }],
+      "lore": "Basil's aromatic oils repel aphids and spider mites that plague pepper foliage."
+    },
+    {
+      "species_id": "tomato_cherokee_purple",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Tomatoes and peppers share similar soil and climate needs. Their root zones coexist without competition."
+    },
+    {
+      "species_id": "carrot_nantes",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Carrot taproots break up compacted soil, improving drainage around pepper roots."
+    }
+  ],
+  "antagonists": [
+    {
+      "species_id": "fennel",
+      "effects": [{ "type": "allelopathy", "modifier": -0.35, "radius": 2 }],
+      "lore": "Fennel root exudates inhibit pepper growth. A classic garden antagonist to all Solanaceae."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "condition_id": "blossom_drop",
+      "susceptibility": 0.5,
+      "min_stage": "flowering",
+      "triggers": [
+        { "type": "temp_high", "threshold": 0.8 },
+        { "type": "humidity_high", "threshold": 0.8 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "wilting",
+            "description": "Flowers wilt and fall from the plant without setting fruit. High heat or humidity is disrupting pollination.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "wilting",
+            "description": "Continued blossom drop. The plant is healthy but producing no new fruit. Yield will be significantly reduced.",
+            "reversible": true
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    },
+    {
+      "condition_id": "early_blight",
+      "susceptibility": 0.4,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.7 },
+        { "type": "crowding", "threshold": 0.7 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "lower_leaf_spots",
+            "description": "Small dark spots with concentric rings appear on the oldest leaves near the soil line.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "spreading_spots_yellowing",
+            "description": "Spots enlarge and merge. Affected leaves yellow and fall, exposing fruit to sunscald.",
+            "reversible": true
+          },
+          {
+            "week": 5,
+            "visual_overlay": "stem_lesions",
+            "description": "Dark sunken lesions girdle stems. Fruit develops leathery dark patches. Plant vigor declines sharply.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 10,
+        "spreads": true,
+        "spread_radius": 1
+      }
+    },
+    {
+      "condition_id": "blossom_end_rot",
+      "susceptibility": 0.35,
+      "min_stage": "fruiting",
+      "triggers": [
+        { "type": "nutrient_deficiency", "threshold": 0.5 },
+        { "type": "overwater", "threshold": 0.7 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "fruit_base_discolor",
+            "description": "A small water-soaked spot appears at the blossom end of developing peppers.",
+            "reversible": true
+          },
+          {
+            "week": 1,
+            "visual_overlay": "fruit_base_rot",
+            "description": "The spot expands into a dark, sunken, leathery patch. A calcium transport issue caused by inconsistent watering.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 7,
+    "seed_saving": true,
+    "harvest_type": "fruit",
+    "continuous_harvest": true
+  },
+  "visual": {
+    "stem": {
+      "height": [2, 28],
+      "thickness": [0.5, 2.5],
+      "color": "#4a7c3f",
+      "curve": 0.08,
+      "branch_frequency": 0.75,
+      "branch_angle": 45
+    },
+    "leaves": {
+      "shape": "simple_pointed",
+      "count": [3, 24],
+      "size": [1.5, 6],
+      "color": "#2e7d32",
+      "droop": [0, 12],
+      "distribution": "alternate",
+      "opacity": [0.75, 1.0]
+    },
+    "flowers": {
+      "shape": "simple",
+      "petal_count": 5,
+      "color": "#f5f5f5",
+      "size": 1.2,
+      "bloom_density": 0.4
+    },
+    "fruit": {
+      "shape": "elongated",
+      "size": [0.5, 3.5],
+      "color_unripe": "#2e7d32",
+      "color_ripe": "#c62828",
+      "cluster_count": 2,
+      "hang_angle": 20
+    },
+    "animation": {
+      "sway_amplitude": 0.05,
+      "sway_frequency": 0.7,
+      "growth_spring_tension": 0.4,
+      "idle_breathing": 0.01
+    }
+  },
+  "lore": {
+    "description": "A compact, prolific pepper with thick walls and moderate heat — the backbone of salsas and pickled pepper rings worldwide.",
+    "origin": "Xalapa (Jalapa), Veracruz, Mexico",
+    "fun_fact": "The characteristic white 'corking' lines on a jalapeño's skin are stress marks — and many chili heads prize heavily corked peppers as having more concentrated heat.",
+    "difficulty": "intermediate"
+  }
+}

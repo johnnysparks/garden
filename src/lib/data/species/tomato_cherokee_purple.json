@@ -72,6 +72,11 @@
       "species_id": "carrot_nantes",
       "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
       "lore": "Carrots loosen soil around tomato roots, improving drainage."
+    },
+    {
+      "species_id": "pepper_jalapeno",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Peppers and tomatoes share the same family and thrive in similar conditions without competing for root space."
     }
   ],
   "antagonists": [
