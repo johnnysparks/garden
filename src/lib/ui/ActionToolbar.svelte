@@ -61,6 +61,16 @@
 			placeholder: true,
 		},
 		{
+			id: 'intervene',
+			label: 'Act',
+			icon: '\u2702\uFE0F',
+			energyCost: 1,
+			needsPlot: true,
+			needsEmpty: false,
+			needsPlant: true,
+			placeholder: false,
+		},
+		{
 			id: 'wait',
 			label: 'Wait',
 			icon: '\u23F3',
