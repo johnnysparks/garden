@@ -53,6 +53,13 @@ export const weather: {
 	scouted: false,
 });
 
+// ── Frost state ─────────────────────────────────────────────────────
+
+export const frost = $state({
+	active: false,
+	killedPlants: [] as string[], // species IDs of killed plants
+});
+
 // ── Helpers ─────────────────────────────────────────────────────────
 
 /** Map a week number (0-29) to a season identifier. */
