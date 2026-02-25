@@ -143,10 +143,11 @@ describe('query commands', () => {
     expect(result.output.length).toBeGreaterThan(0);
   });
 
-  it('score returns placeholder message', () => {
+  it('score returns a formatted score card', () => {
     const session = createTestSession();
     const result = executeCommand(session, 'score');
-    expect(result.output).toContain('not yet implemented');
+    expect(result.output).toContain('FINAL SCORE');
+    expect(result.output).toContain('TOTAL SCORE');
   });
 
   it('commands are case-insensitive', () => {

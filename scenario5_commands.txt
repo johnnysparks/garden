@@ -1,0 +1,175 @@
+# Scenario 5: Full Season Playthrough to Frost
+# Seed: --seed 500, Zone: zone_8a
+# Phase: game starts at DAWN week 1
+
+# ── INITIAL STATUS ────────────────────────────────────────────────────
+status
+# Advance from DAWN → PLAN → ACT
+advance
+advance
+status
+
+# ── WEEK 1: PLANT ─────────────────────────────────────────────────────
+plant tomato_cherokee_purple 1 1
+plant basil_genovese 1 0
+plant carrot_nantes 0 1
+wait
+
+# ── WEEK 2: PLANT ZUCCHINI + AMEND ────────────────────────────────────
+advance
+advance
+status
+plant zucchini_black_beauty 2 1
+amend compost 1 1
+amend compost 2 1
+wait
+
+# ── WEEK 3: MORE AMENDMENTS ───────────────────────────────────────────
+advance
+advance
+status
+amend mulch 1 0
+amend mulch 0 1
+wait
+
+# ── WEEKS 4-8: EARLY SEASON ──────────────────────────────────────────
+week
+status
+grid
+plants
+week
+status
+grid
+week
+status
+grid
+inspect 1 1
+inspect 1 0
+inspect 0 1
+inspect 2 1
+week
+status
+grid
+week
+status
+grid
+plants
+
+# ── WEEKS 9-13: MID-SEASON ────────────────────────────────────────────
+week
+status
+grid
+week
+status
+grid
+inspect 1 1
+inspect 2 1
+week
+status
+grid
+plants
+week
+status
+grid
+week
+status
+grid
+
+# ── WEEKS 14-18: LATE MID-SEASON ─────────────────────────────────────
+week
+status
+grid
+inspect 1 1
+inspect 0 1
+week
+status
+grid
+plants
+week
+status
+grid
+week
+status
+grid
+week
+status
+grid
+
+# ── WEEKS 19-22: PRE-FROST MONITORING ────────────────────────────────
+week
+status
+grid
+weather
+plants
+week
+status
+grid
+weather
+inspect 1 1
+inspect 2 1
+week
+status
+grid
+weather
+week
+status
+grid
+plants
+
+# ── WEEKS 23-27: FROST RISK ZONE ─────────────────────────────────────
+week
+status
+grid
+weather
+inspect 1 1
+inspect 0 1
+week
+status
+grid
+weather
+plants
+week
+status
+grid
+weather
+inspect 1 1
+inspect 2 1
+week
+status
+grid
+weather
+week
+status
+grid
+weather
+plants
+
+# ── WEEKS 28-35: LATE SEASON (expect frost to end run) ───────────────
+week
+status
+grid
+weather
+week
+status
+grid
+plants
+week
+status
+grid
+weather
+week
+status
+grid
+week
+status
+grid
+weather
+week
+status
+grid
+week
+status
+grid
+week
+status
+quit

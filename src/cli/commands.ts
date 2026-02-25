@@ -25,6 +25,7 @@ import {
   formatLog,
   formatHelp,
   formatDiagnose,
+  formatScore,
 } from './formatter.js';
 
 // ── Command result ───────────────────────────────────────────────────
@@ -155,7 +156,7 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       return { output: formatHelp(args[0]) };
 
     case 'score':
-      return { output: 'Score: scoring not yet implemented.' };
+      return { output: formatScore(session) };
 
     // ── Turn commands ───────────────────────────────────────────────
 
@@ -185,6 +186,9 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       } while (safety-- > 0);
 
       outputParts.push(formatStatus(session));
+      if (session.isRunEnded()) {
+        outputParts.push(formatScore(session));
+      }
       return { output: outputParts.join('\n\n') };
     }
 
@@ -216,6 +220,9 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       }
 
       outputParts.push(formatStatus(session));
+      if (session.isRunEnded()) {
+        outputParts.push(formatScore(session));
+      }
       return { output: outputParts.join('\n\n') };
     }
 
@@ -357,6 +364,9 @@ export function executeCommand(session: CliSession, input: string): CommandResul
       }
 
       outputParts.push(formatStatus(session));
+      if (session.isRunEnded()) {
+        outputParts.push(formatScore(session));
+      }
       return { output: outputParts.join('\n\n') };
     }
 

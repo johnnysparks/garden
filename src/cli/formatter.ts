@@ -10,6 +10,7 @@ import type { SoilState, WeekWeather } from '../lib/engine/ecs/components.js';
 import type { PlantSpecies } from '../lib/data/types.js';
 import { TurnPhase } from '../lib/engine/turn-manager.js';
 import { frostProbability } from '../lib/engine/weather-gen.js';
+import { calculateScore } from '../lib/engine/scoring.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -575,5 +576,30 @@ export function formatHelp(command?: string): string {
   lines.push('');
   lines.push('Session:');
   lines.push('  save [PATH], quit');
+  return lines.join('\n');
+}
+
+// ── Score ─────────────────────────────────────────────────────────────
+
+/** Format the end-of-run score card for display in the CLI. */
+export function formatScore(session: CliSession): string {
+  const scoreCard = calculateScore({
+    runState: session.eventLog.state,
+    world: session.world,
+    speciesLookup: session.speciesLookup,
+  });
+
+  const lines: string[] = [];
+  lines.push('=== FINAL SCORE ===');
+  lines.push('');
+  lines.push(`Harvest:   ${String(scoreCard.harvest.total).padStart(4)} pts  (${scoreCard.harvest.speciesCount} species harvested, ${scoreCard.harvest.familyCount} families)`);
+  lines.push(`Soil:      ${String(scoreCard.soil.total).padStart(4)} pts  (${scoreCard.soil.plotsImproved} plots improved)`);
+  lines.push(`Survival:  ${String(scoreCard.survival.total).padStart(4)} pts  (${scoreCard.survival.harvestReady} harvest-ready, ${scoreCard.survival.deaths} deaths)`);
+  lines.push(`Knowledge: ${String(scoreCard.knowledge.total).padStart(4)} pts  (${scoreCard.knowledge.diagnoses} diagnoses, ${scoreCard.knowledge.uniqueSpecies} species planted)`);
+  lines.push('');
+  lines.push(`Subtotal:      ${scoreCard.subtotal}`);
+  lines.push(`Zone modifier: ×${scoreCard.zoneModifier}`);
+  lines.push(`TOTAL SCORE:   ${scoreCard.total}`);
+
   return lines.join('\n');
 }

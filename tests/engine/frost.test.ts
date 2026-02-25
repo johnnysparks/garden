@@ -146,7 +146,7 @@ describe('frostCheckSystem', () => {
       dormant: false,
     });
 
-    // Force a severe frost
+    // Force a frost severe enough to try to kill a light-tolerance plant (severity > 0.7)
     let result;
     for (let i = 0; i < 200; i++) {
       // Reset state
@@ -164,7 +164,8 @@ describe('frostCheckSystem', () => {
           speciesLookup: customLookup,
         }),
       );
-      if (result.killingFrost) break;
+      // Only break when the frost was severe enough to target a light-tolerance plant
+      if (result.killingFrost && result.killed.includes('rosemary')) break;
     }
 
     expect(result!.killingFrost).toBe(true);
@@ -230,11 +231,10 @@ describe('frostCheckSystem – tolerance tiers', () => {
     world = createWorld();
   });
 
-  it('light tolerance plant is killed by any occurring frost (severity always >= 0.5)', () => {
-    // Fennel has frost_tolerance: "light" — killed when frostSeverity > 0.5
-    // frostSeverity = 0.5 + rng.next() * 0.5, so minimum is 0.5 (exclusive from multiplication)
-    // In practice severity will sometimes equal exactly 0.5; light tolerance threshold is > 0.5
-    // so the test looks for death across many seeds
+  it('light tolerance plant is killed by severe frosts (frostSeverity > 0.7)', () => {
+    // Fennel has frost_tolerance: "light" — killed when frostSeverity > 0.7
+    // frostSeverity = 0.5 + rng.next() * 0.5, so severity ranges [0.5, 1.0)
+    // Light-tolerant plants are killed by ~60% of killing frosts (severity 0.7–1.0)
     setupSinglePlot(world, 0, 0);
     const fennel = plantSpecies(world, 'fennel', 0, 0);
 
@@ -257,6 +257,41 @@ describe('frostCheckSystem – tolerance tiers', () => {
     }
 
     expect(killed).toBe(true);
+  });
+
+  it('light tolerance plant sometimes survives mild killing frost (severity <= 0.7)', () => {
+    // Light-tolerant plants survive ~40% of killing frosts (severity 0.5–0.7).
+    // Regression test for the fix that raised the light tolerance kill threshold
+    // from > 0.5 (functionally always killed) to > 0.7 (actually meaningful).
+    const customLookup = (id: string) => {
+      const species = makeSpeciesLookup()(id);
+      if (!species || id !== 'tomato_cherokee_purple') return species;
+      return { ...species, needs: { ...species.needs, frost_tolerance: 'light' as const } };
+    };
+
+    setupSinglePlot(world, 0, 0);
+    const plant = plantSpecies(world, 'tomato_cherokee_purple', 0, 0);
+
+    let survived = false;
+    for (let i = 0; i < 200; i++) {
+      if ((plant as { dead?: boolean }).dead) {
+        world.removeComponent(plant, 'dead');
+      }
+      const result = frostCheckSystem(
+        makeCtx(world, {
+          currentWeek: 40,
+          firstFrostWeekAvg: 30,
+          rng: createRng(i),
+          speciesLookup: customLookup,
+        }),
+      );
+      if (result.killingFrost && !(plant as { dead?: boolean }).dead) {
+        survived = true;
+        break;
+      }
+    }
+
+    expect(survived).toBe(true);
   });
 
   it('moderate tolerance plant sometimes survives frost (severity <= 0.8)', () => {

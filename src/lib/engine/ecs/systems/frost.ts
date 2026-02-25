@@ -49,7 +49,8 @@ export function frostCheckSystem(ctx: SimulationContext): FrostResult {
 
     if (tolerance === 'none') {
       killed = true;
-    } else if (tolerance === 'light' && frostSeverity > 0.5) {
+    } else if (tolerance === 'light' && frostSeverity > 0.7) {
+      // Light tolerance survives mild frosts (severity 0.5–0.7, ~40% of events)
       killed = true;
     } else if (tolerance === 'moderate' && frostSeverity > 0.8) {
       killed = true;
