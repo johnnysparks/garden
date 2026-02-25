@@ -1,6 +1,6 @@
 # Perennial — Project Roadmap
 
-> Last updated 2026-02-25. All engine systems implemented and tested. All 4 gameplay bugs fixed. CLI complete. Web UI has garden grid with plant/wait/amend actions. WS5 (Web UI Gameplay) broken into 39 granular subtasks across 9 work streams — each small enough for a single focused session.
+> Last updated 2026-02-25. All engine systems implemented and tested. All 4 gameplay bugs fixed. CLI complete. Web UI has garden grid with plant/wait/amend/scout/intervene actions. WS5.2 (Scout), WS5.3a–c (Intervene), and WS5.4a (overlay types) complete. WS5 broken into 39 granular subtasks across 9 work streams.
 
 ---
 
@@ -69,8 +69,8 @@
 | Additional zones | partial | zone_7b added; climate ladder needs more |
 | Web UI — amend action | todo | Toolbar button scaffolded, shows "coming soon" |
 | Web UI — diagnose action | todo | Toolbar button scaffolded, shows "coming soon" |
-| Web UI — intervene action | todo | No intervention/harvest/prune/treat UI |
-| Web UI — scout action | todo | Toolbar button scaffolded, shows "coming soon" |
+| Web UI — intervene action | partial | InterveneMenu wired; pull confirm, pull entity removal, harvest toast remain (WS5.3d–f) |
+| Web UI — scout action | done | ScoutPicker + ScoutResultPanel wired (weather/pest/soil views) |
 | Web UI — run end screen | todo | Frost just logs to console |
 | Web UI — zoom/detail views | todo | No pinch-to-zoom, no plot focus or plant detail |
 | Web UI — field journal | todo | No journal UI (data layer exists) |
@@ -146,18 +146,18 @@ The amend button is wired, `AmendmentSelector.svelte` exists, and `onSelectAmend
 
 ---
 
-#### WS5.2 — Scout Action Flow
+#### WS5.2 — Scout Action Flow (done)
 
-Scout lets the player spend 1 energy to peek at upcoming weather, pest forecasts, or soil details. The engine has `session.scoutAction(target)` which validates phase/energy and appends a `SCOUT` event. The toolbar button currently shows "coming soon" (`placeholder: true` in `ActionToolbar.svelte` line 61).
+Scout lets the player spend 1 energy to peek at upcoming weather, pest forecasts, or soil details. `ScoutPicker.svelte` selects a target; `ScoutResultPanel.svelte` displays weather table, pest list, or soil bars. Both are wired into `+page.svelte`. `session.scoutAction(target)` validates phase/energy and appends a `SCOUT` event.
 
 Three scout targets exist in the design (docs/01-ACTIONS-AND-TURN.md): `weather`, `pests`, `soil`.
 
-##### WS5.2a — Remove placeholder flag from Scout button (todo)
+##### WS5.2a — Remove placeholder flag from Scout button (done)
 > **Files:** `src/lib/ui/ActionToolbar.svelte`
 > **Task:** Change `placeholder: false` on the `scout` action definition (line 61). This lets the button call `onAction('scout')` instead of showing a toast.
 > **Verify:** Button no longer shows "coming soon" toast when clicked during ACT phase.
 
-##### WS5.2b — Add scout target picker component (todo)
+##### WS5.2b — Add scout target picker component (done)
 > **Files:** Create `src/lib/ui/ScoutPicker.svelte`
 > **Template:** Copy the structure of `AmendmentSelector.svelte` (overlay + bottom-sheet panel pattern).
 > **Props interface:**
@@ -173,7 +173,7 @@ Three scout targets exist in the design (docs/01-ACTIONS-AND-TURN.md): `weather`
 > - "Soil Survey" (icon: layers) — "Inspect soil nutrients and pH"
 > **Verify:** Component renders, clicking an option calls `onSelect` with the right target string, clicking backdrop calls `onClose`.
 
-##### WS5.2c — Wire scout target picker into garden page (todo)
+##### WS5.2c — Wire scout target picker into garden page (done)
 > **Files:** `src/routes/garden/+page.svelte`
 > **Task:**
 > 1. Add `let showScoutPicker = $state(false);`
@@ -182,7 +182,7 @@ Three scout targets exist in the design (docs/01-ACTIONS-AND-TURN.md): `weather`
 > 4. Render `{#if showScoutPicker}<ScoutPicker onSelect={onSelectScout} onClose={() => showScoutPicker = false} />{/if}` after the other modals.
 > **Verify:** Tapping Scout → picker appears → selecting a target → picker closes, energy decrements.
 
-##### WS5.2d — Create ScoutResultPanel component (todo)
+##### WS5.2d — Create ScoutResultPanel component (done)
 > **Files:** Create `src/lib/ui/ScoutResultPanel.svelte`
 > **Template:** Bottom-sheet overlay like `AmendmentSelector.svelte`.
 > **Props interface:**
@@ -200,7 +200,7 @@ Three scout targets exist in the design (docs/01-ACTIONS-AND-TURN.md): `weather`
 > **Soil view:** Show pH, nitrogen, phosphorus, potassium, organic_matter, moisture, compaction, biology as labeled rows with numeric values. Use colored bars (green = good, yellow = moderate, red = poor).
 > **Verify:** Each view renders its data correctly. Close button works.
 
-##### WS5.2e — Wire ScoutResultPanel display into garden page (todo)
+##### WS5.2e — Wire ScoutResultPanel display into garden page (done)
 > **Files:** `src/routes/garden/+page.svelte`
 > **Task:**
 > 1. Add `let scoutResult = $state<{ target: string; weather?: WeekWeather[]; pests?: PestEvent[]; soil?: SoilState } | null>(null);`
@@ -215,9 +215,9 @@ Three scout targets exist in the design (docs/01-ACTIONS-AND-TURN.md): `weather`
 
 #### WS5.3 — Intervene Action Flow
 
-Intervene lets the player perform actions on a planted plot: harvest, prune, treat disease, or pull (remove) a plant. The engine has `session.interveneAction(action, row, col, targetCondition?)` which validates everything and records treatments. There is also a separate `HarvestEvent` type, but harvest can go through `interveneAction` with `action='harvest'`. The toolbar currently has no intervene button at all.
+Intervene lets the player perform actions on a planted plot: harvest, prune, treat disease, or pull (remove) a plant. The engine has `session.interveneAction(action, row, col, targetCondition?)` which validates everything and records treatments. There is also a separate `HarvestEvent` type, but harvest can go through `interveneAction` with `action='harvest'`. WS5.3a–c are complete: Act button, `InterveneMenu.svelte`, and wiring exist. WS5.3d–f remain.
 
-##### WS5.3a — Add Intervene button to ActionToolbar (todo)
+##### WS5.3a — Add Intervene button to ActionToolbar (done)
 > **Files:** `src/lib/ui/ActionToolbar.svelte`
 > **Task:** Add a new action definition to the `ACTIONS` array (insert before `wait`):
 > ```typescript
@@ -234,7 +234,7 @@ Intervene lets the player perform actions on a planted plot: harvest, prune, tre
 > ```
 > **Verify:** New "Act" button appears in toolbar when a planted plot is selected. Disabled when no plant at selected plot.
 
-##### WS5.3b — Create InterveneMenu component (todo)
+##### WS5.3b — Create InterveneMenu component (done)
 > **Files:** Create `src/lib/ui/InterveneMenu.svelte`
 > **Template:** Bottom-sheet overlay like `AmendmentSelector.svelte`.
 > **Props interface:**
@@ -257,7 +257,7 @@ Intervene lets the player perform actions on a planted plot: harvest, prune, tre
 > - "Pull" (icon: uprooted plant) — always available, description: "Remove plant from plot", show in red/warning style
 > **Verify:** Renders correct actions. Harvest grayed out when not ready. Treat shows condition name. Pull shows warning styling.
 
-##### WS5.3c — Wire InterveneMenu into garden page (todo)
+##### WS5.3c — Wire InterveneMenu into garden page (done)
 > **Files:** `src/routes/garden/+page.svelte`
 > **Task:**
 > 1. Import `InterveneMenu`.
@@ -306,7 +306,7 @@ Intervene lets the player perform actions on a planted plot: harvest, prune, tre
 
 The rendering pipeline needs: overlay generator functions → a DiseaseOverlay component → integration into PlantRenderer.
 
-##### WS5.4a — Define the overlay generator function signature and types (todo)
+##### WS5.4a — Define the overlay generator function signature and types (done)
 > **Files:** `src/lib/render/shapes/overlays.ts`
 > **Task:** Replace the placeholder comment with:
 > 1. An `OverlayParams` interface:
@@ -881,7 +881,7 @@ Data layer is complete and tested. All UI is missing.
 |---|------|----------|--------|
 | 1 | Fix remaining gameplay bugs (soil temp init, warm-season growth) | — | done |
 | 2 | Amend action UI (WS5.1) | — | done |
-| 3 | Intervene/harvest action UI (WS5.3) | WS5.3a–f (6 tasks) | todo |
+| 3 | Intervene/harvest action UI (WS5.3) | WS5.3a–f (6 tasks) | partial (a–c done) |
 | 4 | Run end screen (WS5.5) | WS5.5a–f (6 tasks) | todo |
 | 5 | Run start flow — zone/seed select (WS5.6) | WS5.6a–e (5 tasks) | todo |
 | 6 | More species — pepper, beans, marigold, rosemary, corn (WS3.3) | — | todo |
@@ -891,12 +891,12 @@ Data layer is complete and tested. All UI is missing.
 
 | # | Task | Subtasks | Status |
 |---|------|----------|--------|
-| 7 | Disease overlay visuals (WS5.4) | WS5.4a–j (10 tasks) | todo |
+| 7 | Disease overlay visuals (WS5.4) | WS5.4a–j (10 tasks) | partial (a done) |
 | 8 | Pest visual overlays (WS5.9) | WS5.9a–c (3 tasks) | todo |
 | 9 | Stress/disease visual modifiers (WS7.7) | — | todo |
 | 10 | Diagnosis UI flow (WS2.2) | — | todo |
 | 11 | Treatment feedback loop (WS2.3) | — | todo |
-| 12 | Scout action UI (WS5.2) | WS5.2a–e (5 tasks) | todo |
+| 12 | Scout action UI (WS5.2) | WS5.2a–e (5 tasks) | done |
 | 13 | Zoom & detail views (WS5.7) | WS5.7a–d (4 tasks) | todo |
 | 14 | Companion discovery cues (WS7.5) | — | todo |
 
