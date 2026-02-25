@@ -24,7 +24,6 @@ import { generateSeasonWeather, type ClimateZone } from './weather-gen.js';
 import { generateSeasonPests } from './pest-gen.js';
 import {
   createTurnManager,
-  calculateEnergyBudget,
   TurnPhase,
   type TurnManager,
   type EnergyState,
@@ -330,10 +329,6 @@ export function createGameSession(config: GameSessionConfig): GameSession {
 
   // ── Initialize event log with RUN_START ───────────────────────────
   eventLog.append({ type: 'RUN_START', seed, zone: zone.id });
-
-  // ── Set initial energy budget so it's visible from Week 1 DAWN ────
-  const week1Budget = calculateEnergyBudget(1, seasonWeather[0]);
-  turnManager.energy.set({ current: week1Budget, max: week1Budget });
 
   // ── Create plot grid with starting soil ───────────────────────────
   // Initialize soil temperature from the zone's week 1 average air temperature

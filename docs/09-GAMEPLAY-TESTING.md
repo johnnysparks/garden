@@ -328,7 +328,13 @@ When reporting results, note:
    ```
    plant basil_genovese 0 0
    ```
-3. Apply sulfur to lower pH below basil's preference (6.0-7.0):
+3. Apply sulfur twice (over two weeks) to lower pH below basil's preference (6.0-7.0). One
+   application only lowers pH by ~0.5 (from 6.5 → 6.0, exactly the lower bound). A second
+   application is needed to push below 6.0 and trigger active pH stress:
+   ```
+   amend sulfur 0 0
+   ```
+   Then in week 2 ACT, apply again:
    ```
    amend sulfur 0 0
    ```
@@ -340,8 +346,15 @@ When reporting results, note:
 5. Advance 5-8 weeks, checking `inspect` on both plants each week
 6. Observe stress values and growth rate differences
 
+**Note**: Cold soil temperature (soil is ~8°C in early spring, basil needs ≥18°C) is the
+dominant stressor in the first few weeks regardless of pH. A single sulfur application brings
+pH to exactly 6.0 (basil's lower bound), which triggers no pH stress since the formula only
+fires when pH is strictly below the minimum. Two applications push pH to ~5.5, adding a small
+but observable pH stress component on top of the temperature stress.
+
 **Expected Behavior**:
-- Basil should accumulate stress due to cold soil temps early season and pH shift
+- Basil should accumulate stress primarily due to cold soil temps early season; pH stress
+  activates after the second sulfur takes effect (week 5+)
 - Stress should appear in `inspect` output as a numeric value (0.0-1.0)
 - Growth should be slower for the stressed basil than the well-tended tomato
 - Health should decrease as stress increases
