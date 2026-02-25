@@ -300,6 +300,17 @@ describe('week command', () => {
     expect(session.getWeek()).toBe(startWeek);
   });
 
+  it('allows planting immediately after week command from DAWN', () => {
+    // Regression: planting should succeed on the first week after using `week`
+    // from the game start state (DAWN phase).
+    const session = createTestSession();
+    executeCommand(session, 'week');
+
+    const result = executeCommand(session, 'plant tomato_cherokee_purple 0 0');
+    expect(result.output).not.toContain('Error');
+    expect(result.output).toContain('Planted');
+  });
+
   it('returns error when run has ended', () => {
     const session = createTestSession();
     while (!session.isRunEnded()) {
