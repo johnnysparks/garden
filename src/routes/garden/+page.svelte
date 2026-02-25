@@ -8,6 +8,7 @@
 		SEASON_PALETTES,
 	} from '$lib/render/palette.js';
 	import { createWindState, updateWind, type WindState } from '$lib/render/animation.js';
+	import { calculateDaylight, skyColor, atmosphereFilter } from '$lib/render/daylight.js';
 	import { getSpecies, getAllSpecies, getAllAmendments, getAmendment, getZone } from '$lib/data/index.js';
 	import { createGameSession, type GameSession } from '$lib/engine/game-session.js';
 	import { calculateScore, type ScoreCard } from '$lib/engine/scoring.js';
@@ -24,7 +25,7 @@
 	import ScoutResultPanel from '$lib/ui/ScoutResultPanel.svelte';
 	import InterveneMenu from '$lib/ui/InterveneMenu.svelte';
 	import RunEndScreen from '$lib/ui/RunEndScreen.svelte';
-	import { season, energy, turn, weather, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
+	import { season, energy, turn, weather, weekToSeasonId, dayProgress, updateDayProgress } from '$lib/ui/hud-stores.svelte.js';
 	import zone8aData from '$lib/data/zones/zone_8a.json';
 
 	// ── URL param helpers ──────────────────────────────────────────────
@@ -301,6 +302,20 @@
 	let seasonId = $derived(weekToSeasonId(season.week));
 	let palette = $derived(SEASON_PALETTES[seasonId]);
 
+	// ── Daylight (time-of-day lighting) ─────────────────────────────
+
+	// Recompute dayProgress whenever energy or phase changes
+	$effect(() => {
+		void energy.current;
+		void energy.max;
+		void turn.phase;
+		updateDayProgress();
+	});
+
+	let daylight = $derived(calculateDaylight(dayProgress.value, palette.warmth));
+	let currentSkyColor = $derived(skyColor(daylight, palette.sky));
+	let currentAtmosphereFilter = $derived(atmosphereFilter(daylight));
+
 	// ── Selection state ─────────────────────────────────────────────────
 
 	let selectedPlot = $state<{ row: number; col: number } | null>(null);
@@ -524,13 +539,13 @@
 	<title>Garden — Perennial</title>
 </svelte:head>
 
-<div class="garden-page" style:background={palette.sky}>
+<div class="garden-page" style:background={currentSkyColor} style:transition="background 0.6s ease">
 	<header class="top-bar" style:background={palette.ui_bg}>
 		<SeasonBar />
 		<WeatherRibbon />
 	</header>
 
-	<main class="garden-content">
+	<main class="garden-content" style:filter={currentAtmosphereFilter} style:transition="filter 0.6s ease">
 		<GardenGrid
 			rows={GRID_ROWS}
 			cols={GRID_COLS}
@@ -538,6 +553,7 @@
 			{palette}
 			{windState}
 			{timeMs}
+			{daylight}
 			{selectedPlot}
 			{onSelectPlot}
 		/>

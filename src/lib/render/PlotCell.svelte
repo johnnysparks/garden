@@ -2,6 +2,7 @@
 	import AnimatedPlant from './AnimatedPlant.svelte';
 	import { lerpColor, type SeasonPalette } from './palette.js';
 	import type { WindState } from './animation.js';
+	import { plantShadow, heliotropism, type DaylightState } from './daylight.js';
 	import type { SoilState } from '$lib/engine/ecs/components.js';
 	import type { PlantSpecies, GrowthStageId } from '$lib/data/types.js';
 
@@ -22,12 +23,13 @@
 		palette: SeasonPalette;
 		windState: WindState;
 		timeMs: number;
+		daylight: DaylightState;
 		selected?: boolean;
 		hasSelection?: boolean;
 		onclick?: () => void;
 	}
 
-	let { soil, mulched, plant, palette, windState, timeMs, selected = false, hasSelection = false, onclick }: Props = $props();
+	let { soil, mulched, plant, palette, windState, timeMs, daylight, selected = false, hasSelection = false, onclick }: Props = $props();
 
 	// ── Soil color derivation ───────────────────────────────────────
 
@@ -58,6 +60,14 @@
 		const targetSvgSize = CELL_SVG * 0.6;
 		return targetSvgSize / Math.max(spread, 30);
 	});
+
+	// ── Shadow geometry ────────────────────────────────────────────
+
+	let shadow = $derived(plantShadow(daylight, plantScale));
+
+	// ── Heliotropism (sun-tracking lean) ────────────────────────────
+
+	let sunLean = $derived(heliotropism(daylight, 5));
 
 	// ── Moisture texture lines ──────────────────────────────────────
 
@@ -134,6 +144,14 @@
 
 		<!-- Plant or empty state -->
 		{#if plant}
+			<!-- Plant shadow -->
+			<ellipse
+				cx={CELL_SVG / 2 + shadow.offsetX}
+				cy={CELL_SVG * 0.88}
+				rx={12 * plantScale}
+				ry={12 * plantScale * shadow.scaleY}
+				fill="rgba(0,0,0,{shadow.opacity.toFixed(2)})"
+			/>
 			<g transform="translate({CELL_SVG / 2}, {CELL_SVG * 0.85}) scale({plantScale})">
 				<AnimatedPlant
 					visualParams={plant.species.visual}
@@ -143,6 +161,7 @@
 					stage={plant.stage}
 					{windState}
 					{timeMs}
+					{sunLean}
 				/>
 			</g>
 		{:else}

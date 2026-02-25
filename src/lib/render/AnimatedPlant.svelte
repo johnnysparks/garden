@@ -28,6 +28,8 @@
 		timeMs: number;
 		stage: GrowthStageId;
 		palette?: SeasonPalette;
+		/** Heliotropism lean in degrees (positive = lean right toward west). */
+		sunLean?: number;
 	}
 
 	let {
@@ -39,6 +41,7 @@
 		timeMs,
 		stage,
 		palette,
+		sunLean = 0,
 	}: Props = $props();
 
 	// ── Springs ──────────────────────────────────────────────────────────────────
@@ -121,12 +124,13 @@
 
 	let transformStyle = $derived.by(() => {
 		const tx = swayX + tremor.x;
+		const rot = sunLean;
 		if (pop) {
 			const ty = tremor.y + pop.y;
 			const s = breatheScale * pop.scale;
-			return `translate(${tx}px, ${ty}px) scale(${s})`;
+			return `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${s})`;
 		}
-		return `translate(${tx}px, ${tremor.y}px) scale(${breatheScale})`;
+		return `translate(${tx}px, ${tremor.y}px) rotate(${rot}deg) scale(${breatheScale})`;
 	});
 
 	let plantOpacity = $derived(pop ? pop.opacity : 1);
