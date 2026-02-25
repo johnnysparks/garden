@@ -32,6 +32,29 @@ export const energy = $state({
 	max: 5,
 });
 
+// ── Day progress ───────────────────────────────────────────────────
+
+/**
+ * How far through the workday the player is (0 = dawn, 1 = dusk).
+ *
+ * Derived from actions spent: each action advances time by 1/max.
+ * Updated by the garden page whenever energy changes during ACT phase.
+ * Outside ACT phase this holds either 0 (before work) or 1 (after).
+ */
+export const dayProgress = $state({
+	value: 0,
+});
+
+/** Recompute dayProgress from current energy state and turn phase. */
+export function updateDayProgress(): void {
+	if (turn.phase !== 'ACT' || energy.max <= 0) {
+		// Before ACT: dawn. After ACT (DUSK/ADVANCE): dusk.
+		dayProgress.value = turn.phase === 'PLAN' || turn.phase === 'DAWN' ? 0 : 1;
+		return;
+	}
+	dayProgress.value = (energy.max - energy.current) / energy.max;
+}
+
 // ── Weather state ───────────────────────────────────────────────────
 
 export const weather: {
