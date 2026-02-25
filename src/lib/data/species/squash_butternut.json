@@ -1,0 +1,241 @@
+{
+  "id": "squash_butternut",
+  "common_name": "Butternut Squash",
+  "botanical_name": "Cucurbita moschata 'Waltham Butternut'",
+  "family": "Cucurbitaceae",
+  "type": "annual",
+  "growth": {
+    "habit": "runner_vine",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [1, 2],
+        "description": "A large flat cream-colored seed with a smooth oval shape and slightly pointed tip."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 1],
+        "description": "Thick curved hypocotyl hoists the seed coat above the soil. Cotyledons begin prying apart inside the shell."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [1, 2],
+        "description": "Two broad round cotyledons open wide. The first true leaf unfurls with a rough, sandpapery texture and shallow palmate lobes."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [4, 6],
+        "description": "Vigorous trailing vines extend rapidly, rooting at nodes and sending out curling tendrils. Enormous dark green palmate leaves shade out everything beneath on long hollow petioles."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [2, 3],
+        "description": "Large golden-orange trumpet flowers open at dawn and wilt by afternoon. Male flowers appear first on long stalks; female flowers sit close to the vine with a tiny green bulge at the base — the embryonic fruit."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [6, 8],
+        "description": "Green bell-shaped fruit swells slowly, developing the distinctive cylindrical neck and bulbous base. Skin transitions from dark green to warm tan as sugars concentrate inside. Stem hardens and corks over when ripe."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [2, 3],
+        "description": "Vines wither to papery brown. Leaves yellow and crumble. Mature fruit sits heavy on dry ground, its corked stem signaling readiness for winter storage."
+      }
+    ],
+    "days_to_maturity": [14, 18],
+    "max_height_cm": 45,
+    "max_spread_cm": 400,
+    "growth_rate": "fast"
+  },
+  "needs": {
+    "sun": "full",
+    "water": "moderate",
+    "soil_ph": [6.0, 7.0],
+    "nutrients": { "N": "high", "P": "moderate", "K": "moderate" },
+    "soil_temp_min_c": 18,
+    "frost_tolerance": "none"
+  },
+  "season": {
+    "sow_window": [6, 10],
+    "transplant_window": [7, 11],
+    "harvest_window": [18, 26],
+    "bolt_trigger": null
+  },
+  "companions": [
+    {
+      "species_id": "corn_golden_bantam",
+      "effects": [{ "type": "shade_benefit", "modifier": 0.15, "radius": 1 }],
+      "lore": "Traditional Three Sisters planting — corn provides vertical structure while squash vines shade the ground, suppressing weeds and retaining soil moisture for both."
+    },
+    {
+      "species_id": "bean_provider",
+      "effects": [{ "type": "nutrient_sharing", "modifier": 0.25, "radius": 1 }],
+      "lore": "The third Sister. Beans fix atmospheric nitrogen that feeds the squash plant's heavy nutrient demands, while squash leaves shade bean roots and reduce evaporation."
+    },
+    {
+      "species_id": "marigold_french",
+      "effects": [{ "type": "pest_resistance", "modifier": 0.25, "radius": 1 }],
+      "lore": "French marigold root exudates repel squash bugs and cucumber beetles. The pungent scent confuses pest moths seeking cucurbit hosts."
+    }
+  ],
+  "antagonists": [
+    {
+      "species_id": "fennel",
+      "effects": [{ "type": "allelopathy", "modifier": -0.3, "radius": 2 }],
+      "lore": "Fennel's allelopathic root exudates inhibit cucurbit growth and can stunt vine development. One of the worst neighbors in any garden."
+    },
+    {
+      "species_id": "potato_yukon",
+      "effects": [{ "type": "growth_rate", "modifier": -0.2, "radius": 1 }],
+      "lore": "Potatoes and squash are both heavy feeders competing for the same nutrients and moisture. Potatoes may also increase squash susceptibility to blight."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "condition_id": "powdery_mildew",
+      "susceptibility": 0.65,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.6 },
+        { "type": "crowding", "threshold": 0.7 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "powdery_coating",
+            "description": "White powdery patches appear on upper leaf surfaces, typically starting on the oldest leaves closest to the crown.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "yellowing_uniform",
+            "description": "Affected leaves yellow as photosynthesis is blocked by the fungal coating. White powder spreads to stems and younger foliage. Vine growth slows noticeably.",
+            "reversible": false
+          },
+          {
+            "week": 5,
+            "visual_overlay": "leaf_browning",
+            "description": "Leaves become crispy and brown, curling inward. Fruit may ripen prematurely with poor sugar development. Plant canopy collapses.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 8,
+        "spreads": true,
+        "spread_radius": 2
+      }
+    },
+    {
+      "condition_id": "squash_vine_borer",
+      "susceptibility": 0.55,
+      "triggers": [
+        { "type": "temp_high", "threshold": 0.6 },
+        { "type": "pest_vector", "threshold": 0.5 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "wilting",
+            "description": "A section of vine wilts suddenly in midday heat, recovering partially by evening. Sawdust-like frass visible near the stem base where the larva entered.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "stem_lesions",
+            "description": "Mushy, hollowed-out stem section where the larva is boring through vascular tissue. Yellow-green frass accumulates. The affected vine wilts permanently.",
+            "reversible": false
+          },
+          {
+            "week": 4,
+            "visual_overlay": "total_wilt",
+            "description": "Entire vine collapses as the borer severs internal water transport. Stem crumbles when touched. Fruit on the affected vine stops developing.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 6,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    },
+    {
+      "condition_id": "mosaic_virus",
+      "susceptibility": 0.3,
+      "triggers": [
+        { "type": "pest_vector", "threshold": 0.4 },
+        { "type": "crowding", "threshold": 0.6 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "interveinal_yellowing",
+            "description": "Mottled yellow-green mosaic pattern appears on youngest leaves. Leaf margins may curl slightly upward.",
+            "reversible": false
+          },
+          {
+            "week": 3,
+            "visual_overlay": "leaf_browning",
+            "description": "Leaves become distorted and bumpy with raised blistered areas. Vines are stunted with shortened internodes. Fruit develops warty, discolored skin.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": true,
+        "spread_radius": 1
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 6,
+    "seed_saving": true,
+    "harvest_type": "fruit",
+    "continuous_harvest": false
+  },
+  "visual": {
+    "stem": {
+      "height": [2, 18],
+      "thickness": [0.8, 3.5],
+      "color": "#7a8c54",
+      "curve": 0.3,
+      "branch_frequency": 0.5,
+      "branch_angle": 55
+    },
+    "leaves": {
+      "shape": "palmate",
+      "count": [2, 12],
+      "size": [3, 14],
+      "color": "#1c5e2e",
+      "droop": [5, 30],
+      "distribution": "alternate",
+      "opacity": [0.75, 1.0]
+    },
+    "flowers": {
+      "shape": "simple",
+      "petal_count": 5,
+      "color": "#f0a820",
+      "size": 3.5,
+      "bloom_density": 0.35
+    },
+    "fruit": {
+      "shape": "elongated",
+      "size": [1.5, 7.0],
+      "color_unripe": "#5a7a3e",
+      "color_ripe": "#d4a257",
+      "cluster_count": 1,
+      "hang_angle": 40
+    },
+    "animation": {
+      "sway_amplitude": 0.05,
+      "sway_frequency": 0.5,
+      "growth_spring_tension": 0.35,
+      "idle_breathing": 0.008
+    }
+  },
+  "lore": {
+    "description": "A long-season winter squash with sweet, nutty orange flesh and excellent storage life — the workhorse of autumn kitchens.",
+    "origin": "Developed at Waltham Field Station, Massachusetts, 1944; species Cucurbita moschata originates from Mesoamerica and South America",
+    "fun_fact": "Butternut squash was bred specifically for New England's short growing season — 'Waltham Butternut' matures faster than most moschata types and can store for 3-6 months in a cool root cellar without losing flavor.",
+    "difficulty": "intermediate"
+  }
+}
