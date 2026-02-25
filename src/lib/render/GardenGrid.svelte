@@ -23,6 +23,7 @@
 	import PlotCell from './PlotCell.svelte';
 	import type { SeasonPalette } from './palette.js';
 	import type { WindState } from './animation.js';
+	import type { DaylightState } from './daylight.js';
 
 	interface Props {
 		rows: number;
@@ -31,6 +32,7 @@
 		palette: SeasonPalette;
 		windState: WindState;
 		timeMs: number;
+		daylight: DaylightState;
 		selectedPlot?: { row: number; col: number } | null;
 		onSelectPlot?: (row: number, col: number) => void;
 	}
@@ -42,6 +44,7 @@
 		palette,
 		windState,
 		timeMs,
+		daylight,
 		selectedPlot = null,
 		onSelectPlot,
 	}: Props = $props();
@@ -74,6 +77,7 @@
 					{palette}
 					{windState}
 					{timeMs}
+					{daylight}
 					selected={isSelected(row, col)}
 					onclick={() => onSelectPlot?.(row, col)}
 				/>
