@@ -280,7 +280,7 @@ Intervene lets the player perform actions on a planted plot: harvest, prune, tre
 > 3. When `confirmPull` is true, replace the Pull button row with: "Remove {speciesId}? This cannot be undone." and two buttons: "Cancel" (resets `confirmPull`) and "Remove" (calls `onSelect('pull')`).
 > **Verify:** Pull requires two taps. Cancel returns to normal menu.
 
-##### WS5.3e — Handle pull action in engine — remove plant entity (todo)
+##### WS5.3e — Handle pull action in engine — remove plant entity (done)
 > **Files:** `src/routes/garden/+page.svelte`
 > **Task:** In the `onIntervene()` handler, when `action === 'pull'`, after calling `session.interveneAction('pull', ...)`:
 > 1. Find the plant entity in the ECS world using `session.world.with('plotSlot', 'species')` and matching row/col.
@@ -289,7 +289,7 @@ Intervene lets the player perform actions on a planted plot: harvest, prune, tre
 > **Note:** Check whether `interveneAction` already handles entity removal. If `session.interveneAction('pull', ...)` doesn't mark the entity dead, do it here. If it does, this task is already done — just verify.
 > **Verify:** After pulling, the plot appears empty on the next render.
 
-##### WS5.3f — Add harvest result feedback toast (todo)
+##### WS5.3f — Add harvest result feedback toast (done)
 > **Files:** `src/routes/garden/+page.svelte`
 > **Task:** After a successful harvest intervene action:
 > 1. Also dispatch a `HARVEST` event: `session.dispatch({ type: 'HARVEST', plant_id: \`${row},${col}\`, week: session.getWeek() })`.
