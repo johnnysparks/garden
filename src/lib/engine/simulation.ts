@@ -11,10 +11,11 @@
  *   4. GROWTH_TICK
  *   5. STRESS_ACCUMULATE
  *   6. DISEASE_CHECK
- *   7. PEST_CHECK
- *   8. HARVEST_CHECK
- *   9. SPREAD_CHECK
- *  10. FROST_CHECK
+ *   7. TREATMENT_FEEDBACK
+ *   8. PEST_CHECK
+ *   9. HARVEST_CHECK
+ *  10. SPREAD_CHECK
+ *  11. FROST_CHECK
  */
 
 import type { SimulationContext, WeekWeather, SpeciesLookup, PestEvent } from './ecs/components.js';
@@ -27,6 +28,8 @@ import { companionEffectsSystem } from './ecs/systems/companion.js';
 import { growthTickSystem } from './ecs/systems/growth.js';
 import { stressAccumulateSystem } from './ecs/systems/stress.js';
 import { diseaseCheckSystem } from './ecs/systems/disease.js';
+import { treatmentFeedbackSystem } from './ecs/systems/treatment.js';
+import type { TreatmentFeedbackResult } from './ecs/systems/treatment.js';
 import { pestCheckSystem } from './ecs/systems/pest.js';
 import { harvestCheckSystem } from './ecs/systems/harvest.js';
 import { spreadCheckSystem } from './ecs/systems/spread.js';
@@ -36,6 +39,7 @@ import type { FrostResult } from './ecs/systems/frost.js';
 export interface TickResult {
   week: number;
   frost: FrostResult;
+  treatmentFeedback: TreatmentFeedbackResult;
 }
 
 export interface SimulationConfig {
@@ -83,17 +87,20 @@ export function runTick(
   // 6. Disease check
   diseaseCheckSystem(ctx);
 
-  // 7. Pest check
+  // 7. Treatment feedback
+  const treatmentFeedback = treatmentFeedbackSystem(ctx);
+
+  // 8. Pest check
   pestCheckSystem(ctx);
 
-  // 8. Harvest check
+  // 9. Harvest check
   harvestCheckSystem(ctx);
 
-  // 9. Spread check
+  // 10. Spread check
   spreadCheckSystem(ctx);
 
-  // 10. Frost check
+  // 11. Frost check
   const frost = frostCheckSystem(ctx);
 
-  return { week: currentWeek, frost };
+  return { week: currentWeek, frost, treatmentFeedback };
 }

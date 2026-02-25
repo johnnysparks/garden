@@ -78,7 +78,7 @@ function makeRunState(overrides: Partial<RunState> = {}): RunState {
       },
     ],
     interventions: [
-      { plant_id: 'tomato_cherokee_purple@1,2', action: 'prune', week: 5 },
+      { plant_id: 'tomato_cherokee_purple@1,2', action: 'prune', target_condition: 'early_blight', week: 5 },
     ],
     harvests: [{ plant_id: 'tomato_cherokee_purple@1,2', week: 14 }],
     scouts: [{ target: 'weather', week: 3 }],

@@ -463,7 +463,25 @@ export function formatDuskTick(result: DuskTickResult): string {
     }
   }
 
+  if (result.treatmentOutcomes && result.treatmentOutcomes.length > 0) {
+    lines.push('Treatment feedback:');
+    for (const t of result.treatmentOutcomes) {
+      const label = treatmentResultLabel(t.result);
+      lines.push(`  ${t.speciesId} [${t.row},${t.col}]: ${t.action} for ${t.targetCondition} — ${label}`);
+    }
+  }
+
   return lines.join('\n');
+}
+
+function treatmentResultLabel(result: string): string {
+  switch (result) {
+    case 'resolved': return 'RESOLVED — condition cleared';
+    case 'stabilized': return 'STABILIZED — severity reduced';
+    case 'ineffective': return 'NO EFFECT — wrong treatment for this condition';
+    case 'worsened': return 'WORSENED — misdiagnosis, conditions deteriorated';
+    default: return result;
+  }
 }
 
 export function formatAdvance(result: AdvanceResult, zone: { first_frost_week_avg: number }): string {
@@ -521,7 +539,7 @@ const HELP_TEXT: Record<string, string> = {
   plant: 'plant SPECIES_ID ROW COL — Plant a species at grid position. (ACT phase, costs 1 energy)',
   amend: 'amend AMENDMENT ROW COL — Apply soil amendment to a plot. (ACT phase, costs 1 energy)',
   diagnose: 'diagnose ROW COL — Inspect a plant for symptoms. (ACT phase, costs 1 energy)',
-  intervene: 'intervene ACTION ROW COL — Take action on a plant. (ACT phase, costs 1 energy)',
+  intervene: 'intervene ACTION ROW COL [CONDITION] — Treat a plant condition. Actions: prune, spray_fungicide, spray_neem, hand_pick, adjust_watering, amend_soil, pull_plant, monitor. Feedback in 1-2 weeks. (ACT phase, costs 1 energy)',
   scout: 'scout TARGET — Reveal info (weather, pests, soil). (ACT phase, costs 1 energy)',
   wait: 'wait — End actions early, transition to DUSK.',
   advance: 'advance — Advance to the next phase.',
@@ -549,7 +567,7 @@ export function formatHelp(command?: string): string {
   lines.push('');
   lines.push('Actions (ACT phase only):');
   lines.push('  plant SPECIES ROW COL, amend TYPE ROW COL,');
-  lines.push('  diagnose ROW COL, intervene ACTION ROW COL,');
+  lines.push('  diagnose ROW COL, intervene ACTION ROW COL [CONDITION],');
   lines.push('  scout TARGET, wait');
   lines.push('');
   lines.push('Turn:');

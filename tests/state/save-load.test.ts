@@ -128,7 +128,7 @@ describe('save/load round-trip', () => {
       { type: 'AMEND', amendment: 'lime', plot: [0, 0], week: 1 },
       { type: 'SCOUT', target: 'pests', week: 1 },
       { type: 'DIAGNOSE', plant_id: 'basil@0,0', hypothesis: 'powdery_mildew', week: 1 },
-      { type: 'INTERVENE', plant_id: 'basil@0,0', action: 'treat', week: 1 },
+      { type: 'INTERVENE', plant_id: 'basil@0,0', action: 'treat', target_condition: 'powdery_mildew', week: 1 },
       { type: 'HARVEST', plant_id: 'basil@0,0', week: 1 },
       { type: 'ADVANCE_WEEK' },
       { type: 'RUN_END', reason: 'abandon' },

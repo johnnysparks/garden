@@ -32,6 +32,7 @@ export interface DiagnosisEntry {
 export interface InterventionEntry {
   plant_id: string;
   action: string;
+  target_condition: string;
   week: number;
 }
 
@@ -127,7 +128,7 @@ export function applyEvent(state: RunState, event: GameEvent): RunState {
         ...state,
         interventions: [
           ...state.interventions,
-          { plant_id: event.plant_id, action: event.action, week: event.week },
+          { plant_id: event.plant_id, action: event.action, target_condition: event.target_condition, week: event.week },
         ],
       };
 
