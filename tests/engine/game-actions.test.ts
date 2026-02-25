@@ -477,6 +477,72 @@ describe('interveneAction', () => {
   });
 });
 
+// ── interveneAction — pull ─────────────────────────────────────────────
+
+describe('interveneAction — pull', () => {
+  it('pull does not mark the entity dead in the engine (UI responsibility)', () => {
+    const session = createTestSession();
+    advanceToAct(session);
+
+    session.plantAction('tomato_cherokee_purple', 0, 0);
+    const result = session.interveneAction('pull', 0, 0);
+    expect(result.ok).toBe(true);
+
+    // Engine only records the event; entity should still be alive
+    const plant = session.getPlantAt(0, 0);
+    expect(plant).toBeDefined();
+    expect(plant!.dead).toBe(false);
+  });
+
+  it('pulled entity disappears after UI marks it dead', () => {
+    const session = createTestSession();
+    advanceToAct(session);
+
+    session.plantAction('basil_genovese', 1, 1);
+    session.interveneAction('pull', 1, 1);
+
+    // Simulate what the UI does: find entity and mark dead
+    const plants = session.world.with('plotSlot', 'species');
+    for (const p of plants) {
+      if (p.plotSlot.row === 1 && p.plotSlot.col === 1 && !(p as Entity).dead) {
+        (p as Entity).dead = true;
+        break;
+      }
+    }
+
+    // getPlantAt skips dead entities, so should return undefined
+    expect(session.getPlantAt(1, 1)).toBeUndefined();
+  });
+});
+
+// ── interveneAction — harvest event ──────────────────────────────────
+
+describe('interveneAction — harvest event', () => {
+  it('UI can dispatch a HARVEST event after harvest intervene', () => {
+    const session = createTestSession();
+    advanceToAct(session);
+
+    session.plantAction('tomato_cherokee_purple', 0, 0);
+    const result = session.interveneAction('harvest', 0, 0);
+    expect(result.ok).toBe(true);
+
+    // Simulate what the UI does: dispatch a HARVEST event
+    session.dispatch({
+      type: 'HARVEST',
+      plant_id: '0,0',
+      week: session.getWeek(),
+    });
+
+    const events = session.eventLog.toJSON();
+    const harvestEvent = events.find((e) => e.type === 'HARVEST');
+    expect(harvestEvent).toBeDefined();
+    expect(harvestEvent).toMatchObject({
+      type: 'HARVEST',
+      plant_id: '0,0',
+    });
+  });
+});
+
 // ── scoutAction ──────────────────────────────────────────────────────
 
 describe('scoutAction', () => {

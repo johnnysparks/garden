@@ -391,10 +391,48 @@
 		}
 	}
 
+	// ── Action toast state ──────────────────────────────────────────────
+
+	let actionToast = $state('');
+	let actionToastTimer: ReturnType<typeof setTimeout> | null = null;
+
+	function showActionToast(msg: string) {
+		actionToast = msg;
+		if (actionToastTimer) clearTimeout(actionToastTimer);
+		actionToastTimer = setTimeout(() => {
+			actionToast = '';
+		}, 2000);
+	}
+
 	function onIntervene(action: string) {
 		if (!selectedPlot || !session) return;
-		const result = session.interveneAction(action, selectedPlot.row, selectedPlot.col);
+		const { row, col } = selectedPlot;
+		const result = session.interveneAction(action, row, col);
 		if (!result.ok) return;
+
+		if (action === 'pull') {
+			// Mark the plant entity as dead so it disappears from the grid
+			const plants = session.world.with('plotSlot', 'species');
+			for (const p of plants) {
+				if (p.plotSlot.row === row && p.plotSlot.col === col && !(p as Entity).dead) {
+					(p as Entity).dead = true;
+					break;
+				}
+			}
+		}
+
+		if (action === 'harvest') {
+			// Record a HARVEST event for scoring / meta-progression
+			session.dispatch({
+				type: 'HARVEST',
+				plant_id: `${row},${col}`,
+				week: session.getWeek(),
+			});
+			const species = getSpecies(result.plant.speciesId);
+			const name = species?.common_name ?? result.plant.speciesId;
+			showActionToast(`Harvested ${name}!`);
+		}
+
 		ecsTick++;
 		showInterveneMenu = false;
 		selectedPlot = null;
@@ -438,6 +476,11 @@
 			{selectedPlotHasPlant}
 			{onAction}
 		/>
+		{#if actionToast}
+			<div class="action-toast" transition:fly={{ y: 20, duration: 150 }}>
+				{actionToast}
+			</div>
+		{/if}
 	</footer>
 </div>
 
@@ -506,6 +549,7 @@
 	}
 
 	.bottom-bar {
+		position: relative;
 		border-top: 1px solid rgba(0, 0, 0, 0.08);
 		flex-shrink: 0;
 	}
@@ -539,5 +583,21 @@
 
 	.begin-work-btn:active {
 		transform: scale(0.96);
+	}
+
+	.action-toast {
+		position: absolute;
+		top: -36px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: rgba(0, 0, 0, 0.75);
+		color: #fff;
+		font-size: 13px;
+		font-family: monospace;
+		padding: 5px 14px;
+		border-radius: 12px;
+		white-space: nowrap;
+		pointer-events: none;
+		z-index: 10;
 	}
 </style>
