@@ -19,6 +19,7 @@
 	import AmendmentSelector from '$lib/ui/AmendmentSelector.svelte';
 	import ScoutPicker from '$lib/ui/ScoutPicker.svelte';
 	import ScoutResultPanel from '$lib/ui/ScoutResultPanel.svelte';
+	import InterveneMenu from '$lib/ui/InterveneMenu.svelte';
 	import { season, energy, turn, weather, weekToSeasonId } from '$lib/ui/hud-stores.svelte.js';
 	import zone8aData from '$lib/data/zones/zone_8a.json';
 
@@ -281,6 +282,17 @@
 		selectedPlot = null;
 	}
 
+	// ── Intervene menu state ─────────────────────────────────────────────
+
+	let showInterveneMenu = $state(false);
+
+	/** Plant info snapshot for the currently selected plot, updated reactively. */
+	let selectedPlantInfo = $derived.by(() => {
+		void ecsTick;
+		if (!selectedPlot || !session) return undefined;
+		return session.getPlantAt(selectedPlot.row, selectedPlot.col);
+	});
+
 	// ── Amendment selector state ────────────────────────────────────────
 
 	let showAmendSelector = $state(false);
@@ -367,12 +379,25 @@
 				showScoutPicker = true;
 				break;
 			}
+			case 'intervene': {
+				showInterveneMenu = true;
+				break;
+			}
 			case 'wait': {
 				session.turnManager.endActions(); // ACT → DUSK
 				selectedPlot = null;
 				break;
 			}
 		}
+	}
+
+	function onIntervene(action: string) {
+		if (!selectedPlot || !session) return;
+		const result = session.interveneAction(action, selectedPlot.row, selectedPlot.col);
+		if (!result.ok) return;
+		ecsTick++;
+		showInterveneMenu = false;
+		selectedPlot = null;
 	}
 </script>
 
@@ -446,6 +471,14 @@
 		pestData={scoutResult.pestData}
 		soilData={scoutResult.soilData}
 		onClose={() => (scoutResult = null)}
+	/>
+{/if}
+
+{#if showInterveneMenu && selectedPlantInfo}
+	<InterveneMenu
+		plantInfo={selectedPlantInfo}
+		onSelect={onIntervene}
+		onClose={() => (showInterveneMenu = false)}
 	/>
 {/if}
 
