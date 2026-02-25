@@ -1,0 +1,251 @@
+{
+  "id": "strawberry_alpine",
+  "common_name": "Alpine Strawberry",
+  "botanical_name": "Fragaria vesca 'Mignonette'",
+  "family": "Rosaceae",
+  "type": "perennial",
+  "growth": {
+    "habit": "ground_cover",
+    "stages": [
+      {
+        "id": "seed",
+        "duration_weeks": [2, 3],
+        "description": "Tiny achene barely visible to the naked eye. Needs light and cool stratification to break dormancy — press onto the surface, never bury."
+      },
+      {
+        "id": "germination",
+        "duration_weeks": [1, 2],
+        "description": "A hair-thin radicle emerges after a long wait. Alpine strawberries test your patience from the very first day."
+      },
+      {
+        "id": "seedling",
+        "duration_weeks": [2, 3],
+        "description": "Two tiny round cotyledons open. The first true leaf unfolds as a miniature trifoliate — three serrated leaflets on a thread-like petiole."
+      },
+      {
+        "id": "vegetative",
+        "duration_weeks": [4, 6],
+        "description": "The crown fills with trifoliate leaves on lengthening petioles. Runners begin creeping outward, rooting at nodes to establish daughter plants."
+      },
+      {
+        "id": "flowering",
+        "duration_weeks": [3, 5],
+        "description": "Small white five-petaled flowers with bright yellow centers rise just above the foliage. Everbearing — new flowers keep appearing alongside developing fruit."
+      },
+      {
+        "id": "fruiting",
+        "duration_weeks": [6, 10],
+        "description": "Tiny conical berries ripen from pale green to brilliant red. Intensely sweet and aromatic — more flavor per gram than any garden strawberry. Birds will find them before you do."
+      },
+      {
+        "id": "senescence",
+        "duration_weeks": [2, 4],
+        "description": "Foliage reddens and dies back as frost arrives, but the crown persists underground. Runners have already established next year's colony."
+      }
+    ],
+    "days_to_maturity": [10, 14],
+    "max_height_cm": 25,
+    "max_spread_cm": 45,
+    "growth_rate": "moderate"
+  },
+  "needs": {
+    "sun": "partial",
+    "water": "moderate",
+    "soil_ph": [5.5, 6.5],
+    "nutrients": { "N": "low", "P": "moderate", "K": "moderate" },
+    "soil_temp_min_c": 7,
+    "frost_tolerance": "moderate"
+  },
+  "season": {
+    "sow_window": [2, 6],
+    "transplant_window": [4, 8],
+    "harvest_window": [12, 24],
+    "bolt_trigger": null
+  },
+  "companions": [
+    {
+      "species_id": "lettuce_butterhead",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Lettuce and strawberries are classic interplanting partners — shallow-rooted lettuce fills gaps between strawberry rows without competing, and both prefer cool, moist soil."
+    },
+    {
+      "species_id": "carrot_nantes",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Deep-rooted carrots and shallow-rooted strawberries occupy different soil layers entirely. The carrot taproot loosens subsoil, improving drainage around strawberry crowns."
+    },
+    {
+      "species_id": "basil_genovese",
+      "effects": [{ "type": "pest_resistance", "modifier": 0.2, "radius": 1 }],
+      "lore": "Basil's aromatic oils deter aphids and spider mites that target strawberry foliage. The strong scent also confuses spotted wing drosophila seeking ripe fruit."
+    }
+  ],
+  "antagonists": [
+    {
+      "species_id": "fennel",
+      "effects": [{ "type": "allelopathy", "modifier": -0.3, "radius": 2 }],
+      "lore": "Fennel's allelopathic root exudates inhibit strawberry crown development. A poor neighbor for most Rosaceae."
+    },
+    {
+      "species_id": "brassica_cabbage",
+      "effects": [{ "type": "growth_rate", "modifier": -0.2, "radius": 1 }],
+      "lore": "Brassicas are heavy feeders that deplete the same nutrients strawberries need for crown establishment and fruit set."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "condition_id": "botrytis_gray_mold",
+      "susceptibility": 0.65,
+      "triggers": [
+        { "type": "humidity_high", "threshold": 0.7 },
+        { "type": "overwater", "threshold": 0.6 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "powdery_coating",
+            "description": "A fuzzy gray-brown mold appears on ripe and overripe fruit, especially where berries touch the soil. Botrytis cinerea — the signature strawberry rot.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "leaf_spots",
+            "description": "Mold spreads to flower petals and leaves in wet conditions. Affected fruit collapses into a gray spore mass. Remove infected material immediately.",
+            "reversible": false
+          },
+          {
+            "week": 4,
+            "visual_overlay": "stem_lesions",
+            "description": "Crown tissue softens as the fungus invades the plant's core. Entire trusses of fruit rot on the stem. The plant may survive but yield is devastated.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 8,
+        "spreads": true,
+        "spread_radius": 1
+      }
+    },
+    {
+      "condition_id": "verticillium_wilt",
+      "susceptibility": 0.4,
+      "triggers": [
+        { "type": "temp_high", "threshold": 0.7 },
+        { "type": "overwater", "threshold": 0.7 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "brown_edges",
+            "description": "Outer leaves develop dry brown margins that curl inward. Inner leaves may look fine at first — the soil-borne fungus is blocking water transport from the roots up.",
+            "reversible": false
+          },
+          {
+            "week": 3,
+            "visual_overlay": "asymmetric_wilt",
+            "description": "One side of the plant wilts and flattens while the other remains turgid. Cut a runner and the vascular tissue shows brown streaking.",
+            "reversible": false
+          },
+          {
+            "week": 5,
+            "visual_overlay": "total_wilt",
+            "description": "Entire plant collapses. Crown cross-section reveals a ring of darkened vascular tissue. Soil remains infected for years — do not replant strawberries here.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": 7,
+        "spreads": false,
+        "spread_radius": 0
+      }
+    },
+    {
+      "condition_id": "leaf_scorch",
+      "susceptibility": 0.5,
+      "triggers": [
+        { "type": "temp_high", "threshold": 0.6 },
+        { "type": "humidity_high", "threshold": 0.6 }
+      ],
+      "symptoms": {
+        "stages": [
+          {
+            "week": 0,
+            "visual_overlay": "leaf_spots",
+            "description": "Small dark purple spots appear on upper leaf surfaces. Diplocarpon earlianum — a fungus that thrives in warm, humid weather.",
+            "reversible": true
+          },
+          {
+            "week": 2,
+            "visual_overlay": "brown_edges",
+            "description": "Spots merge into large irregular burned-looking patches. Leaf margins dry and curl upward. Heavily affected leaves detach at the petiole.",
+            "reversible": false
+          }
+        ],
+        "weeks_to_death": null,
+        "spreads": true,
+        "spread_radius": 1
+      }
+    }
+  ],
+  "harvest": {
+    "yield_potential": 4,
+    "seed_saving": true,
+    "harvest_type": "fruit",
+    "continuous_harvest": true
+  },
+  "spreading": {
+    "runner": {
+      "rate": 0.15,
+      "radius": 1,
+      "min_stage": "vegetative"
+    },
+    "self_seed": {
+      "rate": 0.1
+    }
+  },
+  "visual": {
+    "stem": {
+      "height": [1, 10],
+      "thickness": [0.3, 1.2],
+      "color": "#6b7d52",
+      "curve": 0.08,
+      "branch_frequency": 0.7,
+      "branch_angle": 55
+    },
+    "leaves": {
+      "shape": "lobed",
+      "count": [3, 20],
+      "size": [2, 8],
+      "color": "#3a7d2e",
+      "droop": [5, 20],
+      "distribution": "alternate",
+      "opacity": [0.75, 1.0]
+    },
+    "flowers": {
+      "shape": "simple",
+      "petal_count": 5,
+      "color": "#f5f0e8",
+      "size": 1.5,
+      "bloom_density": 0.5
+    },
+    "fruit": {
+      "shape": "berry_cluster",
+      "size": [0.5, 2.5],
+      "color_unripe": "#b8cc78",
+      "color_ripe": "#d32f2f",
+      "cluster_count": 3,
+      "hang_angle": 25
+    },
+    "animation": {
+      "sway_amplitude": 0.07,
+      "sway_frequency": 0.85,
+      "growth_spring_tension": 0.4,
+      "idle_breathing": 0.012
+    }
+  },
+  "lore": {
+    "description": "A dainty perennial ground cover that produces tiny, intensely flavored berries all season long. What alpine strawberries lack in size they repay tenfold in fragrance and sweetness.",
+    "origin": "Mountainous regions across Europe and northern Asia; cultivated since the 14th century, long before the modern garden strawberry was hybridized",
+    "fun_fact": "The modern garden strawberry (Fragaria × ananassa) was created in the 1750s by crossing a Chilean species with a Virginian one — but alpine strawberry lovers insist the original wild flavor was lost in the pursuit of size.",
+    "difficulty": "intermediate"
+  }
+}

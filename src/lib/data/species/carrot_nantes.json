@@ -77,6 +77,11 @@
       "species_id": "lettuce_butterhead",
       "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
       "lore": "Shallow-rooted lettuce occupies the top soil layer without competing with the deep carrot taproot, and its leaf canopy shades the soil to retain moisture."
+    },
+    {
+      "species_id": "strawberry_alpine",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Strawberries' shallow fibrous roots and carrots' deep taproots exploit entirely different soil zones. The strawberry ground cover also helps keep carrot shoulders from greening."
     }
   ],
   "antagonists": [

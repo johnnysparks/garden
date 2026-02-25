@@ -72,6 +72,11 @@
       "species_id": "pepper_jalapeno",
       "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
       "lore": "Basil and peppers are Solanaceae-adjacent companions — basil repels aphids and spider mites that target peppers."
+    },
+    {
+      "species_id": "strawberry_alpine",
+      "effects": [{ "type": "pest_resistance", "modifier": 0.2, "radius": 1 }],
+      "lore": "Basil's volatile oils help deter the aphids and spider mites that plague strawberry foliage, while the strawberry ground cover retains soil moisture that basil appreciates."
     }
   ],
   "antagonists": [

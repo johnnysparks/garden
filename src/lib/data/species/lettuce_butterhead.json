@@ -72,6 +72,11 @@
       "species_id": "tomato_cherokee_purple",
       "effects": [{ "type": "shade_benefit", "modifier": 0.15, "radius": 1 }],
       "lore": "In midsummer heat, lettuce bolts quickly in full sun. Planted beneath the canopy of tomato plants, it gains enough shade to extend the harvest window by several weeks."
+    },
+    {
+      "species_id": "strawberry_alpine",
+      "effects": [{ "type": "growth_rate", "modifier": 0.1, "radius": 1 }],
+      "lore": "Lettuce and alpine strawberries share a preference for cool, moist soil. Interplanted, they form a living ground cover that suppresses weeds and retains moisture for both crops."
     }
   ],
   "antagonists": [],
