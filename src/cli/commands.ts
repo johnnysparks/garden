@@ -193,9 +193,11 @@ export function executeCommand(session: CliSession, input: string): CommandResul
         return { output: 'Error: Run has ended. Start a new game.' };
       }
       const outputParts: string[] = [];
-      const startWeek = session.getWeek();
 
-      // Advance through all phases until we reach ACT in a new week.
+      // Advance through phases until we reach ACT. This handles two cases:
+      //   - Starting from DAWN/PLAN: advances to ACT of the current week.
+      //   - Starting from ACT/DUSK/ADVANCE: advances through the full week
+      //     cycle to reach ACT of the next week.
       let safety = 12;
       while (safety-- > 0) {
         if (session.isRunEnded()) break;
@@ -209,8 +211,8 @@ export function executeCommand(session: CliSession, input: string): CommandResul
           outputParts.push(formatAdvance(result.advance, session.config.zone));
         }
 
-        // Stop once we've advanced at least one week and reached ACT
-        if (session.getWeek() > startWeek && result.phase === TurnPhase.ACT) break;
+        // Stop as soon as we reach ACT phase
+        if (result.phase === TurnPhase.ACT) break;
       }
 
       outputParts.push(formatStatus(session));

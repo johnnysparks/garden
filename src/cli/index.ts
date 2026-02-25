@@ -231,6 +231,11 @@ function main(): void {
   const session = createSession(args.zone, args.seed);
   if (!session) process.exit(1);
 
+  // Auto-advance through DAWN and PLAN so the player starts in ACT phase.
+  // DAWN/PLAN are automated setup phases; players should be able to act immediately.
+  session.advancePhase(); // DAWN → PLAN
+  session.advancePhase(); // PLAN → ACT (sets energy budget)
+
   console.log(`Perennial — Season begins. Zone: ${args.zone}, Seed: ${args.seed}`);
   console.log('');
   startRepl(session);

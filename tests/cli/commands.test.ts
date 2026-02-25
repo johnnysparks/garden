@@ -261,13 +261,42 @@ describe('advance command', () => {
 // ── week command ─────────────────────────────────────────────────────
 
 describe('week command', () => {
-  it('advances a full week', () => {
+  it('from ACT phase, advances to ACT of next week', () => {
     const session = createTestSession();
+    advanceToAct(session);
     const startWeek = session.getWeek();
 
     executeCommand(session, 'week');
 
     expect(session.getWeek()).toBeGreaterThan(startWeek);
+    expect(session.getPhase()).toBe(TurnPhase.ACT);
+  });
+
+  it('from DAWN phase, advances to ACT of the same week (not the next week)', () => {
+    // BUG: The week command was checking `getWeek() > startWeek && phase === ACT`,
+    // which caused it to skip Week 1 ACT entirely when starting from DAWN.
+    // Players who used `week` immediately after starting the game lost their first week.
+    const session = createTestSession();
+    expect(session.getPhase()).toBe(TurnPhase.DAWN);
+    const startWeek = session.getWeek(); // 1
+
+    executeCommand(session, 'week');
+
+    // Should land on ACT of Week 1, not skip to Week 2
+    expect(session.getPhase()).toBe(TurnPhase.ACT);
+    expect(session.getWeek()).toBe(startWeek); // still Week 1
+  });
+
+  it('from PLAN phase, advances to ACT of the same week', () => {
+    const session = createTestSession();
+    session.advancePhase(); // DAWN → PLAN
+    expect(session.getPhase()).toBe(TurnPhase.PLAN);
+    const startWeek = session.getWeek();
+
+    executeCommand(session, 'week');
+
+    expect(session.getPhase()).toBe(TurnPhase.ACT);
+    expect(session.getWeek()).toBe(startWeek);
   });
 
   it('returns error when run has ended', () => {
