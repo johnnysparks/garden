@@ -302,11 +302,11 @@ Intervene lets the player perform actions on a planted plot: harvest, prune, tre
 
 #### WS5.4 — Disease Overlay Visuals
 
-`src/lib/render/shapes/overlays.ts` is a placeholder with only a comment. Docs/06-VISUAL-SYSTEM.md specifies 11 overlay types. The disease system writes `activeConditions.conditions[]` on plant entities, each with a `current_stage` that maps to a `visual_overlay` string in the species JSON `SymptomStage` definition.
+`src/lib/render/shapes/overlays.ts` has `OverlayParams`, `OverlayElement`, and a `generateOverlay` dispatch stub (all cases return `[]`). Docs/06-VISUAL-SYSTEM.md specifies 11 overlay types. The disease system writes `activeConditions.conditions[]` on plant entities, each with a `current_stage` that maps to a `visual_overlay` string in the species JSON `SymptomStage` definition.
 
 The rendering pipeline needs: overlay generator functions → a DiseaseOverlay component → integration into PlantRenderer.
 
-##### WS5.4a — Define the overlay generator function signature and types (todo)
+##### WS5.4a — Define the overlay generator function signature and types (done)
 > **Files:** `src/lib/render/shapes/overlays.ts`
 > **Task:** Replace the placeholder comment with:
 > 1. An `OverlayParams` interface:
