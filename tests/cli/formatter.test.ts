@@ -982,7 +982,7 @@ describe('formatSpeciesDetail', () => {
   it('shows growth info', () => {
     const output = formatSpeciesDetail(TOMATO);
     expect(output).toContain('Growth: indeterminate_vine, fast rate');
-    expect(output).toContain('Maturity: 12-16 days');
+    expect(output).toContain('Maturity: 12-16 weeks');
     expect(output).toContain('Max size: 180cm H x 60cm W');
   });
 

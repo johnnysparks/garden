@@ -374,7 +374,7 @@ export function formatSpeciesDetail(species: PlantSpecies): string {
   lines.push(`Difficulty: ${species.lore.difficulty}`);
   lines.push('');
   lines.push(`Growth: ${species.growth.habit}, ${species.growth.growth_rate} rate`);
-  lines.push(`  Maturity: ${species.growth.days_to_maturity[0]}-${species.growth.days_to_maturity[1]} days`);
+  lines.push(`  Maturity: ${species.growth.days_to_maturity[0]}-${species.growth.days_to_maturity[1]} weeks`);
   lines.push(`  Max size: ${species.growth.max_height_cm}cm H x ${species.growth.max_spread_cm}cm W`);
   lines.push('');
   lines.push(`Needs:`);
