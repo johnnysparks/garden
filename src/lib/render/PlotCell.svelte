@@ -25,10 +25,11 @@
 		timeMs: number;
 		daylight: DaylightState;
 		selected?: boolean;
+		hasSelection?: boolean;
 		onclick?: () => void;
 	}
 
-	let { soil, mulched, plant, palette, windState, timeMs, daylight, selected = false, onclick }: Props = $props();
+	let { soil, mulched, plant, palette, windState, timeMs, daylight, selected = false, hasSelection = false, onclick }: Props = $props();
 
 	// ── Soil color derivation ───────────────────────────────────────
 
@@ -89,7 +90,7 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="plot-cell" class:selected onclick={onclick}>
+<div class="plot-cell" class:selected class:has-selection={hasSelection} onclick={onclick}>
 	<svg
 		viewBox="0 0 {CELL_SVG} {CELL_SVG}"
 		preserveAspectRatio="xMidYMid meet"
@@ -220,19 +221,44 @@
 	.plot-cell {
 		aspect-ratio: 1;
 		cursor: pointer;
-		border-radius: 4px;
+		border-radius: 6px;
 		overflow: hidden;
-		transition: box-shadow 0.15s ease;
+		transition:
+			transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+			box-shadow 0.3s ease,
+			opacity 0.25s ease,
+			filter 0.25s ease;
+		transform: scale(1) translateY(0);
+		will-change: transform, box-shadow, opacity;
 	}
 
 	.plot-cell:hover {
 		box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 	}
 
+	.plot-cell:active {
+		transform: scale(0.93) !important;
+		transition-duration: 0.08s;
+	}
+
 	.plot-cell.selected {
+		transform: scale(1.06) translateY(-3px);
 		box-shadow:
-			0 0 0 2px rgba(255, 255, 255, 0.5),
-			0 0 8px 1px rgba(255, 255, 255, 0.15);
+			0 0 0 2px rgba(255, 255, 255, 0.6),
+			0 4px 12px 2px rgba(0, 0, 0, 0.18);
+		z-index: 2;
+		animation: selected-glow 2s ease-in-out infinite;
+	}
+
+	.plot-cell.has-selection:not(.selected) {
+		opacity: 0.7;
+		filter: brightness(0.85);
+		transform: scale(0.97);
+	}
+
+	@keyframes selected-glow {
+		0%, 100% { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6), 0 4px 12px 2px rgba(0, 0, 0, 0.18); }
+		50% { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8), 0 4px 16px 4px rgba(0, 0, 0, 0.22); }
 	}
 
 	svg {
